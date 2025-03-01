@@ -1,4 +1,4 @@
-name: computer_ecommerce
+name: frontend_user
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -38,6 +38,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  font_awesome_flutter: ^10.8.0
+
+  curved_labeled_navigation_bar: ^2.0.6
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

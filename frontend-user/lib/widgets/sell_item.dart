@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class SellItem extends StatelessWidget {
   final String name;
   final double price;
