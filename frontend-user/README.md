@@ -1,4 +1,4 @@
-# laptop_ecommerce
+# frontend_user
 
 A new Flutter project.
 
