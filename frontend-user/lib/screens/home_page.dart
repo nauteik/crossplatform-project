@@ -1,162 +1,107 @@
 import 'package:flutter/material.dart';
-import '../widgets/sell_item.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import '../screens/body.dart';
+import '../widgets/action_button.dart';
+import '../widgets/dropdown_menu.dart';
+import '../widgets/curved_navigation_bar.dart';
+import '../widgets/leading_button.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Widget _currentBody = Body.landingPageBody();
+
+  void _updateBody(Widget newBody) {
+    setState(() {
+      _currentBody = newBody;
+    });
+  }
+
+  List<Widget>? _buildActions() {
+    if (kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      return [
+        ActionButton(onPageChange: _updateBody),
+        const SizedBox(width: 100),
+      ];
+    }
+    return null;
+  }
+
+  Widget _platformSpecificSizedBox(double width) {
+  if (kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    return SizedBox(width: width);
+  }
+  return SizedBox(width: 0);
+}
+//jjkj
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: SizedBox(
-          height: 40,
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Tìm kiếm...',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide.none,
+          backgroundColor: Colors.blue,
+          title: Column(
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _platformSpecificSizedBox(100),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (BuildContext context) => HomePage()),
+                      );
+                    },
+                    child: CircleAvatar(
+                      backgroundImage: NetworkImage(
+                          "https://images.squarespace-cdn.com/content/v1/5930dc9237c5817c00b10842/1557979868721-ZFEVPV8NS06PZ21ZC174/images.png"),
+                      radius: 30,
+                    ),
+                  ),
+                  _platformSpecificSizedBox(20),
+                  DropDownMenu(
+                    onPageChange: _updateBody,
+                  ),
+                  _platformSpecificSizedBox(20),
+                  Expanded(
+                    child: SizedBox(
+                      height: 40,
+                      width: 500,
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Tìm kiếm...',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide:
+                                BorderSide(color: Colors.blue, width: 2.0),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  _platformSpecificSizedBox(10),
+                ],
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide(color: Colors.blue, width: 2.0),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10),
-            ),
+            ],
           ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () {
-              // TODO: Implement cart navigation
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.message),
-            onPressed: () {
-              // TODO: Implement message navigation
-            },
-          ),
-        ],
-      ),
-      body: ListView(
-        children: const [
-          SellItem(
-            name: 'Laptop Asus A15',
-            price: 20000000,
-            soldCount: 150,
-            discountPercent: 10,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Asus ROG',
-            price: 30000000,
-            soldCount: 80,
-            discountPercent: 15,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Asus Zenbook',
-            price: 25000000,
-            soldCount: 60,
-            discountPercent: 5,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Lenovo IdeaPad',
-            price: 18000000,
-            soldCount: 120,
-            discountPercent: 12,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Lenovo ThinkPad',
-            price: 22000000,
-            soldCount: 90,
-            discountPercent: 8,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Lenovo Legion',
-            price: 35000000,
-            soldCount: 40,
-            discountPercent: 20,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Dell Inspiron',
-            price: 19000000,
-            soldCount: 110,
-            discountPercent: 10,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Dell XPS',
-            price: 28000000,
-            soldCount: 70,
-            discountPercent: 5,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Dell G5',
-            price: 32000000,
-            soldCount: 30,
-            discountPercent: 15,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop HP Pavilion',
-            price: 21000000,
-            soldCount: 100,
-            discountPercent: 10,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop HP Omen',
-            price: 33000000,
-            soldCount: 50,
-            discountPercent: 20,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop HP Envy',
-            price: 24000000,
-            soldCount: 40,
-            discountPercent: 15,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Macbook Air',
-            price: 35000000,
-            soldCount: 200,
-            discountPercent: 5,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Macbook Pro',
-            price: 45000000,
-            soldCount: 150,
-            discountPercent: 10,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-          SellItem(
-            name: 'Laptop Macbook Retina',
-            price: 40000000,
-            soldCount: 80,
-            discountPercent: 15,
-            imageUrl: '../../assets/bag_1.png',
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Trang chủ'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Thông báo'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Tôi'),
-        ],
+          actions: _buildActions()),
+      body: _currentBody,
+      bottomNavigationBar: MyBottomNavigationBar(
+        onPageChange: _updateBody,
       ),
     );
   }

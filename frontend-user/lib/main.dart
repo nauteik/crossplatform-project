@@ -12,12 +12,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Laptop Store',
+      title: 'Personal Computer Shop',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const HomePage(), // Đặt HomePage làm màn hình chính
+      home: HomePage(), // Đặt HomePage làm màn hình chính
     );
   }
 }
