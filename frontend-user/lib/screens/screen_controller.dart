@@ -1,4 +1,4 @@
-import 'body.dart';
+import 'landing_page.dart';
 import 'package:flutter/material.dart';
 import 'product_page/pc_gaming_page.dart';
 import 'product_page/pc_office_page.dart';
@@ -17,7 +17,7 @@ import 'account_manager_page/wishlist_page.dart';
 import 'account_manager_page/setting_page.dart';
 
 class ScreenController {
-  static Widget _page = Body.landingPageBody();
+  static Widget _page = LandingPage();
 
   static void setPageBody(String value) {
     switch (value) {
@@ -67,7 +67,7 @@ class ScreenController {
         _page = SettingPage();
         break;
       default:
-        _page = Body.landingPageBody();
+        _page = LandingPage();
         break;
     }
   }

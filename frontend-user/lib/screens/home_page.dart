@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../screens/body.dart';
+import 'package:frontend_user/screens/landing_page.dart';
 import '../widgets/action_button.dart';
 import '../widgets/dropdown_menu.dart';
 import '../widgets/curved_navigation_bar.dart';
@@ -15,7 +15,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Widget _currentBody = Body.landingPageBody();
+  Widget _currentBody = LandingPage();
 
   void _updateBody(Widget newBody) {
     setState(() {
@@ -99,7 +99,9 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           actions: _buildActions()),
-      body: _currentBody,
+      body: SingleChildScrollView(
+        child: _currentBody,
+    ),
       bottomNavigationBar: MyBottomNavigationBar(
         onPageChange: _updateBody,
       ),
