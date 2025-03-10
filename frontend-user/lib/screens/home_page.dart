@@ -104,6 +104,7 @@ class _HomePageState extends State<HomePage> {
     ),
       bottomNavigationBar: MyBottomNavigationBar(
         onPageChange: _updateBody,
+        //fix bug
       ),
     );
   }
