@@ -5,9 +5,9 @@ import 'popup_menu_account.dart';
 
 class ActionButton extends StatefulWidget {
   final Function(Widget) onPageChange;
-  
+
   const ActionButton({
-    super.key, 
+    super.key,
     required this.onPageChange,
   });
 
@@ -28,6 +28,22 @@ class _ActionButtonState extends State<ActionButton> {
       ),
     ),
   );
+
+  bool _isLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // _checkLoginStatus(); // Comment dòng này
+  }
+
+  // Future<void> _checkLoginStatus() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   String? token = prefs.getString('jwt_token');
+  //   setState(() {
+  //     _isLoggedIn = token != null;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +110,24 @@ class _ActionButtonState extends State<ActionButton> {
           ),
           SizedBox(
             width: 110,
-            child: PopupMenuAccount(onPageChange: widget.onPageChange),
+            child: _isLoggedIn
+                ? PopupMenuAccount(onPageChange: widget.onPageChange)
+                : InkWell(
+                    onTap: () {
+                      ScreenController.setPageBody('LOGIN');
+                      widget.onPageChange(ScreenController.getPage());
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.login),
+                        Text(
+                          "Đăng nhập",
+                          style: _theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
