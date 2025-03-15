@@ -15,6 +15,8 @@ import 'account_manager_page/order_page.dart';
 import 'account_manager_page/profile_page.dart';
 import 'account_manager_page/wishlist_page.dart';
 import 'account_manager_page/setting_page.dart';
+import 'action_button_page/login_page.dart';
+import 'action_button_page/register_screen.dart';
 
 class ScreenController {
   static Widget _page = LandingPage();
@@ -65,6 +67,19 @@ class ScreenController {
         break;
       case 'SETTINGS':
         _page = SettingPage();
+        break;
+      case 'LOGIN':
+        _page = LoginPage(
+          onPageChange: (Widget page) {
+            _page = page;
+          },
+        );
+        break;
+      case 'REGISTER':
+        _page = RegisterScreen();
+        break;
+      case 'HOME':
+        _page = Body.landingPageBody();
         break;
       default:
         _page = LandingPage();
