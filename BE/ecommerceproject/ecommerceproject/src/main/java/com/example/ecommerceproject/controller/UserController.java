@@ -14,8 +14,6 @@ public class UserController {
     @Autowired
     private UserRepository userRepo;
 
-    // Save method is predefine method in Mongo Repository
-    // with this method we will save user in our database
     @PostMapping("/add")
     public UserDTO addUser(@RequestBody UserDTO user) {
         return userRepo.save(user);
