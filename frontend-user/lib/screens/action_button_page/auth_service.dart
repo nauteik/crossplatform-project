@@ -2,82 +2,24 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  final String baseUrl = "http://localhost:8080/api/auth";
+  final String baseUrl = "http://192.168.111.147:8080/api/auth";
 
   Future<Map<String, dynamic>> registerUser(
       String username, String password, String email) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/register"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(
-            {"username": username, "password": password, "email": email}),
-      );
+    final response = await http.post(
+      Uri.parse("$baseUrl/register"),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(
+          {"username": username, "password": "password", "email": email}),
+    );
 
-      if (response.statusCode == 200) {
-        return {"success": true, "message": "User registered successfully"};
-      } else {
-        final data = jsonDecode(response.body);
-        return {
-          "success": false,
-          "message": data['message'] ?? "Registration failed"
-        };
-      }
-    } catch (e) {
-      print("Network error: $e");
+    if (response.statusCode == 200) {
+      return {"success": true, "message": "User registered successfully"};
+    } else {
+      final data = jsonDecode(response.body);
       return {
         "success": false,
-        "message": "Network error: Could not connect to server"
-      };
-    }
-  }
-
-  Future<Map<String, dynamic>> loginUser(
-      String username, String password) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/login"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "username": username,
-          "password": password,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        print("Login response: $responseData"); // Debug print to see response
-
-        // Access the token from the nested structure
-        final String? token =
-            responseData['data'] != null ? responseData['data']['token'] : null;
-
-        final userData = responseData['data'] != null
-            ? responseData['data']
-            : {"username": username};
-
-        print("Token extracted: ${token != null ? 'Success' : 'Null'}");
-
-        return {
-          "success": true,
-          "message": "Login successful",
-          "token":
-              token ?? "temp_token_${DateTime.now().millisecondsSinceEpoch}",
-          "userData": userData
-        };
-      } else {
-        final data = jsonDecode(response.body);
-        return {
-          "success": false,
-          "message":
-              data['message'] ?? "Login failed. Please check your credentials."
-        };
-      }
-    } catch (e) {
-      print("Network error during login: $e");
-      return {
-        "success": false,
-        "message": "Network error: Could not connect to server"
+        "message": data['message'] ?? "Registration failed"
       };
     }
   }

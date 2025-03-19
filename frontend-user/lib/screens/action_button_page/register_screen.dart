@@ -13,56 +13,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _authService = AuthService();
   bool _isLoading = false;
 
-  // Add variables to store validation errors
-  String? _usernameError;
-  String? _emailError;
-  String? _passwordError;
-
-  // Add validation function
-  bool _validateInputs() {
-    bool isValid = true;
-
-    // Reset previous errors
-    setState(() {
-      _usernameError = null;
-      _emailError = null;
-      _passwordError = null;
-    });
-
-    // Validate username
-    if (_usernameController.text.trim().isEmpty) {
-      setState(() {
-        _usernameError = 'Username is required';
-      });
-      isValid = false;
-    }
-
-    // Validate email
-    if (_emailController.text.trim().isEmpty) {
-      setState(() {
-        _emailError = 'Email is required';
-      });
-      isValid = false;
-    }
-
-    // Validate password
-    if (_passwordController.text.isEmpty) {
-      setState(() {
-        _passwordError = 'Password is required';
-      });
-      isValid = false;
-    }
-
-    return isValid;
-  }
-
   void _register() async {
-    // First validate all inputs
-    if (!_validateInputs()) {
-      // If validation fails, don't proceed with registration
-      return;
-    }
-
     setState(() {
       _isLoading = true;
     });
@@ -110,7 +61,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelText: 'Username',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.person),
-                errorText: _usernameError,
               ),
             ),
             SizedBox(height: 20),
@@ -120,7 +70,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelText: 'Email',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.email),
-                errorText: _emailError,
               ),
             ),
             SizedBox(height: 20),
@@ -131,7 +80,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 labelText: 'Password',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.lock),
-                errorText: _passwordError,
               ),
             ),
             SizedBox(height: 20),
@@ -143,23 +91,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: _isLoading
                   ? CircularProgressIndicator(color: Colors.white)
                   : Text('Register'),
-            ),
-            SizedBox(height: 16),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Go back to login screen
-              },
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 15),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.arrow_back, size: 16),
-                  SizedBox(width: 8),
-                  Text('Back to Login'),
-                ],
-              ),
             ),
           ],
         ),

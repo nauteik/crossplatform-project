@@ -4,8 +4,6 @@ import 'auth_service.dart';
 import 'register_screen.dart';
 import '../home_page.dart';
 import '../screen_controller.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   final Function(Widget)? onPageChange; // Thêm callback này
@@ -22,96 +20,11 @@ class _LoginPageState extends State<LoginPage> {
   final _authService = AuthService();
   bool _isLoading = false;
 
-  String? _usernameError;
-  String? _passwordError;
-
-  bool _validateInputs() {
-    bool isValid = true;
-    setState(() {
-      _usernameError = null;
-      _passwordError = null;
-    });
-
-    if (_usernameController.text.trim().isEmpty) {
-      setState(() {
-        _usernameError = 'Username is required';
-      });
-      isValid = false;
-    }
-
-    if (_passwordController.text.isEmpty) {
-      setState(() {
-        _passwordError = 'Password is required';
-      });
-      isValid = false;
-    }
-
-    return isValid;
-  }
-
-  void _login() async {
-    if (!_validateInputs()) {
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final result = await _authService.loginUser(
-      _usernameController.text,
-      _passwordController.text,
+  void _login() {
+    // Implement login functionality later
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Login functionality not implemented yet')),
     );
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    if (result['success']) {
-      // IMPORTANT: Store the token FIRST before navigating
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      // Save the token
-      String token = result['token'] ?? "";
-      await prefs.setString('jwt_token', token);
-      print("Token saved to SharedPreferences: $token");
-
-      if (result['userData'] != null) {
-        await prefs.setString('user_data', jsonEncode(result['userData']));
-      }
-
-      ScreenController.setPageBody('Home');
-      
-      Navigator.pushReplacement(
-        context, 
-        MaterialPageRoute(builder: (context) => HomePage())
-      );
-    } else {
-      // Show error dialog
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.error_outline, color: Colors.red),
-                SizedBox(width: 10),
-                Text('Login Failed'),
-              ],
-            ),
-            content: Text(result['message']),
-            actions: [
-              TextButton(
-                child: Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close dialog
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
   }
 
   @override
@@ -180,6 +93,18 @@ class _LoginPageState extends State<LoginPage> {
                       context,
                       MaterialPageRoute(builder: (context) => RegisterScreen()),
                     );
+                    // ScreenController.setPageBody('REGISTER');
+
+                    // if (widget.onPageChange != null) {
+                    //   widget.onPageChange!(ScreenController.getPage());
+                    // } else {
+                    //   // Nếu không có callback, hiển thị thông báo
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //     SnackBar(
+                    //         content: Text(
+                    //             'Không thể điều hướng: callback onPageChange chưa được cung cấp')),
+                    //   );
+                    // }
                   },
                   child: Text('Register Now'),
                 ),

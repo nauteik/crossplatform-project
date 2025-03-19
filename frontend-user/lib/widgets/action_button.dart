@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/screen_controller.dart';
 import 'popup_menu_account.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ActionButton extends StatefulWidget {
   final Function(Widget) onPageChange;
@@ -37,36 +34,16 @@ class _ActionButtonState extends State<ActionButton> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    // _checkLoginStatus(); // Comment dòng này
   }
 
-  @override
-  void didUpdateWidget(ActionButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _checkLoginStatus();
-  }
-
-  // This runs after each build to check if login state changed
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _checkLoginStatus();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('jwt_token');
-
-    print(
-        "Checking login status: token = ${token != null ? 'exists' : 'null'}");
-
-    if ((token != null) != _isLoggedIn) {
-      print("Login state changed: ${_isLoggedIn} -> ${token != null}");
-      setState(() {
-        _isLoggedIn = token != null;
-      });
-    }
-  }
+  // Future<void> _checkLoginStatus() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   String? token = prefs.getString('jwt_token');
+  //   setState(() {
+  //     _isLoggedIn = token != null;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
