@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../screens/screen_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PopupMenuAccount extends StatefulWidget {
   final Function(Widget) onPageChange;
-  
+
   const PopupMenuAccount({
     super.key,
     required this.onPageChange,
@@ -80,11 +81,22 @@ class _PopupMenuAccountState extends State<PopupMenuAccount> {
             widget.onPageChange(ScreenController.getPage());
             break;
           case 'LOGOUT':
-            // Handle logout
+            _logout();
             break;
         }
       }
     });
+  }
+
+  Future<void> _logout() async {
+    // Clear the token and user data
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt_token');
+    await prefs.remove('user_data');
+
+    // Navigate to home page
+    ScreenController.setPageBody('Home');
+    widget.onPageChange(ScreenController.getPage());
   }
 
   PopupMenuItem<String> _buildMenuItem(
