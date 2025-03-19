@@ -79,7 +79,7 @@ class ScreenController {
         _page = RegisterScreen();
         break;
       case 'HOME':
-        _page = Body.landingPageBody();
+        _page = LandingPage();
         break;
       default:
         _page = LandingPage();
