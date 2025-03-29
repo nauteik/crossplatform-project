@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import '../screens/screen_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import '../features/navigation/providers/navigation_provider.dart';
+import '../features/auth/providers/auth_provider.dart';
+import '../features/profile/presentation/screens/profile_screen.dart';
+import '../features/profile/presentation/screens/order_screen.dart';
+import '../features/profile/presentation/screens/wishlist_screen.dart';
+import '../features/profile/presentation/screens/setting_screen.dart';
+import '../features/home/presentation/screens/home_screen.dart';
 
 class PopupMenuAccount extends StatefulWidget {
-  final Function(Widget) onPageChange;
-
   const PopupMenuAccount({
     super.key,
-    required this.onPageChange,
   });
 
   @override
@@ -18,6 +21,8 @@ class _PopupMenuAccountState extends State<PopupMenuAccount> {
   void _showPopupMenu() {
     final RenderBox button = context.findRenderObject() as RenderBox;
     final Offset offset = button.localToGlobal(Offset.zero);
+    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     showMenu(
       color: Colors.white,
@@ -65,38 +70,24 @@ class _PopupMenuAccountState extends State<PopupMenuAccount> {
       if (value != null) {
         switch (value) {
           case 'PROFILE':
-            ScreenController.setPageBody('PROFILE');
-            widget.onPageChange(ScreenController.getPage());
+            navigationProvider.setCurrentScreen(const ProfileScreen());
             break;
           case 'ORDERS':
-            ScreenController.setPageBody('ORDERS');
-            widget.onPageChange(ScreenController.getPage());
+            navigationProvider.setCurrentScreen(const OrderScreen());
             break;
           case 'WISHLIST':
-            ScreenController.setPageBody('WISHLIST');
-            widget.onPageChange(ScreenController.getPage());
+            navigationProvider.setCurrentScreen(const WishlistScreen());
             break;
           case 'SETTINGS':
-            ScreenController.setPageBody('SETTINGS');
-            widget.onPageChange(ScreenController.getPage());
+            navigationProvider.setCurrentScreen(const SettingScreen());
             break;
           case 'LOGOUT':
-            _logout();
+            authProvider.logout();
+            navigationProvider.setCurrentScreen(const HomeScreen());
             break;
         }
       }
     });
-  }
-
-  Future<void> _logout() async {
-    // Clear the token and user data
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
-    await prefs.remove('user_data');
-
-    // Navigate to home page
-    ScreenController.setPageBody('Home');
-    widget.onPageChange(ScreenController.getPage());
   }
 
   PopupMenuItem<String> _buildMenuItem(
@@ -131,7 +122,7 @@ class _PopupMenuAccountState extends State<PopupMenuAccount> {
       onTap: _showPopupMenu,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
+        children: const [
           Icon(Icons.account_circle, color: Colors.white),
           Text(
             'Tài khoản',

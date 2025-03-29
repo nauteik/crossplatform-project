@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../screens/screen_controller.dart';
+import '../features/navigation/providers/navigation_provider.dart';
+import '../features/auth/presentation/screens/login_screen.dart';
+import '../features/build_pc/presentation/screens/build_configuration_screen.dart';
+import '../features/support/presentation/screens/support_screen.dart';
+import '../features/cart/presentation/screens/cart_screen.dart';
 import 'popup_menu_account.dart';
-import 'dart:convert';
 
 class ActionButton extends StatefulWidget {
-  final Function(Widget) onPageChange;
-
   const ActionButton({
     super.key,
-    required this.onPageChange,
   });
 
   @override
@@ -69,6 +70,8 @@ class _ActionButtonState extends State<ActionButton> {
 
   @override
   Widget build(BuildContext context) {
+    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+    
     return Theme(
       data: _theme,
       child: Row(
@@ -77,8 +80,8 @@ class _ActionButtonState extends State<ActionButton> {
             width: 110,
             child: InkWell(
               onTap: () {
-                ScreenController.setPageBody('Xây dựng cấu hình');
-                widget.onPageChange(ScreenController.getPage());
+                print("Nút xây dựng cấu hình được nhấn"); // Debug print
+                navigationProvider.setCurrentScreen(const BuildConfigurationScreen());
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -96,8 +99,8 @@ class _ActionButtonState extends State<ActionButton> {
             width: 110,
             child: InkWell(
               onTap: () {
-                ScreenController.setPageBody('Hỗ trợ');
-                widget.onPageChange(ScreenController.getPage());
+                print("Nút hỗ trợ được nhấn"); // Debug print
+                navigationProvider.setCurrentScreen(const SupportScreen());
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -115,8 +118,8 @@ class _ActionButtonState extends State<ActionButton> {
             width: 110,
             child: InkWell(
               onTap: () {
-                ScreenController.setPageBody('Giỏ hàng');
-                widget.onPageChange(ScreenController.getPage());
+                print("Nút giỏ hàng được nhấn"); // Debug print
+                navigationProvider.setCurrentScreen(const CartScreen());
               },
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -133,11 +136,11 @@ class _ActionButtonState extends State<ActionButton> {
           SizedBox(
             width: 110,
             child: _isLoggedIn
-                ? PopupMenuAccount(onPageChange: widget.onPageChange)
+                ? PopupMenuAccount()
                 : InkWell(
                     onTap: () {
-                      ScreenController.setPageBody('LOGIN');
-                      widget.onPageChange(ScreenController.getPage());
+                      print("Nút đăng nhập trong ActionButton được nhấn"); // Debug print
+                      navigationProvider.setCurrentScreen(const LoginScreen());
                     },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,

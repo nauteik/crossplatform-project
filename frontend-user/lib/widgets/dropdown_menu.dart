@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import '../screens/screen_controller.dart';
+import 'package:provider/provider.dart';
+import '../features/navigation/providers/navigation_provider.dart';
+import '../features/product/presentation/screens/categories/pc_gaming_screen.dart';
+import '../features/product/presentation/screens/categories/pc_office_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class DropDownMenu extends StatefulWidget {
-  final Function(Widget) onPageChange;
-  const DropDownMenu({super.key, required this.onPageChange});
+  const DropDownMenu({super.key});
 
   @override
   State<DropDownMenu> createState() => _DropDownMenuState();
@@ -16,39 +18,49 @@ class _DropDownMenuState extends State<DropDownMenu> {
     {
       'value': 'PC GAMING',
       'leadingIcon': FaIcon(FontAwesomeIcons.gamepad),
+      'screen': PCGamingScreen(),
     },
     {
       'value': 'PC VĂN PHÒNG',
       'leadingIcon': FaIcon(FontAwesomeIcons.computer),
+      'screen': PCOfficeScreen(),
     },
     {
       'value': 'PC ĐỒ HỌA',
       'leadingIcon': FaIcon(FontAwesomeIcons.unity),
+      'screen': Text('PC Đồ Họa'),
     },
     {
       'value': 'MÀN HÌNH MÁY TÍNH',
       'leadingIcon': FaIcon(FontAwesomeIcons.display),
+      'screen': Text('Màn Hình Máy Tính'),
     },
     {
       'value': 'CHUỘT MÁY TÍNH',
       'leadingIcon': FaIcon(FontAwesomeIcons.computerMouse),
+      'screen': Text('Chuột Máy Tính'),
     },
     {
       'value': 'BÀN PHÍM MÁY TÍNH',
       'leadingIcon': FaIcon(FontAwesomeIcons.keyboard),
+      'screen': Text('Bàn Phím Máy Tính'),
     },
     {
       'value': 'THIẾT BỊ LƯU TRỮ',
       'leadingIcon': FaIcon(FontAwesomeIcons.hardDrive),
+      'screen': Text('Thiết Bị Lưu Trữ'),
     },
     {
       'value': 'LINH KIỆN MÁY TÍNH',
       'leadingIcon': FaIcon(FontAwesomeIcons.microchip),
+      'screen': Text('Linh Kiện Máy Tính'),
     },
   ];
 
   @override
   Widget build(BuildContext context) {
+    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+    
     return Stack(
       children: [
         Container(
@@ -98,8 +110,11 @@ class _DropDownMenuState extends State<DropDownMenu> {
                 _selectedValue = newValue;
               });
               if (newValue != null) {
-                ScreenController.setPageBody(newValue);
-                widget.onPageChange(ScreenController.getPage());
+                final selectedItem = _items.firstWhere(
+                  (item) => item['value'] == newValue,
+                  orElse: () => _items[0],
+                );
+                navigationProvider.setCurrentScreen(selectedItem['screen']);
                 FocusScope.of(context).requestFocus(FocusNode());
               }
             },

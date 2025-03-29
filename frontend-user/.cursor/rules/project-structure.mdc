@@ -1,0 +1,32 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# You are developing a Flutter Project 3.x.x upper
+# Ensure you are following below project structure 
+--
+lib/
+│── main.dart              # Entry point
+│── app.dart               # App root widget, theme, and navigation
+│
+├── core/                  # Core utilities (shared across app)
+│   ├── constants/         # App-wide constants (strings, colors)
+│   ├── theme/             # App theme & styles
+│   ├── utils/             # Helper functions & extensions
+│   ├── services/          # API & local storage handling
+│   ├── routes/            # Navigation setup
+│
+├── data/                  # Data handling layer
+│   ├── models/            # Data models
+│   ├── repositories/      # Repository pattern for fetching data
+│
+├── features/              # Feature-based modules
+│   ├── auth/              # Example: Authentication feature
+│   │   ├── presentation/
+│   │   │   ├── screens/   # Screens/UI
+│   │   │   ├── widgets/   # Reusable UI components
+│   │   ├── providers/     # Providers for state management
+│   │   ├── data/          # Models, Repositories, APIs
+│
+├── widgets/               # Reusable widgets
