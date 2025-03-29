@@ -116,20 +116,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (BuildContext context) => HomePage()),
-            );
-          },
-        ),
-      ),
-      body: Padding(
+    return Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -187,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ],
         ),
-      ),
+
     );
   }
 

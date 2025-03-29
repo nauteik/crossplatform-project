@@ -29,7 +29,12 @@ public class UserService implements UserDetailsService {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
-
+        user.setName("Chưa cập nhật");
+        user.setAvatar("Chưa cập nhật");
+        user.setAddress("Chưa cập nhật");
+        user.setPhone("Chưa cập nhật");
+        user.setGender("Chưa cập nhật");
+        user.setRank("Thành viên đồng");
         // Mã hóa mật khẩu trước khi lưu
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
@@ -63,5 +68,50 @@ public class UserService implements UserDetailsService {
         
         return user;
     }
+
+    public UserDTO updateUser(String userId, UserDTO updatedUser) {
+        UserDTO existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        if (updatedUser.getEmail() != null) {
+            // Kiểm tra nếu email mới khác email cũ và đã tồn tại
+            if (!existingUser.getEmail().equals(updatedUser.getEmail()) && 
+                userRepository.existsByEmail(updatedUser.getEmail())) {
+                throw new RuntimeException("Email already in use");
+            }
+            existingUser.setEmail(updatedUser.getEmail());
+        }
+        
+        if (updatedUser.getName() != null) {
+            existingUser.setName(updatedUser.getName());
+        } 
+        
+        if (updatedUser.getAddress() != null) {
+            existingUser.setAddress(updatedUser.getAddress());
+        }
+        
+        if (updatedUser.getPhone() != null) {
+            existingUser.setPhone(updatedUser.getPhone());
+        }
+        
+        // Cập nhật mật khẩu nếu được cung cấp
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+        }
+        
+        // Lưu người dùng đã cập nhật
+        return userRepository.save(existingUser);
+    }
+
+    public UserDTO getUserById(String userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+    }
+
+    public UserDTO getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+    }
+
 }
 
