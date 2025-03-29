@@ -66,10 +66,10 @@ public class AuthController {
             
             // Tạo response
             LoginResponse loginResponse = new LoginResponse(
-                token,
-                authenticatedUser.getUsername(),
-                authenticatedUser.getEmail(),
-                authenticatedUser.getRole()
+                    token,
+                    authenticatedUser.getId(),
+                    authenticatedUser.getUsername(),
+                    authenticatedUser.getRole()
             );
             
             return ResponseEntity.ok(new ApiResponse<>(

@@ -26,9 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // Những đường dẫn không cần xác thực
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
         "/api/auth/register",
-        "/api/auth/login",
-        "/user/add",
-        "/user/get"
+        "/api/auth/login"
     );
     
     @Autowired
