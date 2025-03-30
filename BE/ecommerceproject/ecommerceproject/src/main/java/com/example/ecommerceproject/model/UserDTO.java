@@ -1,14 +1,16 @@
 package com.example.ecommerceproject.model;
 
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(collection = "users")
@@ -22,6 +24,7 @@ public class UserDTO {
     private String email;
     private String password;
 
+    private String avatar;
     private String name;
     private String username;
     private String phone;
@@ -29,27 +32,10 @@ public class UserDTO {
     private String gender;
     private Date birthday;
 
-    private int rank;
+    private String rank;
     private int totalSpend;
 
     private int role;
 
-    public String getUsername() {
-        return username;
-    }
-    public String getPassword() {
-        return password;
-    }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public int getRole() {
-        return role;
-    }
-
-    public String getEmail() {
-        return email;
-    }
 }

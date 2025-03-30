@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'layout_responsive.dart'; // Nhập trang layout builder
+=======
+import 'app.dart';
+>>>>>>> offical-main
 
 void main() {
   runApp(const MyApp());
 }
+<<<<<<< HEAD
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -20,3 +25,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+=======
+>>>>>>> offical-main

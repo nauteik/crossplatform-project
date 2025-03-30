@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+class PCOfficeScreen extends StatelessWidget {
+  const PCOfficeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Text('Profile Page'),
+      child: Text('PC Văn Phòng'),
     );
   }
-}
+} 
