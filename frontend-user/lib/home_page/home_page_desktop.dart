@@ -1,30 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:frontend_user/screens/landing_page.dart';
-import '../widgets/curved_navigation_bar.dart';
 import '../widgets/custom_app_bar.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class HomePageDesktop extends StatefulWidget {
+  const HomePageDesktop({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<HomePageDesktop> createState() => _HomePageDesktopState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageDesktopState extends State<HomePageDesktop> {
   Widget _currentBody = LandingPage();
 
   void _updateBody(Widget newBody) {
     setState(() {
       _currentBody = newBody;
     });
-  }
-
-  MyBottomNavigationBar? _buildBottomNavigationBar() {
-    if (!kIsWeb) {
-      return MyBottomNavigationBar(onPageChange: _updateBody);
-    }
-    return null;
   }
 
   @override
@@ -34,7 +25,6 @@ class _HomePageState extends State<HomePage> {
       body: SingleChildScrollView(
         child: _currentBody,
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 }

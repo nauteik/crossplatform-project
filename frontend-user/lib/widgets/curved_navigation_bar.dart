@@ -4,7 +4,6 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar.dart';
 import 'package:curved_labeled_navigation_bar/curved_navigation_bar_item.dart';
-import 'package:frontend_user/screens/home_page.dart';
 import '../screens/screen_controller.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
@@ -40,6 +39,10 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
         ScreenController.setPageBody('Giỏ hàng');
         widget.onPageChange(ScreenController.getPage());
         break;
+      case 3:
+        ScreenController.setPageBody('LOGIN');
+        widget.onPageChange(ScreenController.getPage());
+        break;
     }
   }
 
@@ -66,6 +69,11 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
         CurvedNavigationBarItem(
           child: Icon(Icons.shopping_cart, color: Colors.white),
           label: 'Giỏ hàng',
+          labelStyle: TextStyle(color: Colors.white)
+        ),
+        CurvedNavigationBarItem(
+          child: Icon(Icons.login, color: Colors.white),
+          label: 'Đăng nhập',
           labelStyle: TextStyle(color: Colors.white)
         ),
       ],
