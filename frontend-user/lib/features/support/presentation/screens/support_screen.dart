@@ -5,8 +5,13 @@ class SupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Hỗ trợ'),
+    return const SingleChildScrollView(
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Text('Hỗ trợ'),
+        ),
+      ),
     );
   }
 } 

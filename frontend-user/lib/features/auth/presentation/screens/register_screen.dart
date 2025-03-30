@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -45,16 +44,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
         
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đăng ký thành công! Vui lòng đăng nhập.')),
-          );
-          
-          // Chuyển về màn hình đăng nhập
           if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            // Hiển thị thông báo đăng ký thành công
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Đăng ký thành công! Đang đăng nhập...'),
+                duration: Duration(seconds: 2),
+              ),
             );
+            
+            // Đợi 2 giây để người dùng đọc thông báo
+            await Future.delayed(const Duration(seconds: 2));
+            
+            // Tự động đăng nhập
+            final loginSuccess = await authProvider.login(
+              _emailController.text.trim(),
+              _passwordController.text,
+            );
+            
+            // Kiểm tra nếu đăng nhập thành công và widget vẫn còn mounted
+            if (loginSuccess && mounted) {
+              // Pop màn hình đăng ký (quay về màn hình đăng nhập)
+              Navigator.pop(context);
+              // Tiếp tục pop màn hình đăng nhập (quay về màn hình trước đó)
+              Navigator.pop(context);
+            } else if (mounted) {
+              // Nếu đăng nhập thất bại, chỉ quay về màn hình đăng nhập
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đăng ký thành công! Vui lòng đăng nhập.')),
+              );
+            }
           }
         } else {
           if (mounted) {
@@ -224,11 +244,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const Text('Đã có tài khoản?'),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginScreen()),
-                      );
+                      Navigator.pop(context);
                     },
                     child: const Text('Đăng nhập'),
                   ),

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:frontend_user/core/constants/api_constants.dart';
 class AuthService {
-  final String baseUrl = "http://localhost:8080/api/auth";
+  final String baseUrl = "${ApiConstants.baseApiUrl}/api/auth";
 
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {

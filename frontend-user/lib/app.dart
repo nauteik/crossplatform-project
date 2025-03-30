@@ -5,7 +5,7 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/cart/providers/cart_provider.dart';
 import 'features/product/providers/product_provider.dart';
 import 'features/navigation/providers/navigation_provider.dart';
-import 'widgets/navigation/main_layout.dart';
+import 'widgets/main_layout.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

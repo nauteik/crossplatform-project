@@ -55,6 +55,9 @@ class _LoginScreenState extends State<LoginScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Đăng nhập thành công')),
           );
+          
+          // Quay lại màn hình trước đó
+          Navigator.pop(context);
         } else if (mounted) {
           // Hiển thị lỗi đăng nhập
           showDialog(
@@ -94,20 +97,17 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     print("LoginScreen build");
-    return Container(
-      width: double.infinity,
-      constraints: BoxConstraints(
-        minHeight: MediaQuery.of(context).size.height -
-            kToolbarHeight -
-            kBottomNavigationBarHeight,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Đăng nhập'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
       ),
-      child: Padding(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          child: ListView(
             children: [
               const Icon(
                 Icons.account_circle,

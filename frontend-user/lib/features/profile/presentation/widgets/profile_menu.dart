@@ -8,14 +8,33 @@ class ProfileMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 16, top: 16, bottom: 8),
+            child: Text(
+              'Tài khoản của tôi',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue.shade800,
+              ),
+            ),
+          ),
           _buildMenuItem(
             context,
             icon: Icons.shopping_bag,
@@ -28,7 +47,7 @@ class ProfileMenu extends StatelessWidget {
               );
             },
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: Colors.grey.shade200),
           _buildMenuItem(
             context,
             icon: Icons.favorite,
@@ -41,7 +60,7 @@ class ProfileMenu extends StatelessWidget {
               );
             },
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: Colors.grey.shade200),
           _buildMenuItem(
             context,
             icon: Icons.location_on,
@@ -54,7 +73,7 @@ class ProfileMenu extends StatelessWidget {
               );
             },
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: Colors.grey.shade200),
           _buildMenuItem(
             context,
             icon: Icons.support_agent,
@@ -67,7 +86,7 @@ class ProfileMenu extends StatelessWidget {
               );
             },
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: Colors.grey.shade200),
           _buildMenuItem(
             context,
             icon: Icons.settings,
@@ -89,6 +108,7 @@ class ProfileMenu extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -97,9 +117,9 @@ class ProfileMenu extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: Colors.blue, size: 24),
+              child: Icon(icon, color: Colors.blue.shade700, size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -124,7 +144,7 @@ class ProfileMenu extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 16),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
           ],
         ),
       ),
