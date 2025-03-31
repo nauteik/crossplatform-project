@@ -73,7 +73,6 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = null;
       final authService = AuthService();
       final result = await authService.register(username, email, password);
-      
       if (result['success']) {
         // Đăng ký thành công, có thể tự động đăng nhập
         // hoặc để người dùng đăng nhập

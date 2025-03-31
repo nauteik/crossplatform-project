@@ -62,8 +62,7 @@ class AuthService {
           "password": password,
         }),
       );
-
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return {"success": true, "message": "User registered successfully"};
       } else {
         final data = jsonDecode(response.body);

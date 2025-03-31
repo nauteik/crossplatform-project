@@ -87,13 +87,18 @@ class ProfileMenu extends StatelessWidget {
             },
           ),
           Divider(height: 1, color: Colors.grey.shade200),
-          _buildMenuItem(
-            context,
-            icon: Icons.settings,
-            title: 'Cài đặt tài khoản',
-            subtitle: 'Thay đổi mật khẩu, thông tin cá nhân',
-            onTap: () => _navigateTo(context, const SettingScreen()),
-          ),
+          _buildMenuItem(context,
+              icon: Icons.settings,
+              title: 'Cài đặt tài khoản',
+              subtitle: 'Thay đổi mật khẩu, thông tin cá nhân',
+              onTap: () => {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SettingScreen(),
+                      ),
+                    )
+                  }),
         ],
       ),
     );
@@ -144,7 +149,8 @@ class ProfileMenu extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.grey.shade400),
           ],
         ),
       ),
@@ -152,7 +158,8 @@ class ProfileMenu extends StatelessWidget {
   }
 
   void _navigateTo(BuildContext context, Widget screen) {
-    final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+    final navigationProvider =
+        Provider.of<NavigationProvider>(context, listen: false);
     navigationProvider.setCurrentScreen(screen);
   }
-} 
+}

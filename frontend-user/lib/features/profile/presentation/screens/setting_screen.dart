@@ -7,9 +7,9 @@ class SettingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cài đặt tài khoản', style: TextStyle(color: Colors.white)),
+        title: const Text('Cài đặt tài khoản'),
         backgroundColor: Colors.blue,
-        iconTheme: const IconThemeData(color: Colors.white),
+        foregroundColor: Colors.white,
       ),
       body: ListView(
         children: [
