@@ -3,7 +3,7 @@ package com.example.ecommerceproject.controller;
 import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.LoginRequest;
 import com.example.ecommerceproject.model.LoginResponse;
-import com.example.ecommerceproject.model.UserDTO;
+import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.security.JwtUtil;
 import com.example.ecommerceproject.service.UserService;
@@ -26,7 +26,7 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<?>> registerUser(@RequestBody UserDTO user) {
+    public ResponseEntity<ApiResponse<?>> registerUser(@RequestBody User user) {
         try {
             // Kiểm tra username đã tồn tại chưa
             if (userService.isUsernameExists(user.getUsername())) {
@@ -38,7 +38,7 @@ public class AuthController {
             }
             
             // Nếu username chưa tồn tại, tiến hành đăng ký
-            UserDTO newUser = userService.registerUser(user);
+            User newUser = userService.registerUser(user);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(new ApiResponse<>(
                         ApiStatus.SUCCESS.getCode(),
@@ -58,7 +58,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<?>> login(@RequestBody LoginRequest loginRequest) {
         try {
             // Xác thực người dùng
-            UserDTO authenticatedUser = userService.authenticateUser(loginRequest.getUsername(), loginRequest.getPassword());
+            User authenticatedUser = userService.authenticateUser(loginRequest.getUsername(), loginRequest.getPassword());
             
             // Tạo JWT token
             UserDetails userDetails = userService.loadUserByUsername(loginRequest.getUsername());

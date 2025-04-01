@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiConstants {
   // Base URLs for different environments
@@ -7,11 +8,21 @@ class ApiConstants {
   
   // Chọn base URL phù hợp theo môi trường
   static String get baseApiUrl {
+    // Kiểm tra nếu đang chạy trên web
+    if (kIsWeb) {
+      return localUrl;
+    }
+    
     // Cho môi trường development
-    if (Platform.isAndroid) {
-      return localEmulatorUrl; // Cho Android emulator
-    } else {
-      return localUrl; // Cho web, iOS và các nền tảng khác
+    try {
+      if (Platform.isAndroid) {
+        return localEmulatorUrl; // Cho Android emulator
+      } else {
+        return localUrl; // Cho iOS và các nền tảng khác
+      }
+    } catch (e) {
+      // Fallback nếu không thể xác định Platform
+      return localUrl;
     }
   }
 } 

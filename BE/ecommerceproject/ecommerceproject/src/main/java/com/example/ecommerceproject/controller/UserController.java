@@ -3,7 +3,7 @@ package com.example.ecommerceproject.controller;
 import java.util.List;
 
 import com.example.ecommerceproject.exception.ApiStatus;
-import com.example.ecommerceproject.model.UserDTO;
+import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.repository.UserRepository;
 import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.security.JwtUtil;
@@ -30,12 +30,12 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     @PostMapping("/add")
-    public UserDTO addUser(@RequestBody UserDTO user) {
+    public User addUser(@RequestBody User user) {
         return userRepo.save(user);
     }
 
     @GetMapping("/getAll")
-    public List<UserDTO> getAllUser(){
+    public List<User> getAllUser(){
         return userRepo.findAll();
     }
     
@@ -48,9 +48,9 @@ public class UserController {
     @PutMapping("/edit/{userId}")
     public ResponseEntity<ApiResponse<?>> updateUser(
             @PathVariable String userId,
-            @RequestBody UserDTO updatedUser) {
+            @RequestBody User updatedUser) {
         try {
-            UserDTO updated = userService.updateUser(userId, updatedUser);
+            User updated = userService.updateUser(userId, updatedUser);
             return ResponseEntity.ok(new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
                 "User updated successfully",
@@ -90,7 +90,7 @@ public class UserController {
     @GetMapping("/get/{userId}")
     public ResponseEntity<ApiResponse<?>> getUserById(@PathVariable String userId) {
         try {
-            UserDTO user = userService.getUserById(userId);
+            User user = userService.getUserById(userId);
             
             // Bảo mật: Không trả về mật khẩu đã mã hóa cho client
             user.setPassword(null);
@@ -130,7 +130,7 @@ public class UserController {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
                 String username = jwtUtil.extractUsername(token);
-                UserDTO user = userService.getUserByUsername(username);
+                User user = userService.getUserByUsername(username);
                 
                 // Bảo mật: Không trả về mật khẩu đã mã hóa cho client
                 user.setPassword(null);

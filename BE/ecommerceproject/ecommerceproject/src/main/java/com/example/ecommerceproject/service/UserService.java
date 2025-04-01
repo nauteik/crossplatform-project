@@ -1,10 +1,9 @@
 package com.example.ecommerceproject.service;
 
-import com.example.ecommerceproject.model.UserDTO;
+import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,7 +24,7 @@ public class UserService implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserDTO registerUser(UserDTO user) {
+    public User registerUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
@@ -52,14 +51,14 @@ public class UserService implements UserDetailsService {
     
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserDTO user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
             
-        return new User(user.getUsername(), user.getPassword(), new ArrayList<>());
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), new ArrayList<>());
     }
     
-    public UserDTO authenticateUser(String username, String password) {
-        UserDTO user = userRepository.findByUsername(username)
+    public User authenticateUser(String username, String password) {
+        User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
             
         if (!passwordEncoder.matches(password, user.getPassword())) {
@@ -69,8 +68,8 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
-    public UserDTO updateUser(String userId, UserDTO updatedUser) {
-        UserDTO existingUser = userRepository.findById(userId)
+    public User updateUser(String userId, User updatedUser) {
+        User existingUser = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
         if (updatedUser.getEmail() != null) {
@@ -103,12 +102,12 @@ public class UserService implements UserDetailsService {
         return userRepository.save(existingUser);
     }
 
-    public UserDTO getUserById(String userId) {
+    public User getUserById(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
     }
 
-    public UserDTO getUserByUsername(String username) {
+    public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
