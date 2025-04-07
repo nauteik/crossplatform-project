@@ -156,10 +156,4 @@ class ProfileMenu extends StatelessWidget {
       ),
     );
   }
-
-  void _navigateTo(BuildContext context, Widget screen) {
-    final navigationProvider =
-        Provider.of<NavigationProvider>(context, listen: false);
-    navigationProvider.setCurrentScreen(screen);
-  }
 }

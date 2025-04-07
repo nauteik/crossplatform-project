@@ -54,6 +54,30 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/user/**").permitAll()
+                // Brand API paths
+                .requestMatchers("/api/brand/brands").permitAll()
+                .requestMatchers("/api/brand/{id}").permitAll()
+                .requestMatchers("/api/brand/create").permitAll()
+                .requestMatchers("/api/brand/update/{id}").permitAll()
+                .requestMatchers("/api/brand/delete/{id}").permitAll()
+                // ProductType API paths
+                .requestMatchers("/api/producttype/types").permitAll()
+                .requestMatchers("/api/producttype/{id}").permitAll()
+                .requestMatchers("/api/producttype/create").permitAll()
+                .requestMatchers("/api/producttype/update/{id}").permitAll()
+                .requestMatchers("/api/producttype/delete/{id}").permitAll()
+                // Product API paths
+                .requestMatchers("/api/product/products").permitAll()
+                .requestMatchers("/api/product/{id}").permitAll()
+                .requestMatchers("/api/product/search").permitAll()
+                .requestMatchers("/api/product/by-brand/{brandId}").permitAll()
+                .requestMatchers("/api/product/by-type/{productTypeId}").permitAll()
+                .requestMatchers("/api/product/create").permitAll()
+                .requestMatchers("/api/product/update/{id}").permitAll()
+                .requestMatchers("/api/product/delete/{id}").permitAll()
+                .requestMatchers("/api/product/discount/{id}").permitAll()
+                .requestMatchers("/api/product/discount-brand/{brandId}").permitAll()
+                .requestMatchers("/api/product/discount-type/{productTypeId}").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> 

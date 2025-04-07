@@ -1,0 +1,10 @@
+---
+description: 
+globs: **/ecommerceproject/**/*.*
+alwaysApply: false
+---
+
+# Your rule content
+
+- Uses ApiStatus.java (in exception folder) and ApiResponse.java (in response folder) for responding to API call
+- Remember to add API request path to SecurityConfig.java in folder security
