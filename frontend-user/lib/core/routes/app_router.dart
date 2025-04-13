@@ -1,7 +1,7 @@
 // // core/routes/app_router.dart
 // import 'package:flutter/material.dart';
 // import '../../utils/route_transitions.dart';
-
+// fix router
 // class AppRouter {
 //   static const String home = '/';
 //   static const String login = '/login';
