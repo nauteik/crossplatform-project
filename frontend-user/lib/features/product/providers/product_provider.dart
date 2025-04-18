@@ -139,4 +139,27 @@ class ProductProvider with ChangeNotifier {
     _currentCategory = category;
     notifyListeners();
   }
+  
+  // Lấy danh sách hình ảnh của sản phẩm
+  Future<List<String>> getProductImages(String productId) async {
+    try {
+      final response = await _repository.getProductImages(productId);
+      if (response.data != null) {
+        return response.data!;
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+  
+  // Lấy ảnh chính của sản phẩm
+  Future<String?> getPrimaryImage(String productId) async {
+    try {
+      final response = await _repository.getPrimaryImage(productId);
+      return response.data;
+    } catch (e) {
+      return null;
+    }
+  }
 } 

@@ -4,7 +4,8 @@ class ProductModel {
   final double price;
   final int quantity;
   final String description;
-  final String imageUrl;
+  final String primaryImageUrl;
+  final List<String> imageUrls;
   final int soldCount;
   final double discountPercent;
   final Map<String, dynamic> brand;
@@ -16,7 +17,8 @@ class ProductModel {
     required this.price,
     required this.quantity,
     required this.description,
-    required this.imageUrl,
+    required this.primaryImageUrl,
+    required this.imageUrls,
     required this.soldCount,
     required this.discountPercent,
     required this.brand,
@@ -30,7 +32,8 @@ class ProductModel {
       price: (json['price'] ?? 0).toDouble(),
       quantity: json['quantity'] ?? 0,
       description: json['description'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
+      primaryImageUrl: json['primaryImageUrl'] ?? '',
+      imageUrls: List<String>.from(json['imageUrls'] ?? []),
       soldCount: json['soldCount'] ?? 0,
       discountPercent: (json['discountPercent'] ?? 0).toDouble(),
       brand: json['brand'] ?? {},
@@ -45,7 +48,8 @@ class ProductModel {
       'price': price,
       'quantity': quantity,
       'description': description,
-      'imageUrl': imageUrl,
+      'primaryImageUrl': primaryImageUrl,
+      'imageUrls': imageUrls,
       'soldCount': soldCount,
       'discountPercent': discountPercent,
       'brand': brand,

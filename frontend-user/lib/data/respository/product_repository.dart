@@ -117,4 +117,40 @@ class ProductRepository {
       throw Exception('Error: $e');
     }
   }
+
+  Future<ApiResponse<List<String>>> getProductImages(String productId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/api/images/product/$productId'));
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        return ApiResponse.fromJson(
+          responseData,
+          (data) => List<String>.from(data),
+        );
+      } else {
+        throw Exception('Failed to load product images');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  Future<ApiResponse<String>> getPrimaryImage(String productId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/api/images/product/$productId/primary'));
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        return ApiResponse.fromJson(
+          responseData,
+          (data) => data as String,
+        );
+      } else {
+        throw Exception('Failed to load primary image');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
 } 

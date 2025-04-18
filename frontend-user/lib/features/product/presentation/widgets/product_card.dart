@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/utils/navigation_helper.dart';
+import '../../../../core/constants/api_constants.dart';
 
 class ProductCard extends StatelessWidget {
   final String id;
@@ -8,7 +9,7 @@ class ProductCard extends StatelessWidget {
   final double price;
   final int soldCount;
   final double discountPercent;
-  final String imageUrl;
+  final String primaryImageUrl;
 
   const ProductCard({
     super.key,
@@ -17,7 +18,7 @@ class ProductCard extends StatelessWidget {
     required this.price,
     required this.soldCount,
     required this.discountPercent,
-    required this.imageUrl,
+    required this.primaryImageUrl,
   });
 
   @override
@@ -61,7 +62,7 @@ class ProductCard extends StatelessWidget {
                         ClipRRect(
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(0.5)),
                           child: Image.network(
-                            imageUrl,
+                            '${ApiConstants.baseApiUrl}/api/images/$primaryImageUrl',
                             fit: BoxFit.cover,
                             loadingBuilder: (context, child, loadingProgress) {
                               if (loadingProgress == null) return child;
@@ -146,6 +147,7 @@ class ProductCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           // Product name
+                          const SizedBox(height: 1), // Reduced spacing
                           Text(
                           name,
                           maxLines: 1,  // Reduced to 1 line
@@ -183,7 +185,7 @@ class ProductCard extends StatelessWidget {
                           ],
                           ),
                           
-                          const SizedBox(height: 2), // Reduced spacing
+                          const SizedBox(height: 3), // Reduced spacing
                           
                           // Rating on the left, sold count on the right
                           Row(

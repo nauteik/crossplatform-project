@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../features/product/presentation/widgets/product_card.dart';
 import '../../../product/providers/product_provider.dart';
+import '../../../product/presentation/widgets/product_card.dart';
+import '../../../../core/constants/api_constants.dart';
 import '../widgets/app_search_bar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,10 +32,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Consumer<ProductProvider>(
         builder: (context, productProvider, child) {
           final status = productProvider.status;
-          
-          if (status == ProductStatus.loading && productProvider.products.isEmpty) {
+          final products = productProvider.products;
+
+          if (status == ProductStatus.loading) {
             return const Center(child: CircularProgressIndicator());
-          } else if (status == ProductStatus.error && productProvider.products.isEmpty) {
+          } else if (status == ProductStatus.error) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -55,9 +57,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             );
           }
-          
-          final products = productProvider.products;
-          
+
+          if (products.isEmpty) {
+            return const Center(
+              child: Text('Không có sản phẩm nào'),
+            );
+          }
+
           return RefreshIndicator(
             onRefresh: () => productProvider.fetchProducts(),
             child: SingleChildScrollView(
@@ -144,41 +150,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
 
                   // Product grid
-                  if (products.isEmpty && status == ProductStatus.loaded)
-                    const Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Text(
-                        'Không có sản phẩm nào',
-                        style: TextStyle(fontSize: 16),
-                        textAlign: TextAlign.center,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.73,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
                       ),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.7,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                        itemCount: products.length,
-                        itemBuilder: (context, index) {
-                          final product = products[index];
-                          return ProductCard(
-                            id: product.id,
-                            name: product.name,
-                            price: product.price,
-                            soldCount: product.soldCount,
-                            discountPercent: product.discountPercent,
-                            imageUrl: product.imageUrl,
-                          );
-                        },
-                      ),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return ProductCard(
+                          id: product.id,
+                          name: product.name,
+                          price: product.price,
+                          soldCount: product.soldCount,
+                          discountPercent: product.discountPercent,
+                          primaryImageUrl: product.primaryImageUrl,
+                        );
+                      },
                     ),
+                  ),
 
                   // Loading indicator for pagination or refresh
                   if (status == ProductStatus.loading && products.isNotEmpty)

@@ -83,7 +83,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(
-                              product.imageUrl,
+                              product.primaryImageUrl,
                               width: 80,
                               height: 80,
                               fit: BoxFit.cover,

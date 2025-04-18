@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.List;
 
 @Document(collection = "products")
 @Data
@@ -19,7 +20,8 @@ public class Product {
     private double price;
     private int quantity;
     private String description;
-    private String imageUrl;
+    private String primaryImageUrl; // Ảnh chính
+    private List<String> imageUrls; // Danh sách các ảnh khác
     private int soldCount;
     private double discountPercent;
     

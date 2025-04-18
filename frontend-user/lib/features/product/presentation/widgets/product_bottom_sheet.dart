@@ -12,8 +12,11 @@ class ProductBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Lấy padding bottom an toàn của thiết bị
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + bottomPadding),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [

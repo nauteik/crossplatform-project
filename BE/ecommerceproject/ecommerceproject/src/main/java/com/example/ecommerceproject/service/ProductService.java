@@ -1,14 +1,17 @@
 package com.example.ecommerceproject.service;
 
+import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.Brand;
 import com.example.ecommerceproject.model.Product;
 import com.example.ecommerceproject.model.ProductType;
 import com.example.ecommerceproject.repository.BrandRepository;
 import com.example.ecommerceproject.repository.ProductRepository;
 import com.example.ecommerceproject.repository.ProductTypeRepository;
+import com.example.ecommerceproject.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,7 +101,6 @@ public class ProductService {
             productRepository.saveAll(products);
         }
     }
-
     // Phương thức để áp dụng giảm giá cho tất cả sản phẩm của một loại
     public void applyDiscountToProductType(String productTypeId, double discountPercent) {
         Optional<ProductType> optionalProductType = productTypeRepository.findById(productTypeId);
@@ -108,4 +110,5 @@ public class ProductService {
             productRepository.saveAll(products);
         }
     }
+
 } 

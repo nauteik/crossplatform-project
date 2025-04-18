@@ -23,14 +23,24 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
   final ValueNotifier<int> _selectedImageIndex = ValueNotifier<int>(0);
+  List<String> _images = [];
 
   @override
   void initState() {
     super.initState();
     // Fetch product details when screen initializes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProductProvider>(context, listen: false)
-          .getProductById(widget.productId);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final productProvider = Provider.of<ProductProvider>(context, listen: false);
+      await productProvider.getProductById(widget.productId);
+      
+      // Lấy danh sách ảnh từ product
+      if (productProvider.currentProduct != null) {
+        final product = productProvider.currentProduct!;
+        setState(() {
+          // Thêm primaryImageUrl vào đầu danh sách
+          _images = [product.primaryImageUrl, ...product.imageUrls];
+        });
+      }
     });
   }
 
@@ -125,14 +135,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             );
           }
 
-          // Mock data for demo purposes
-          final List<String> images = [
-            product.imageUrl,
-            'https://picsum.photos/500/500?random=1',
-            'https://picsum.photos/500/500?random=2',
-            'https://picsum.photos/500/500?random=3',
-          ];
-
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -140,7 +142,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               children: [
                 // Product Images Gallery
                 ProductGallery(
-                  images: images,
+                  images: _images,
                   selectedImageIndex: _selectedImageIndex,
                 ),
 
