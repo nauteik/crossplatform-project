@@ -89,8 +89,7 @@ class _CartScreenState extends State<CartScreen> {
                       child: const Text('Xóa'),
                       onPressed: () {
                         // Using listen: false here as it's inside a button press handler
-                        Provider.of<CartProvider>(context, listen: false)
-                            .clearCart();
+                        Provider.of<CartProvider>(context, listen: false).clearCart();
                         Navigator.of(ctx).pop();
                       },
                     ),
