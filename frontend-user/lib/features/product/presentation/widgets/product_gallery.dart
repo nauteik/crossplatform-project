@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/utils/image_helper.dart';
 
 class ProductGallery extends StatelessWidget {
   final List<String> images;
@@ -42,7 +43,7 @@ class ProductGallery extends StatelessWidget {
               builder: (context, selectedIndex, _) {
                 final index = selectedIndex.clamp(0, images.length - 1);
                 return Image.network(
-                  '${ApiConstants.baseApiUrl}/api/images/${images[index]}',
+                  ImageHelper.getImage(images[index]),
                   fit: BoxFit.contain,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;

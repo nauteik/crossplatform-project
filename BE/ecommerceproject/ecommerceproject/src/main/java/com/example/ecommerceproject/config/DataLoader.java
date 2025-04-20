@@ -1,11 +1,15 @@
 package com.example.ecommerceproject.config;
 
 import com.example.ecommerceproject.model.Brand;
+import com.example.ecommerceproject.model.Cart;
 import com.example.ecommerceproject.model.Product;
 import com.example.ecommerceproject.model.ProductType;
+import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.repository.BrandRepository;
+import com.example.ecommerceproject.repository.CartRepository;
 import com.example.ecommerceproject.repository.ProductRepository;
 import com.example.ecommerceproject.repository.ProductTypeRepository;
+import com.example.ecommerceproject.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -20,12 +24,16 @@ public class DataLoader implements CommandLineRunner {
     private final BrandRepository brandRepository;
     private final ProductTypeRepository productTypeRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final CartRepository cartRepository;
 
     @Autowired
-    public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, ProductRepository productRepository) {
+    public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository) {
         this.brandRepository = brandRepository;
         this.productTypeRepository = productTypeRepository;
         this.productRepository = productRepository;
+        this.userRepository = userRepository;
+        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -44,6 +52,9 @@ public class DataLoader implements CommandLineRunner {
         
         // Tạo Products (Sản phẩm)
         createProducts(brands, productTypes);
+
+        // Tạo Users và Carts
+        createUsersAndCarts();
         
         System.out.println("Đã khởi tạo dữ liệu thành công!");
     }
@@ -368,5 +379,32 @@ public class DataLoader implements CommandLineRunner {
         product.setBrand(brand);
         product.setProductType(productType);
         return product;
+    }
+
+    private void createUsersAndCarts() {
+        // Tạo admin user
+        User admin = new User();
+        admin.setEmail("admin@example.com");
+        admin.setPassword("$2a$10$rDkPvvAFV6GgW5K7w5L0QO5v5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z"); // password: admin123
+        admin.setName("Admin");
+        admin.setUsername("admin");
+        admin.setRole(1); // 1 là admin
+        admin = userRepository.save(admin);
+
+        // Tạo user thường
+        User user = new User();
+        user.setEmail("user@example.com");
+        user.setPassword("$2a$10$rDkPvvAFV6GgW5K7w5L0QO5v5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z"); // password: user123
+        user.setName("User");
+        user.setUsername("user");
+        user.setRole(0); // 0 là user thường
+        user = userRepository.save(user);
+
+        // Tạo cart cho user
+        Cart userCart = new Cart();
+        userCart.setUserId(user.getId());
+        userCart.setItems(new ArrayList<>());
+        userCart.setTotalPrice(0);
+        cartRepository.save(userCart);
     }
 } 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_user/data/model/cart_item_model.dart';
+import 'package:frontend_user/data/model/product_model.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -10,6 +12,7 @@ import '../widgets/product_specifications.dart';
 import '../widgets/product_bottom_sheet.dart';
 import '../widgets/review_item.dart';
 import '../../../../core/utils/navigation_helper.dart';
+import '../../../cart/providers/cart_provider.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/models/review_model.dart';
 import '../screens/product_reviews_screen.dart';
@@ -34,6 +37,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   List<ReviewModel> _reviews = [];
   static const int _initialReviewCount = 3; // Hiển thị 3 đánh giá đầu tiên
   List<String> _images = [];
+  bool _isAddingToCart = false;
 
   @override
   void initState() {
@@ -114,7 +118,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _handleReviewTap() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
+    
     if (authProvider.isAuthenticated) {
       NavigationHelper.navigateToProductReview(context, widget.productId)
           .then((value) {
@@ -139,6 +143,72 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleAddToCart() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
+    if (!authProvider.isAuthenticated) {
+      NavigationHelper.navigateToLogin(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (productProvider.currentProduct == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Thông tin sản phẩm chưa được tải xong.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_isAddingToCart) return;
+    setState(() {
+      _isAddingToCart = true;
+    });
+
+    try {
+      final cartItem = CartItemModel(
+        id: productProvider.currentProduct!.id,
+        name: productProvider.currentProduct!.name,
+        price: productProvider.currentProduct!.price,
+        imageUrl: productProvider.currentProduct!.primaryImageUrl,
+        quantity: _quantity,
+      );
+
+      cartProvider.addItem(cartItem, authProvider.userId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã thêm sản phẩm vào giỏ hàng!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      setState(() {
+        _quantity = 1;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã xảy ra lỗi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isAddingToCart = false;
+      });
+    }
   }
 
   @override
@@ -246,9 +316,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
 
+
                 // Specifications
                 const SizedBox(height: 24),
                 ProductSpecifications(product: product),
+
 
                 // Reviews section
                 const SizedBox(height: 24),
@@ -270,7 +342,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-
+               
                 // Review summary card
                 _buildReviewSummaryCard(),
 
@@ -320,15 +392,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         },
       ),
       bottomSheet: ProductBottomSheet(
-        onAddToCart: () {
-          // Thêm vào giỏ hàng
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã thêm vào giỏ hàng'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
+        onAddToCart: _handleAddToCart,
+        isLoadingAddToCart: _isAddingToCart,
         onBuyNow: () {
           // Mua ngay
           ScaffoldMessenger.of(context).showSnackBar(

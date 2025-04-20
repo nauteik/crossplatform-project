@@ -56,6 +56,8 @@ public class SecurityConfig {
                 .requestMatchers("/user/**").permitAll()
                 // Image API paths
                 .requestMatchers("/api/images/**").permitAll()
+                // Cart APT paths
+                .requestMatchers("/api/cart/**").permitAll()
                 // Brand API paths
                 .requestMatchers("/api/brand/brands").permitAll()
                 .requestMatchers("/api/brand/{id}").permitAll()

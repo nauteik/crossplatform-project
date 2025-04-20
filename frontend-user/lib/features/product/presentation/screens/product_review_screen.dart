@@ -9,6 +9,7 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/models/review_model.dart';
 import '../widgets/review_item.dart';
+import '../../../../core/utils/image_helper.dart';
 
 class ProductReviewScreen extends StatefulWidget {
   final String productId;
@@ -29,7 +30,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
   int _rating = 5;
   bool _isLoading = false;
   Map<String, dynamic>? _reviewSummary;
-  List<XFile> _selectedImages = [];
+  final List<XFile> _selectedImages = [];
   XFile? _selectedVideo;
 
   @override
@@ -242,7 +243,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.network(
-                              product.primaryImageUrl,
+                              ImageHelper.getImage(product.primaryImageUrl),
                               width: 80,
                               height: 80,
                               fit: BoxFit.cover,

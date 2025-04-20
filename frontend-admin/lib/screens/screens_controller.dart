@@ -11,7 +11,7 @@ import 'customer_support.dart';
 Widget getScreen(int index) {
   switch(index) {
     case 0:
-      return const Home();
+      return const HomeScreen();
     case 1:
       return const ViewStatistics();
     case 2:
@@ -27,6 +27,6 @@ Widget getScreen(int index) {
     case 7:
       return const ProductsPromotion();
     default:
-      return const Home();
+      return const HomeScreen();
   }
 }
