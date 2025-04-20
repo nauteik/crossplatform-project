@@ -1,8 +1,43 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:frontend_user/core/constants/api_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 class AuthService {
+  static const String USER_ID_KEY = 'user_id';
+  static const String USER_DATA_KEY = 'user_data';
+  static const String TOKEN_KEY = 'auth_token';
+
   final String baseUrl = "${ApiConstants.baseApiUrl}/api/auth";
+
+  // Phương thức tĩnh để lấy ID người dùng hiện tại từ local storage
+  static String? getCurrentUserId() {
+    // Đọc từ SharedPreferences (cần đảm bảo đã lưu ID khi đăng nhập)
+    try {
+      // Trong thực tế, cần đọc giá trị từ SharedPreferences
+      // Đây là cách triển khai tạm thời để demo
+      SharedPreferences prefs =
+          SharedPreferences.getInstance() as SharedPreferences;
+      return prefs.getString(USER_ID_KEY);
+    } catch (e) {
+      print("Error getting current user ID: $e");
+      // Trả về ID giả định cho mục đích demo - trong ứng dụng thực, bạn nên xử lý đúng cách
+      return "demo_user_id";
+    }
+  }
+
+  // Phương thức lưu thông tin người dùng sau khi đăng nhập
+  Future<void> saveUserData(
+      String userId, Map<String, dynamic> userData, String token) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(USER_ID_KEY, userId);
+      await prefs.setString(USER_DATA_KEY, jsonEncode(userData));
+      await prefs.setString(TOKEN_KEY, token);
+    } catch (e) {
+      print("Error saving user data: $e");
+    }
+  }
 
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
@@ -24,6 +59,11 @@ class AuthService {
             responseData['data'] != null ? responseData['data']['token'] : null;
 
         final userData = responseData['data'] ?? {"username": username};
+
+        // Lưu thông tin người dùng khi đăng nhập thành công
+        if (userData != null && userData['id'] != null) {
+          await saveUserData(userData['id'], userData, token ?? "");
+        }
 
         print("Token extracted: ${token != null ? 'Success' : 'Null'}");
 
@@ -51,7 +91,8 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> register(String username, String email, String password) async {
+  Future<Map<String, dynamic>> register(
+      String username, String email, String password) async {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/register"),
@@ -79,4 +120,16 @@ class AuthService {
       };
     }
   }
-} 
+
+  // Phương thức đăng xuất
+  Future<void> logout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(USER_ID_KEY);
+      await prefs.remove(USER_DATA_KEY);
+      await prefs.remove(TOKEN_KEY);
+    } catch (e) {
+      print("Error during logout: $e");
+    }
+  }
+}
