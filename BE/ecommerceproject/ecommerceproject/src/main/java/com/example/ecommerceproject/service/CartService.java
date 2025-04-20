@@ -1,6 +1,7 @@
 package com.example.ecommerceproject.service;
 
 import com.example.ecommerceproject.model.Cart;
+import com.example.ecommerceproject.model.CartItem;
 import com.example.ecommerceproject.repository.CartRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,14 +30,14 @@ public class CartService {
         }
     }
 
-    public Cart addItemToCart(String userId, Cart.CartItem cartItem) {
+    public Cart addItemToCart(String userId, CartItem cartItem) {
         // Get or create cart
         Cart cart = getOrCreateCart(userId);
 
         // Check if product already exists in cart
         boolean productExists = false;
 
-        for (Cart.CartItem item : cart.getItems()) {
+        for (CartItem item : cart.getItems()) {
             if (item.getProductId().equals(cartItem.getProductId())) {
                 // Update existing item quantity
                 item.setQuantity(item.getQuantity() + cartItem.getQuantity());

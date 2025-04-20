@@ -111,4 +111,25 @@ public class ProductService {
         }
     }
 
+    // Phương thức để tăng số lượng sản phảm theo Id
+    public void increaseQuantity(String productId, int quantity) {
+        Optional<Product> optionalProduct = productRepository.findById(productId);
+        if (optionalProduct.isPresent()) {
+            Product product = optionalProduct.get();
+            int newQuantity = product.getQuantity() + quantity;
+            product.setQuantity(newQuantity);
+            productRepository.save(product);
+        }
+    }
+
+    // Phương thức để giảm số lượng sản phảm theo Id
+    public void decreaseQuantity(String productId, int quantity) {
+        Optional<Product> optionalProduct = productRepository.findById(productId);
+        if (optionalProduct.isPresent()) {
+            Product product = optionalProduct.get();
+            int newQuantity = product.getQuantity() - quantity;
+            product.setQuantity(newQuantity);
+            productRepository.save(product);
+        }
+    }
 } 

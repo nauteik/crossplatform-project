@@ -19,16 +19,4 @@ public class Cart {
     private String userId;
     private List<CartItem> items = new ArrayList<>();
     private double totalPrice;
-
-    // Helper class for cart items
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CartItem {
-        private String productId;
-        private String productName;
-        private int quantity;
-        private double price;
-        private String imageUrl;
-    }
 }

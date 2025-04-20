@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:frontend_user/data/model/api_response_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:frontend_user/core/constants/api_constants.dart';
@@ -80,27 +81,26 @@ class CartProvider extends ChangeNotifier {
 
   Future<void> _saveCartItems() async {
     try {
-      // Save to local storage
       final prefs = await SharedPreferences.getInstance();
       final cartJson = jsonEncode(_items.map((item) => item.toJson()).toList());
       await prefs.setString('cart', cartJson);
-
-      // No need to save to backend here since we're already doing that in addItem
-      // This method now primarily handles local storage
     } catch (e) {
       print('Error saving cart items: $e');
       rethrow;
     }
   }
 
-  Future<void> addItem(CartItemModel cartItem, String? userId) async {
+  Future<ApiResponse<dynamic>> addItem(CartItemModel cartItem) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+
       if (userId == null) {
         throw Exception('User not logged in');
       }
 
       // Add to backend first
-      await _repository.addToCart(
+      ApiResponse<dynamic> response = await _repository.addToCart(
         userId: userId,
         productId: cartItem.id,
         name: cartItem.name,
@@ -119,6 +119,7 @@ class CartProvider extends ChangeNotifier {
 
       await _saveCartItems();
       notifyListeners();
+      return response;
     } catch (e) {
       print('Error adding item to cart: $e');
       rethrow;

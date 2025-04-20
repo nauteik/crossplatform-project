@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_user/data/model/api_response_model.dart';
 import 'package:frontend_user/data/model/cart_item_model.dart';
 import 'package:frontend_user/data/model/product_model.dart';
 import 'package:provider/provider.dart';
@@ -44,9 +45,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.initState();
     // Fetch product details when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final productProvider = Provider.of<ProductProvider>(context, listen: false);
+      final productProvider =
+          Provider.of<ProductProvider>(context, listen: false);
       await productProvider.getProductById(widget.productId);
-      
+
       // Lấy danh sách ảnh từ product
       if (productProvider.currentProduct != null) {
         final product = productProvider.currentProduct!;
@@ -118,7 +120,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _handleReviewTap() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
     if (authProvider.isAuthenticated) {
       NavigationHelper.navigateToProductReview(context, widget.productId)
           .then((value) {
@@ -147,7 +149,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _handleAddToCart() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final productProvider =
+        Provider.of<ProductProvider>(context, listen: false);
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
 
     if (!authProvider.isAuthenticated) {
@@ -185,12 +188,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         quantity: _quantity,
       );
 
-      cartProvider.addItem(cartItem, authProvider.userId);
+      ApiResponse<dynamic> response = await cartProvider.addItem(cartItem);
+      print(response.message);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Đã thêm sản phẩm vào giỏ hàng!'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text(response.message),
+          backgroundColor: response.status == 1 ? Colors.green : Colors.red,
         ),
       );
 
@@ -316,11 +320,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
 
-
                 // Specifications
                 const SizedBox(height: 24),
                 ProductSpecifications(product: product),
-
 
                 // Reviews section
                 const SizedBox(height: 24),
@@ -342,7 +344,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-               
+
                 // Review summary card
                 _buildReviewSummaryCard(),
 
@@ -355,7 +357,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             padding: const EdgeInsets.only(bottom: 16),
                             child: ReviewItem(
                               review: review,
-                              onDeleted: _fetchReviewData, 
+                              onDeleted: _fetchReviewData,
                             ),
                           ))
                       .toList(),

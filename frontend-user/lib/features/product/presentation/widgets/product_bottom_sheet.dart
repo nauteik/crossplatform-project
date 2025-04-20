@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ProductBottomSheet extends StatelessWidget {
   final VoidCallback onAddToCart;
   final VoidCallback onBuyNow;
-  final bool isLoadingAddToCart; // <-- Add this parameter
+  final bool isLoadingAddToCart;
 
   const ProductBottomSheet({
     super.key,
@@ -45,7 +45,7 @@ class ProductBottomSheet extends StatelessWidget {
                           strokeWidth: 2.0, // Adjust thickness
                         ),
                       )
-                    : const Text('Thêm vào giỏ'),
+                    : const Text('Thêm vào giỏ hàng'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
