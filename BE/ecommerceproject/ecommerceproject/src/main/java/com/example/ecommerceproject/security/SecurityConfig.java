@@ -80,6 +80,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/product/discount/{id}").permitAll()
                 .requestMatchers("/api/product/discount-brand/{brandId}").permitAll()
                 .requestMatchers("/api/product/discount-type/{productTypeId}").permitAll()
+                // Review API paths 
+                .requestMatchers("/api/reviews/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> 
