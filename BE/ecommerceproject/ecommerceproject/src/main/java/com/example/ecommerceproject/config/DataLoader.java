@@ -1,9 +1,11 @@
 package com.example.ecommerceproject.config;
 
 import com.example.ecommerceproject.model.Brand;
+import com.example.ecommerceproject.model.Cart;
 import com.example.ecommerceproject.model.Product;
 import com.example.ecommerceproject.model.ProductType;
 import com.example.ecommerceproject.repository.BrandRepository;
+import com.example.ecommerceproject.repository.CartRepository;
 import com.example.ecommerceproject.repository.ProductRepository;
 import com.example.ecommerceproject.repository.ProductTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;

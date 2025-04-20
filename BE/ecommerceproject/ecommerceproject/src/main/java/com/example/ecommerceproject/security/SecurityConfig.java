@@ -54,6 +54,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/user/**").permitAll()
+                // Cart APT paths
+                .requestMatchers("/api/cart/**").permitAll()
                 // Brand API paths
                 .requestMatchers("/api/brand/brands").permitAll()
                 .requestMatchers("/api/brand/{id}").permitAll()

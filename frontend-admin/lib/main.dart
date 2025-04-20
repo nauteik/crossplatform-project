@@ -2,6 +2,8 @@ import 'package:admin_interface/admin_sidebar.dart';
 import 'package:flutter/material.dart';
 import 'package:sidebarx/sidebarx.dart';
 import 'package:admin_interface/screens/screens_controller.dart';
+import 'package:provider/provider.dart';
+import 'package:admin_interface/providers/product_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,7 +21,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         useMaterial3: true,
       ),
-      home: const Admin(),
+      debugShowCheckedModeBanner: false,
+      home: ChangeNotifierProvider(
+        create: (context) => ProductProvider(),
+        child: const Admin(),
+      ),
     );
   }
 }

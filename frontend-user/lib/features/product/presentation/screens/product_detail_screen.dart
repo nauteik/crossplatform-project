@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_user/data/model/cart_item_model.dart';
+import 'package:frontend_user/data/model/product_model.dart';
 import 'package:provider/provider.dart';
 import '../../providers/product_provider.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -7,6 +9,7 @@ import '../widgets/product_info.dart';
 import '../widgets/product_specifications.dart';
 import '../widgets/product_bottom_sheet.dart';
 import '../../../../core/utils/navigation_helper.dart';
+import '../../../cart/providers/cart_provider.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -23,6 +26,7 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
   final ValueNotifier<int> _selectedImageIndex = ValueNotifier<int>(0);
+  bool _isAddingToCart = false;
 
   @override
   void initState() {
@@ -50,12 +54,146 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   void _handleReviewTap() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
+
     if (authProvider.isAuthenticated) {
       NavigationHelper.navigateToProductReview(context, widget.productId);
     } else {
       NavigationHelper.navigateToLogin(context);
     }
+  }
+
+  Future<void> _handleAddToCart() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
+    if (!authProvider.isAuthenticated) {
+      NavigationHelper.navigateToLogin(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (productProvider.currentProduct == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Thông tin sản phẩm chưa được tải xong.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_isAddingToCart) return;
+    setState(() {
+      _isAddingToCart = true;
+    });
+
+    try {
+      final cartItem = CartItemModel(
+        id: productProvider.currentProduct!.id,
+        name: productProvider.currentProduct!.name,
+        price: productProvider.currentProduct!.price,
+        imageUrl: productProvider.currentProduct!.imageUrl,
+        quantity: _quantity,
+      );
+
+      cartProvider.addItem(cartItem, authProvider.userId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Đã thêm sản phẩm vào giỏ hàng!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      setState(() {
+        _quantity = 1;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Đã xảy ra lỗi: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isAddingToCart = false;
+      });
+    }
+
+    // // 1. Kiểm tra đăng nhập
+    // if (!authProvider.isAuthenticated) {
+    //   NavigationHelper.navigateToLogin(context);
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
+    //       backgroundColor: Colors.orange,
+    //     ),
+    //   );
+    //   return;
+    // }
+
+    // // 2. Kiểm tra sản phẩm đã load chưa
+    // if (productProvider.currentProduct == null) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Thông tin sản phẩm chưa được tải xong.'),
+    //       backgroundColor: Colors.orange,
+    //     ),
+    //   );
+    //   return;
+    // }
+
+    // // 3. Tránh việc nhấn nút nhiều lần
+    // if (_isAddingToCart) return;
+    // setState(() {
+    //   _isAddingToCart = true;
+    // });
+
+    // try {
+    //   // 4. Tạo product model
+    //   final product = ProductModel(
+    //     id: productProvider.currentProduct!.id,
+    //     name: productProvider.currentProduct!.name,
+    //     price: productProvider.currentProduct!.price,
+    //     imageUrl: productProvider.currentProduct!.imageUrl,
+    //     quantity: _quantity,
+    //   );
+
+    //   // 5. Thêm vào giỏ hàng sử dụng CartProvider
+    //   cartProvider.addItem(product);
+      
+    //   // 6. Hiển thị thông báo thành công
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Text('Đã thêm sản phẩm vào giỏ hàng!'),
+    //       backgroundColor: Colors.green,
+    //     ),
+    //   );
+
+    //   // Reset số lượng về 1
+    //   setState(() {
+    //     _quantity = 1;
+    //   });
+    // } catch (e) {
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text('Đã xảy ra lỗi: ${e.toString()}'),
+    //       backgroundColor: Colors.red,
+    //     ),
+    //   );
+    // } finally {
+    //   // 7. Reset trạng thái loading
+    //   setState(() {
+    //     _isAddingToCart = false;
+    //   });
+    // }
   }
 
   @override
@@ -152,7 +290,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   onIncrementQuantity: _incrementQuantity,
                   onDecrementQuantity: _decrementQuantity,
                 ),
-                
+
                 // Product details
                 const SizedBox(height: 24),
                 const Text(
@@ -170,11 +308,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     height: 1.5,
                   ),
                 ),
-                
+
                 // Specifications
                 const SizedBox(height: 24),
                 ProductSpecifications(product: product),
-                
+
                 // Reviews section
                 const SizedBox(height: 24),
                 Row(
@@ -203,7 +341,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.star, color: Colors.amber, size: 48),
+                            const Icon(Icons.star,
+                                color: Colors.amber, size: 48),
                             const SizedBox(width: 8),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +376,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
                 ),
-                
+
                 // Bottom spacing
                 const SizedBox(height: 100),
               ],
@@ -246,17 +385,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         },
       ),
       bottomSheet: ProductBottomSheet(
-        onAddToCart: () {
-          // Thêm vào giỏ hàng
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đã thêm vào giỏ hàng'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        },
+        // Pass the loading state down
+        isLoadingAddToCart: _isAddingToCart,
+        onAddToCart: _handleAddToCart, // Use the new handler method
         onBuyNow: () {
-          // Mua ngay
+          // Mua ngay - Keep existing logic for now
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Chức năng mua ngay đang được phát triển'),
@@ -267,4 +400,4 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
     );
   }
-} 
+}

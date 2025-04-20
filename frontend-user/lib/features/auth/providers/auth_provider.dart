@@ -15,6 +15,7 @@ class AuthProvider extends ChangeNotifier {
   Map<String, dynamic>? get userData => _userData;
   String? get errorMessage => _errorMessage;
   String get username => _username;
+  String? get userId => _userData?['id'] as String?;
 
   AuthProvider() {
     _loadAuthState();
@@ -30,6 +31,11 @@ class AuthProvider extends ChangeNotifier {
       try {
         _userData = jsonDecode(userDataString);
         _username = _userData?['username'] ?? '';
+        
+        // Kiểm tra và lưu lại userId nếu chưa có
+        if (_userData != null && _userData!['id'] != null) {
+          await prefs.setString('userId', _userData!['id']);
+        }
       } catch (e) {
         print('Lỗi khi parse userData: $e');
       }
@@ -52,6 +58,12 @@ class AuthProvider extends ChangeNotifier {
         // Lưu vào SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('jwt_token', _token!);
+        
+        // Lưu userId vào SharedPreferences
+        if (_userData != null && _userData!['id'] != null) {
+          await prefs.setString('userId', _userData!['id']);
+        }
+        
         if (_userData != null) {
           await prefs.setString('user_data', jsonEncode(_userData));
         }
@@ -98,7 +110,8 @@ class AuthProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');
     await prefs.remove('user_data');
+    await prefs.remove('userId'); // Thêm dòng này
     
     notifyListeners();
   }
-} 
+}

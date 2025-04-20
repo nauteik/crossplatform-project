@@ -1,25 +1,25 @@
 import 'dart:convert';
+import 'package:admin_interface/constants/api_constants.dart';
+import 'package:admin_interface/models/api_response_model.dart';
+import 'package:admin_interface/models/product_model.dart';
 import 'package:http/http.dart' as http;
-import '../../../../data/model/product_model.dart';
-import '../../../../data/model/api_response_model.dart';
-import '../../../../core/constants/api_constants.dart';
 
 class ProductRepository {
+ 
   final String baseUrl = ApiConstants.baseApiUrl;
 
   // Lấy tất cả sản phẩm
-  Future<ApiResponse<List<ProductModel>>> getProducts() async {
+  Future<ApiResponse<List<Product>>> getProducts() async {
     try {
-      final response =
-          await http.get(Uri.parse('$baseUrl/api/product/products'));
-
+      final response = await http.get(Uri.parse('$baseUrl/api/product/products'));
+      
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-
+        
         return ApiResponse.fromJson(
           responseData,
           (data) => (data as List)
-              .map((item) => ProductModel.fromJson(item))
+              .map((item) => Product.fromJson(item))
               .toList(),
         );
       } else {
@@ -31,16 +31,16 @@ class ProductRepository {
   }
 
   // Lấy sản phẩm theo ID
-  Future<ApiResponse<ProductModel>> getProductById(String id) async {
+  Future<ApiResponse<Product>> getProductById(String id) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/api/product/$id'));
-
+      
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-
+        
         return ApiResponse.fromJson(
           responseData,
-          (data) => ProductModel.fromJson(data),
+          (data) => Product.fromJson(data),
         );
       } else {
         throw Exception('Failed to load product');
@@ -51,19 +51,19 @@ class ProductRepository {
   }
 
   // Tìm kiếm sản phẩm
-  Future<ApiResponse<List<ProductModel>>> searchProducts(String query) async {
+  Future<ApiResponse<List<Product>>> searchProducts(String query) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/api/product/search?query=$query'),
       );
-
+      
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-
+        
         return ApiResponse.fromJson(
           responseData,
           (data) => (data as List)
-              .map((item) => ProductModel.fromJson(item))
+              .map((item) => Product.fromJson(item))
               .toList(),
         );
       } else {
@@ -75,19 +75,17 @@ class ProductRepository {
   }
 
   // Lấy sản phẩm theo thương hiệu
-  Future<ApiResponse<List<ProductModel>>> getProductsByBrand(
-      String brandId) async {
+  Future<ApiResponse<List<Product>>> getProductsByBrand(String brandId) async {
     try {
-      final response =
-          await http.get(Uri.parse('$baseUrl/api/product/by-brand/$brandId'));
-
+      final response = await http.get(Uri.parse('$baseUrl/api/product/by-brand/$brandId'));
+      
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-
+        
         return ApiResponse.fromJson(
           responseData,
           (data) => (data as List)
-              .map((item) => ProductModel.fromJson(item))
+              .map((item) => Product.fromJson(item))
               .toList(),
         );
       } else {
@@ -99,19 +97,17 @@ class ProductRepository {
   }
 
   // Lấy sản phẩm theo loại
-  Future<ApiResponse<List<ProductModel>>> getProductsByType(
-      String typeId) async {
+  Future<ApiResponse<List<Product>>> getProductsByType(String typeId) async {
     try {
-      final response =
-          await http.get(Uri.parse('$baseUrl/api/product/by-type/$typeId'));
-
+      final response = await http.get(Uri.parse('$baseUrl/api/product/by-type/$typeId'));
+      
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-
+        
         return ApiResponse.fromJson(
           responseData,
           (data) => (data as List)
-              .map((item) => ProductModel.fromJson(item))
+              .map((item) => Product.fromJson(item))
               .toList(),
         );
       } else {
@@ -121,4 +117,4 @@ class ProductRepository {
       throw Exception('Error: $e');
     }
   }
-}
+} 

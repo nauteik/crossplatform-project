@@ -1,96 +1,175 @@
-import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-
-class ProductModel {
-  final String id;
-  final String name;
-  final double price;
-  final String imageUrl;
-  int quantity;
-
-  ProductModel({
-    required this.id,
-    required this.name,
-    required this.price,
-    required this.imageUrl,
-    this.quantity = 1,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'price': price,
-      'imageUrl': imageUrl,
-      'quantity': quantity,
-    };
-  }
-
-  factory ProductModel.fromJson(Map<String, dynamic> json) {
-    return ProductModel(
-      id: json['id'],
-      name: json['name'],
-      price: json['price'],
-      imageUrl: json['imageUrl'],
-      quantity: json['quantity'],
-    );
-  }
-}
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend_user/core/constants/api_constants.dart';
+import 'package:frontend_user/data/model/cart_item_model.dart';
+import 'package:frontend_user/data/respository/cart_repository.dart';
 
 class CartProvider extends ChangeNotifier {
-  List<ProductModel> _items = [];
-  
-  List<ProductModel> get items => _items;
+  final List<CartItemModel> _items = [];
+  final CartRepository _repository = CartRepository();
+
+  List<CartItemModel> get items => _items;
   int get itemCount => _items.length;
-  
-  double get totalAmount {
-    return _items.fold(0.0, (sum, item) => sum + (item.price * item.quantity));
-  }
-  
-  CartProvider() {
-    _loadCartItems();
+
+  double get totalPrice {
+    double calculatedTotal = 0.0;
+    for (var item in _items) {
+      calculatedTotal += item.price * item.quantity;
+    }
+    return calculatedTotal;
   }
 
-  Future<void> _loadCartItems() async {
+  Future<void> fetchCart() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final cartJson = prefs.getString('cart') ?? '[]';
-      final cartList = jsonDecode(cartJson) as List;
-      _items = cartList.map((item) => ProductModel.fromJson(item)).toList();
-      notifyListeners();
+      final userId = prefs.getString('userId');
+
+      if (userId == null) {
+        _items.clear();
+        await prefs.setString('cart', '[]');
+        notifyListeners();
+        print('User not logged in. Cannot load cart from backend.');
+        return;
+      }
+
+      final response = await _repository.getCart(userId);
+
+      if (response.status == 1 && response.data != null) {
+        final cartData = response.data as Map<String, dynamic>;
+        final Map<String, dynamic> data = cartData['data'];
+        final List<dynamic> itemMaps = data['items'];
+
+        final List<CartItemModel> loadedItems = itemMaps.map((itemMap) {
+          return CartItemModel.fromJson(itemMap as Map<String, dynamic>);
+        }).toList();
+
+        _items.clear();
+        _items.addAll(loadedItems);
+
+        for (CartItemModel item in _items) {
+          print(item.toString());
+        }
+
+        await _saveCartItems();
+        notifyListeners();
+
+        print('Cart items loaded successfully from backend.');
+      } else if (response.status == 0 &&
+          response.data == null &&
+          response.message.contains('not found')) {
+        print(
+            'Cart not found on backend for user $userId. Initializing empty local cart.');
+        _items.clear();
+        await prefs.setString('cart', '[]');
+        notifyListeners();
+      } else {
+        print('Failed to load cart from backend: ${response.message}');
+        throw Exception('Failed to load cart from server: ${response.message}');
+      }
     } catch (e) {
-      print('Lỗi khi tải giỏ hàng: $e');
+      print('Error loading cart items: $e');
+      _items.clear();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cart', '[]');
+      notifyListeners();
+      rethrow;
     }
   }
 
   Future<void> _saveCartItems() async {
     try {
+      // Save to local storage
       final prefs = await SharedPreferences.getInstance();
       final cartJson = jsonEncode(_items.map((item) => item.toJson()).toList());
       await prefs.setString('cart', cartJson);
+
+      // No need to save to backend here since we're already doing that in addItem
+      // This method now primarily handles local storage
     } catch (e) {
-      print('Lỗi khi lưu giỏ hàng: $e');
+      print('Error saving cart items: $e');
+      rethrow;
     }
   }
-  
-  void addItem(ProductModel product) {
-    final existingIndex = _items.indexWhere((item) => item.id == product.id);
-    
-    if (existingIndex >= 0) {
-      _items[existingIndex].quantity += 1;
-    } else {
-      _items.add(product);
+
+  Future<void> addItem(CartItemModel cartItem, String? userId) async {
+    try {
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      // Add to backend first
+      await _repository.addToCart(
+        userId: userId,
+        productId: cartItem.id,
+        name: cartItem.name,
+        price: cartItem.price,
+        imageUrl: cartItem.imageUrl,
+        quantity: cartItem.quantity,
+      );
+
+      // If backend successful, update local state
+      final existingIndex = _items.indexWhere((item) => item.id == cartItem.id);
+      if (existingIndex >= 0) {
+        _items[existingIndex].quantity += cartItem.quantity;
+      } else {
+        _items.add(cartItem);
+      }
+
+      await _saveCartItems();
+      notifyListeners();
+    } catch (e) {
+      print('Error adding item to cart: $e');
+      rethrow;
     }
-    
-    _saveCartItems();
-    notifyListeners();
   }
-  
-  void removeItem(String productId) {
-    _items.removeWhere((item) => item.id == productId);
-    _saveCartItems();
-    notifyListeners();
+
+  Future<void> removeItem(String productId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+
+      if (userId != null) {
+        final response = await http.delete(
+          Uri.parse(
+              '${ApiConstants.baseApiUrl}/api/cart/$userId/items/$productId'),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception('Failed to remove item from server');
+        }
+      }
+
+      _items.removeWhere((item) => item.id == productId);
+      await _saveCartItems(); // Only save locally
+      notifyListeners();
+    } catch (e) {
+      print('Error removing item: $e');
+    }
+  }
+
+  Future<void> clearCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+
+      if (userId != null) {
+        final response = await http.delete(
+          Uri.parse('${ApiConstants.baseApiUrl}/api/cart/$userId'),
+        );
+
+        if (response.statusCode != 204) {
+          throw Exception('Failed to clear cart on server');
+        }
+      }
+
+      _items.clear();
+      await prefs.setString('cart', '[]');
+      notifyListeners();
+    } catch (e) {
+      print('Error clearing cart: $e');
+    }
   }
 
   void updateQuantity(String productId, int quantity) {
@@ -105,10 +184,4 @@ class CartProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
-  void clearCart() {
-    _items.clear();
-    _saveCartItems();
-    notifyListeners();
-  }
-} 
+}
