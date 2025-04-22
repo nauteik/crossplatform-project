@@ -25,12 +25,11 @@ public class CartController {
     @GetMapping("/{userId}")
     public ResponseEntity<?> getCart(@PathVariable String userId) {
         Cart cart = cartService.getCartByUserId(userId);
-        System.out.println("Cart for user ID " + userId + ":" + cart);
         return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(ApiStatus.SUCCESS.getCode(), "Cart Items List", cart));
     }
 
     @PostMapping("/{userId}/items")
-    public ResponseEntity addItemToCart(
+    public ResponseEntity<?> addItemToCart(
             @PathVariable String userId,
             @RequestBody CartItem cartItem) {
         ApiResponse<?> response = facadeService.addToCart(userId, cartItem);
@@ -42,11 +41,16 @@ public class CartController {
 
 
     @DeleteMapping("/{userId}/items/{productId}")
-    public ResponseEntity<Cart> removeItemFromCart(
+    public ResponseEntity<?> removeFromCart(
             @PathVariable String userId,
             @PathVariable String productId) {
-        Cart updatedCart = cartService.removeItemFromCart(userId, productId);
-        return ResponseEntity.ok(updatedCart);
+        ApiResponse<?> response = facadeService.removeFromCart(userId, productId);
+        if (response.getStatus() == ApiStatus.SUCCESS.getCode()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//        Cart updatedCart = cartService.removeItemFromCart(userId, productId);
+//        return ResponseEntity.ok(updatedCart);
     }
 
     @DeleteMapping("/{userId}")

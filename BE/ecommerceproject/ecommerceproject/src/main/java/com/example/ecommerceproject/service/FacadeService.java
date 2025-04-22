@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class FacadeService {
     private final BrandService brandService;
@@ -47,8 +49,47 @@ public class FacadeService {
 
         // 3. Thêm sản phẩm vào giỏ hàng
         Cart cart = cartService.addItemToCart(userId, cartItem);
+
+        // 4. Giảm số lượng sản phẩm trong kho
         productService.decreaseQuantity(cartItem.getProductId(), cartItem.getQuantity());
 
         return new ApiResponse<>(ApiStatus.SUCCESS.getCode(), "Item added to cart successfully!", cart);
     }
+
+    @Transactional
+    public ApiResponse<?> removeFromCart(String userId, String productId) {
+        // 1. Xác thực người dùng
+        User user = userService.getUserById(userId);
+        if (user == null) {
+            return new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), "User not found", null);
+        }
+
+        // 2. Kiểm tra sản phẩm trong giỏ hàng
+        Cart cart = cartService.getCartByUserId(userId);
+        List<CartItem> cartItemList = cart.getItems();
+        boolean productExistsInCart = false;
+        CartItem existingItem = null;
+
+        for (CartItem cI : cartItemList) {
+            if (cI.getProductId().equals(productId)) {
+                productExistsInCart = true;
+                existingItem = cI;
+                break;
+            }
+        }
+
+        if (!productExistsInCart) {
+            return new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), "Product not found in cart", null);
+        }
+
+        // 3. Xóa sản phẩm khỏi giỏ hàng
+        cartService.removeItemFromCart(userId, productId);
+
+        // 4. Tăng số lượng sản phẩm trong kho
+        productService.increaseQuantity(productId, existingItem.getQuantity());
+
+        return new ApiResponse<>(ApiStatus.SUCCESS.getCode(), "Item removed from cart successfully!", cart);
+    }
+
+//    https://github.com/momo-wallet/java/blob/master/src/main/java/com/mservice/models/Response.java
 }
