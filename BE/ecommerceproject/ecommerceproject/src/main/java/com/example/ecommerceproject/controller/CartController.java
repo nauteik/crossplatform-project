@@ -17,45 +17,45 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
 
     @Autowired
-    private CartService cartService;
-
-    @Autowired
     private FacadeService facadeService;
-
-    @GetMapping("/{userId}")
-    public ResponseEntity<?> getCart(@PathVariable String userId) {
-        Cart cart = cartService.getCartByUserId(userId);
-        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(ApiStatus.SUCCESS.getCode(), "Cart Items List", cart));
-    }
 
     @PostMapping("/{userId}/items")
     public ResponseEntity<?> addItemToCart(
             @PathVariable String userId,
             @RequestBody CartItem cartItem) {
-        ApiResponse<?> response = facadeService.addToCart(userId, cartItem);
+        ApiResponse<?> response = facadeService.addItemToCart(userId, cartItem);
         if (response.getStatus() == ApiStatus.SUCCESS.getCode()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-
     @DeleteMapping("/{userId}/items/{productId}")
-    public ResponseEntity<?> removeFromCart(
+    public ResponseEntity<?> removeItemFromCart(
             @PathVariable String userId,
             @PathVariable String productId) {
-        ApiResponse<?> response = facadeService.removeFromCart(userId, productId);
+        ApiResponse<?> response = facadeService.removeItemFromCart(userId, productId);
         if (response.getStatus() == ApiStatus.SUCCESS.getCode()) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-//        Cart updatedCart = cartService.removeItemFromCart(userId, productId);
-//        return ResponseEntity.ok(updatedCart);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getCartByUserId(@PathVariable String userId) {
+        ApiResponse<?> response = facadeService.getCartByUserId(userId);
+        if (response.getStatus() == ApiStatus.SUCCESS.getCode()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> clearCart(@PathVariable String userId) {
-        cartService.clearCart(userId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> clearCartItemsList(@PathVariable String userId) {
+        ApiResponse<?> response = facadeService.clearCartItemsList(userId);
+        if (response.getStatus() == ApiStatus.SUCCESS.getCode()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }
