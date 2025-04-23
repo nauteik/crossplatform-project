@@ -135,7 +135,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
       });
 
       try {
-        final userId = AuthService.getCurrentUserId();
+        final userId = await AuthService.getCurrentUserId(); // Add await here
         if (userId == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Vui lòng đăng nhập để đánh giá')),

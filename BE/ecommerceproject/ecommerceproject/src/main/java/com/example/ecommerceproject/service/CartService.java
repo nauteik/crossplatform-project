@@ -3,6 +3,8 @@ package com.example.ecommerceproject.service;
 import com.example.ecommerceproject.model.Cart;
 import com.example.ecommerceproject.model.CartItem;
 import com.example.ecommerceproject.repository.CartRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class CartService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CartService.class);
 
     @Autowired
     private CartRepository cartRepository;
@@ -51,6 +55,7 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
+
     public Cart removeItemFromCart(String userId, String productId) {
         Optional<Cart> cartOptional = cartRepository.findByUserId(userId);
 
@@ -69,7 +74,51 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
+    /**
+     * Remove multiple items from the cart by product IDs
+     * This is used after successful payment to remove only the purchased items
+     * 
+     * @param userId User ID
+     * @param productIds List of product IDs to remove
+     */
+    public void removeItemsFromCart(String userId, List<String> productIds) {
+        Optional<Cart> cartOptional = cartRepository.findByUserId(userId);
+
+        if (!cartOptional.isPresent()) {
+            logger.warn("Attempted to remove items from non-existent cart for user: {}", userId);
+            return;
+        }
+
+        Cart cart = cartOptional.get();
+        int initialCount = cart.getItems().size();
+        
+        // Filter out the items with product IDs in the list
+        cart.setItems(cart.getItems().stream()
+                .filter(item -> !productIds.contains(item.getProductId()))
+                .collect(Collectors.toList()));
+        
+        int removedCount = initialCount - cart.getItems().size();
+        logger.info("Removed {} items from cart for user: {}", removedCount, userId);
+
+        // Recalculate total price
+        updateCartTotalPrice(cart);
+
+        // Save the updated cart
+        cartRepository.save(cart);
+    }
+
     public void clearCartItemsList(String userId) {
+        Optional<Cart> cartOptional = cartRepository.findByUserId(userId);
+
+        if (cartOptional.isPresent()) {
+            Cart cart = cartOptional.get();
+            cart.getItems().clear();
+            cart.setTotalPrice(0);
+            cartRepository.save(cart);
+        }
+    }
+
+    public void clearCart(String userId) {
         Optional<Cart> cartOptional = cartRepository.findByUserId(userId);
 
         if (cartOptional.isPresent()) {

@@ -17,6 +17,7 @@ import '../../../cart/providers/cart_provider.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/models/review_model.dart';
 import '../screens/product_reviews_screen.dart';
+import '../../../payment/payment_feature.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -395,14 +396,85 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       bottomSheet: ProductBottomSheet(
         onAddToCart: _handleAddToCart,
         isLoadingAddToCart: _isAddingToCart,
-        onBuyNow: () {
-          // Mua ngay
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Chức năng mua ngay đang được phát triển'),
-              duration: Duration(seconds: 2),
-            ),
-          );
+        onBuyNow: () async {
+          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+          final productProvider = Provider.of<ProductProvider>(context, listen: false);
+          final cartProvider = Provider.of<CartProvider>(context, listen: false);
+          
+          // Check if user is authenticated
+          if (!authProvider.isAuthenticated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Vui lòng đăng nhập để mua hàng'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            NavigationHelper.navigateToLogin(context);
+            return;
+          }
+          
+          // Check if product is available
+          if (productProvider.currentProduct == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Thông tin sản phẩm chưa được tải xong'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            return;
+          }
+          
+          setState(() {
+            _isAddingToCart = true;
+          });
+          
+          try {
+            // Create a cart item from the current product
+            final product = productProvider.currentProduct!;
+            final cartItem = CartItemModel(
+              id: product.id,
+              name: product.name,
+              price: product.price,
+              imageUrl: product.primaryImageUrl,
+              quantity: _quantity,
+            );
+            
+            // Add to cart and select it
+            final response = await cartProvider.addItemAndSelect(cartItem);
+            
+            if (response.status == 1) {
+              // Show success message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${product.name} đã được thêm vào giỏ hàng'),
+                  duration: const Duration(seconds: 1),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              
+              // Navigate to cart screen with transition
+              NavigationHelper.navigateToCart(context);
+            } else {
+              // Show error message
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(response.message),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Đã xảy ra lỗi: ${e.toString()}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } finally {
+            setState(() {
+              _isAddingToCart = false;
+            });
+          }
         },
       ),
     );

@@ -90,6 +90,23 @@ class CartManager implements CartSubject {
     }
   }
 
+  Future<void> removeMultipleItems(List<String> productIds) async {
+    if (productIds.isEmpty) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+
+      if (userId != null) {
+        await _repository.removeMultipleFromCart(userId, productIds);
+        _items.removeWhere((item) => productIds.contains(item.id));
+        notify();
+      }
+    } catch (e) {
+      print('Error removing multiple items: $e');
+    }
+  }
+
   void setItems(List<CartItemModel> items) {
     _items.clear();
     _items.addAll(items);

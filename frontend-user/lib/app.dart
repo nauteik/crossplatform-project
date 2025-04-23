@@ -5,6 +5,7 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/cart/providers/cart_provider.dart';
 import 'features/product/providers/product_provider.dart';
 import 'features/navigation/providers/navigation_provider.dart';
+import 'features/payment/payment_feature.dart'; // Import PaymentFeature
 import 'widgets/main_layout.dart';
 import 'core/routes/app_router.dart';
 
@@ -16,10 +17,11 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()), // Keep one CartProvider
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
-        ChangeNotifierProvider(create: (context) => CartProvider()),
+        // Add PaymentProvider using the static method from PaymentFeature
+        ...PaymentFeature.getProviders(),
       ],
       child: MaterialApp(
         title: 'Personal Computer Shop',

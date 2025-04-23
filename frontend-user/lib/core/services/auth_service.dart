@@ -11,18 +11,15 @@ class AuthService {
   final String baseUrl = "${ApiConstants.baseApiUrl}/api/auth";
 
   // Phương thức tĩnh để lấy ID người dùng hiện tại từ local storage
-  static String? getCurrentUserId() {
+  static Future<String?> getCurrentUserId() async {
     // Đọc từ SharedPreferences (cần đảm bảo đã lưu ID khi đăng nhập)
     try {
-      // Trong thực tế, cần đọc giá trị từ SharedPreferences
-      // Đây là cách triển khai tạm thời để demo
-      SharedPreferences prefs =
-          SharedPreferences.getInstance() as SharedPreferences;
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
       return prefs.getString(USER_ID_KEY);
     } catch (e) {
-      print("Error getting current user ID: $e");
-      // Trả về ID giả định cho mục đích demo - trong ứng dụng thực, bạn nên xử lý đúng cách
-      return "demo_user_id";
+      print("Error getting current user ID from SharedPreferences: $e");
+      // Return null or throw an exception if the ID cannot be retrieved
+      return null;
     }
   }
 

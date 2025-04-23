@@ -116,6 +116,41 @@ class CartRepository {
     }
   }
 
+  // Xóa nhiều sản phẩm khỏi giỏ hàng (sau khi thanh toán)
+  Future<ApiResponse<dynamic>> removeMultipleFromCart(
+    String userId,
+    List<String> productIds,
+  ) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/cart/$userId/items'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'productIds': productIds}),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        return ApiResponse(
+          status: 1,
+          message: 'Xóa các sản phẩm khỏi giỏ hàng thành công',
+          data: responseData,
+        );
+      } else {
+        return ApiResponse(
+          status: 0,
+          message: 'Xóa các sản phẩm khỏi giỏ hàng thất bại',
+          data: null,
+        );
+      }
+    } catch (e) {
+      return ApiResponse(
+        status: 0,
+        message: 'Lỗi khi xóa các sản phẩm khỏi giỏ hàng: $e',
+        data: null,
+      );
+    }
+  }
+
   // Xóa toàn bộ giỏ hàng
   Future<ApiResponse<dynamic>> clearCart(String userId) async {
     try {
