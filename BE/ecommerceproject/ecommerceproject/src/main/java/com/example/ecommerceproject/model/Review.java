@@ -1,5 +1,6 @@
 package com.example.ecommerceproject.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +23,8 @@ public class Review {
     private int rating; //danh gia sao
     private String comment;
     private List<Media> media = new ArrayList<>();
+    
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt = LocalDateTime.now();
-    // getters & setters
 }
 

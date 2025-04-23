@@ -154,7 +154,7 @@ packages:
       sha256: bdb68674043280c3428e9ec998512fb681678676b3c54e773629ffe74419f8c7
       url: "https://pub.dev"
     source: hosted
-    version: "1.16.0"
+    version: "1.15.0"
   nested:
     dependency: transitive
     description:
@@ -170,7 +170,7 @@ packages:
       sha256: "087ce49c3f0dc39180befefc60fdb4acd8f8620e5682fe2476afd0b3688bb4af"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.1"
+    version: "1.9.0"
   provider:
     dependency: "direct main"
     description:
@@ -239,7 +239,7 @@ packages:
       sha256: "664d3a9a64782fcdeb83ce9c6b39e78fd2971d4e37827b9b06c3aa1edc5e760c"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.4"
+    version: "0.7.3"
   typed_data:
     dependency: transitive
     description:
@@ -263,7 +263,7 @@ packages:
       sha256: f6be3ed8bd01289b34d679c2b62226f63c0e69f9fd2e50a6b3c1c729a961041b
       url: "https://pub.dev"
     source: hosted
-    version: "14.3.1"
+    version: "14.3.0"
   web:
     dependency: transitive
     description:

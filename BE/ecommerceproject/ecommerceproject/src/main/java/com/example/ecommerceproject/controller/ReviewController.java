@@ -93,6 +93,10 @@ public class ReviewController {
             if (reviews.isEmpty()) {
                 return ResponseEntity.ok(new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), "No reviews found for this product", reviews));
             }
+            
+            // Sort reviews by createdAt (newest first)
+            reviews.sort((r1, r2) -> r2.getCreatedAt().compareTo(r1.getCreatedAt()));
+            
             return ResponseEntity.ok(new ApiResponse<>(ApiStatus.SUCCESS.getCode(), ApiStatus.SUCCESS.getMessage(), reviews));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(

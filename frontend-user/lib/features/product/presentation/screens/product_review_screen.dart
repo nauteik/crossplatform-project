@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../providers/product_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/models/review_model.dart';
@@ -135,11 +136,20 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
       });
 
       try {
-        final userId = AuthService.getCurrentUserId();
-        if (userId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Vui lòng đăng nhập để đánh giá')),
-          );
+        final prefs = await SharedPreferences.getInstance();
+        final userId = prefs.getString('userId');
+
+        if (userId == null || userId.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Vui lòng đăng nhập để đánh giá sản phẩm'),
+              ),
+            );
+            setState(() {
+              _isLoading = false;
+            });
+          }
           return;
         }
 
@@ -155,9 +165,11 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
         request.fields['comment'] = _commentController.text;
 
         // Add images
-        for (var image in _selectedImages) {
+        for (var i = 0; i < _selectedImages.length; i++) {
+          final image = _selectedImages[i];
           final imageBytes = await image.readAsBytes();
           final filename = image.name;
+          print("Thêm hình ảnh: $filename");
           request.files.add(http.MultipartFile.fromBytes(
             'files',
             imageBytes,
@@ -169,6 +181,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
         if (_selectedVideo != null) {
           final videoBytes = await _selectedVideo!.readAsBytes();
           final filename = _selectedVideo!.name;
+          print("Thêm video: $filename");
           request.files.add(http.MultipartFile.fromBytes(
             'files',
             videoBytes,
@@ -177,31 +190,72 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
         }
 
         // Send the request
-        var response = await request.send();
+        var streamedResponse = await request.send();
+        var response = await http.Response.fromStream(streamedResponse);
+
+        print("Phản hồi server: ${response.statusCode}");
+        print("Response body: ${response.body}");
 
         if (response.statusCode == 200) {
-          // Refresh review summary after submission
-          await _fetchReviewSummary();
+          // Parse response body
+          var responseData = jsonDecode(response.body);
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Cảm ơn bạn đã đánh giá sản phẩm')),
-            );
-            Navigator.pop(context,
-                true); // Return true to indicate a successful review submission
+          if (responseData['status'] == 200) {
+            // Success status
+            if (mounted) {
+              // Hiển thị thông báo thành công
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Cảm ơn bạn đã đánh giá sản phẩm'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(
+                      seconds:
+                          1), // Giảm thời gian hiển thị để chuyển màn hình nhanh hơn
+                ),
+              );
+
+              // Tạo đối tượng kết quả để trả về màn hình chi tiết sản phẩm
+              final reviewResult = {
+                'success': true,
+                'rating': _rating,
+                'comment': _commentController.text,
+              };
+
+              // Trì hoãn chuyển màn hình để người dùng thấy thông báo thành công
+              Future.delayed(const Duration(milliseconds: 700), () {
+                Navigator.pop(context, reviewResult); // Trả về kết quả đánh giá
+              });
+            }
+          } else {
+            // API returned success HTTP status but with error in payload
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(responseData['message'] ?? 'Đã có lỗi xảy ra'),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
           }
         } else {
+          // HTTP error status
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Đã có lỗi xảy ra khi gửi đánh giá')),
+              SnackBar(
+                content: Text('Lỗi máy chủ: ${response.statusCode}'),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         }
       } catch (e) {
+        print("Lỗi ngoại lệ khi gửi đánh giá: $e");
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Đã có lỗi: $e')),
+            SnackBar(
+              content: Text('Đã có lỗi xảy ra: $e'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       } finally {

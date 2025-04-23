@@ -54,6 +54,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/user/**").permitAll()
+                .requestMatchers("/login/oauth2/**").permitAll()
                 // Image API paths
                 .requestMatchers("/api/images/**").permitAll()
                 // Cart APT paths
@@ -85,6 +86,9 @@ public class SecurityConfig {
                 // Review API paths 
                 .requestMatchers("/api/reviews/**").permitAll()
                 .anyRequest().authenticated()
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("/api/auth/oauth2-success", true)
             )
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
