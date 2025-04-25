@@ -8,6 +8,9 @@ import 'features/navigation/providers/navigation_provider.dart';
 import 'features/payment/payment_feature.dart'; // Import PaymentFeature
 import 'widgets/main_layout.dart';
 import 'core/routes/app_router.dart';
+import 'package:frontend_user/features/build_pc/providers/pc_provider.dart';
+import 'package:frontend_user/features/build_pc/presentation/screens/build_configuration_screen.dart';
+import 'package:frontend_user/features/build_pc/presentation/screens/saved_builds_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -22,6 +25,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
         // Add PaymentProvider using the static method from PaymentFeature
         ...PaymentFeature.getProviders(),
+        ChangeNotifierProvider(create: (context) => PCProvider()),
       ],
       child: MaterialApp(
         title: 'Personal Computer Shop',
@@ -42,6 +46,10 @@ class MyApp extends StatelessWidget {
           ),
         ),
         home: const MainLayout(),
+        routes: {
+          '/build_pc': (context) => const BuildConfigurationScreen(),
+          '/saved_builds': (context) => const SavedBuildsScreen(),
+        },
       ),
     );
   }

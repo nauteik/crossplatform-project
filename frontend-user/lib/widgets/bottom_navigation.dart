@@ -31,8 +31,8 @@ class BottomNavigation extends StatelessWidget {
             label: 'Trang chủ',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
-            label: 'Đơn hàng',
+            icon: Icon(Icons.computer),
+            label: 'Build PC',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
@@ -42,4 +42,4 @@ class BottomNavigation extends StatelessWidget {
       ),
     );
   }
-} 
+}

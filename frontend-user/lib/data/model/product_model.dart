@@ -10,6 +10,7 @@ class ProductModel {
   final double discountPercent;
   final Map<String, dynamic> brand;
   final Map<String, dynamic> productType;
+  final Map<String, dynamic>? specifications; // Add this field for product specifications
 
   ProductModel({
     required this.id,
@@ -23,6 +24,7 @@ class ProductModel {
     required this.discountPercent,
     required this.brand,
     required this.productType,
+    this.specifications, // Make it optional for backward compatibility
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class ProductModel {
       discountPercent: (json['discountPercent'] ?? 0).toDouble(),
       brand: json['brand'] ?? {},
       productType: json['productType'] ?? {},
+      specifications: json['specifications'] as Map<String, dynamic>?, // Parse specifications from JSON
     );
   }
 
@@ -54,6 +57,7 @@ class ProductModel {
       'discountPercent': discountPercent,
       'brand': brand,
       'productType': productType,
+      'specifications': specifications,
     };
   }
-} 
+}

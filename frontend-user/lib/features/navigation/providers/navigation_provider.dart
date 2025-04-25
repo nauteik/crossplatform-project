@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../home/presentation/screens/home_screen.dart';
-import '../../profile/presentation/screens/order_screen.dart';
+import '../../build_pc/presentation/screens/build_configuration_screen.dart';
 import '../../profile/presentation/screens/profile_screen.dart';
 
 class NavigationProvider extends ChangeNotifier {
@@ -16,7 +16,7 @@ class NavigationProvider extends ChangeNotifier {
   void _initScreens() {
     _screens = [
       const HomeScreen(),
-      const OrderScreen(),
+      const BuildConfigurationScreen(),
       const ProfileScreen(),
     ];
     _currentScreen = _screens[0];
@@ -57,4 +57,4 @@ class NavigationProvider extends ChangeNotifier {
     _currentScreen = screen;
     notifyListeners();
   }
-} 
+}
