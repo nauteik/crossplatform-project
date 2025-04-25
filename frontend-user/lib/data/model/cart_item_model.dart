@@ -25,11 +25,11 @@ class CartItemModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'name': name,
+      'productId': id,
+      'productName': name,  // Changed 'name' to 'productName' to match backend expectation
       'price': price,
       'imageUrl': imageUrl,
       'quantity': quantity,
     };
   }
-} 
+}

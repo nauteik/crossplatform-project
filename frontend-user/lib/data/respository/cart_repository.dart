@@ -21,7 +21,7 @@ class CartRepository {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'productId': productId,
-          'name': name,
+          'productName': name,
           'price': price,
           'imageUrl': imageUrl,
           'quantity': quantity,

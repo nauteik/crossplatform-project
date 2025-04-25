@@ -85,6 +85,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/product/discount-type/{productTypeId}").permitAll()
                 // Review API paths 
                 .requestMatchers("/api/reviews/**").permitAll()
+                // PC API paths
+                .requestMatchers("/api/pc/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

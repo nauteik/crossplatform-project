@@ -223,4 +223,53 @@ class PCRepository {
       throw Exception('Error deleting PC: $e');
     }
   }
+
+  // Add PC components to cart
+  Future<ApiResponse<dynamic>> addPCComponentsToCart(String pcId, String userId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/pc/$pcId/add-to-cart'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'userId': userId}),
+      );
+      
+      // Check if response body is empty before parsing
+      if (response.body.isEmpty) {
+        return ApiResponse(
+          status: 0,
+          message: 'Server returned an empty response',
+          data: null,
+        );
+      }
+      
+      try {
+        final responseData = json.decode(response.body);
+        if (response.statusCode == 200) {
+          return ApiResponse(
+            status: 1,
+            message: responseData['message'] ?? 'PC components added to cart successfully',
+            data: null,
+          );
+        } else {
+          return ApiResponse(
+            status: 0,
+            message: responseData['message'] ?? 'Failed to add PC components to cart',
+            data: null,
+          );
+        }
+      } catch (parseError) {
+        return ApiResponse(
+          status: 0,
+          message: 'Error parsing response: ${parseError.toString()}',
+          data: null,
+        );
+      }
+    } catch (e) {
+      return ApiResponse(
+        status: 0,
+        message: 'Error adding PC components to cart: ${e.toString()}',
+        data: null,
+      );
+    }
+  }
 }

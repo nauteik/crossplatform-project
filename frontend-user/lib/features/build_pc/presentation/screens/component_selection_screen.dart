@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend_user/core/utils/format_currency.dart';
 import 'package:frontend_user/data/model/product_model.dart';
 import 'package:frontend_user/data/respository/product_repository.dart';
+import 'package:frontend_user/core/utils/image_helper.dart';
 
 class ComponentSelectionScreen extends StatefulWidget {
   final String componentType;
@@ -180,7 +181,7 @@ class _ComponentSelectionScreenState extends State<ComponentSelectionScreen> {
                                       ),
                                       child: component.primaryImageUrl.isNotEmpty
                                           ? Image.network(
-                                              "http://localhost:8080/api/images/${component.primaryImageUrl}",
+                                              ImageHelper.getImage(component.primaryImageUrl),
                                               fit: BoxFit.cover,
                                               errorBuilder: (context, error, stackTrace) =>
                                                   const Icon(Icons.image_not_supported),

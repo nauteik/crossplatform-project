@@ -4,6 +4,7 @@ import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.pc.PC;
 import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.service.PCService;
+import com.example.ecommerceproject.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +19,12 @@ import java.util.Map;
 public class PCController {
     
     private final PCService pcService;
+    private final CartService cartService;
     
     @Autowired
-    public PCController(PCService pcService) {
+    public PCController(PCService pcService, CartService cartService) {
         this.pcService = pcService;
+        this.cartService = cartService;
     }
     
     @GetMapping("/all")
@@ -168,5 +171,48 @@ public class PCController {
                 ApiStatus.NOT_FOUND.getMessage()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    
+    @PostMapping("/{id}/add-to-cart")
+    public ResponseEntity<ApiResponse<Void>> addPCComponentsToCart(
+            @PathVariable String id, 
+            @RequestBody Map<String, String> request) {
+        String userId = request.get("userId");
+        
+        if (userId == null || userId.isEmpty()) {
+            ApiResponse<Void> response = new ApiResponse<>(
+                    ApiStatus.BAD_REQUEST.getCode(),
+                    "User ID is required"
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        try {
+            // Get the PC build by ID
+            PC pc = pcService.getPCById(id);
+            
+            if (pc == null) {
+                ApiResponse<Void> response = new ApiResponse<>(
+                        ApiStatus.NOT_FOUND.getCode(),
+                        "PC build not found"
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+            
+            // Add all components to the cart
+            pcService.addPCComponentsToCart(pc, userId);
+            
+            ApiResponse<Void> response = new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    "PC components added to cart successfully"
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            ApiResponse<Void> response = new ApiResponse<>(
+                    ApiStatus.SERVER_ERROR.getCode(),
+                    "Error adding PC components to cart: " + e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 }

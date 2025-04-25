@@ -1,5 +1,6 @@
 package com.example.ecommerceproject.service;
 
+import com.example.ecommerceproject.model.CartItem;
 import com.example.ecommerceproject.model.Product;
 import com.example.ecommerceproject.model.pc.PC;
 import com.example.ecommerceproject.model.pc.PCDirector;
@@ -19,12 +20,14 @@ public class PCService {
     private final PCRepository pcRepository;
     private final ProductRepository productRepository;
     private final PCDirector pcDirector;
+    private final CartService cartService;
     
     @Autowired
-    public PCService(PCRepository pcRepository, ProductRepository productRepository, PCDirector pcDirector) {
+    public PCService(PCRepository pcRepository, ProductRepository productRepository, PCDirector pcDirector, CartService cartService) {
         this.pcRepository = pcRepository;
         this.productRepository = productRepository;
         this.pcDirector = pcDirector;
+        this.cartService = cartService;
     }
     
     public List<PC> getAllPCs() {
@@ -205,5 +208,44 @@ public class PCService {
         }
         
         return pc;
+    }
+    
+    /**
+     * Add all components of a PC build to the user's cart
+     * 
+     * @param pc The PC build containing components to add to the cart
+     * @param userId The ID of the user who owns the cart
+     */
+    public void addPCComponentsToCart(PC pc, String userId) {
+        // Add each component to the cart with quantity 1
+        addComponentToCart(pc.getCpu(), userId);
+        addComponentToCart(pc.getMotherboard(), userId);
+        addComponentToCart(pc.getRam(), userId);
+        addComponentToCart(pc.getStorage(), userId);
+        addComponentToCart(pc.getPowerSupply(), userId);
+        
+        // Optional components
+        addComponentToCart(pc.getGpu(), userId);
+        addComponentToCart(pc.getPcCase(), userId);
+        addComponentToCart(pc.getCooling(), userId);
+    }
+    
+    /**
+     * Helper method to add a single component to the cart
+     * 
+     * @param product The product to add to the cart
+     * @param userId The ID of the user who owns the cart
+     */
+    private void addComponentToCart(Product product, String userId) {
+        if (product == null) return;
+        
+        CartItem cartItem = new CartItem();
+        cartItem.setProductId(product.getId());
+        cartItem.setProductName(product.getName());
+        cartItem.setQuantity(1);
+        cartItem.setPrice(product.getPrice());
+        cartItem.setImageUrl(product.getPrimaryImageUrl());
+        
+        cartService.addItemToCart(userId, cartItem);
     }
 }

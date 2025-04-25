@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:frontend_user/core/utils/format_currency.dart';
 import 'package:frontend_user/features/build_pc/models/pc_model.dart';
 import 'package:frontend_user/features/build_pc/providers/pc_provider.dart';
+import 'package:frontend_user/features/auth/providers/auth_provider.dart';
+import 'package:frontend_user/core/utils/navigation_helper.dart';
 
 class SavedBuildsScreen extends StatefulWidget {
   const SavedBuildsScreen({Key? key}) : super(key: key);
@@ -12,6 +14,9 @@ class SavedBuildsScreen extends StatefulWidget {
 }
 
 class _SavedBuildsScreenState extends State<SavedBuildsScreen> {
+  // Track which builds are currently adding to cart
+  final Map<String, bool> _addingToCartMap = {};
+  
   @override
   void initState() {
     super.initState();
@@ -23,6 +28,66 @@ class _SavedBuildsScreenState extends State<SavedBuildsScreen> {
   Future<void> _loadUserBuilds() async {
     final pcProvider = Provider.of<PCProvider>(context, listen: false);
     await pcProvider.loadUserBuilds();
+  }
+  
+  // New method to handle adding PC components to cart
+  Future<void> _addComponentsToCart(String pcId) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final pcProvider = Provider.of<PCProvider>(context, listen: false);
+    
+    // Check if user is authenticated
+    if (!authProvider.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please login to add items to your cart'))
+      );
+      NavigationHelper.navigateToLogin(context);
+      return;
+    }
+    
+    // Set the specific build as loading
+    setState(() {
+      _addingToCartMap[pcId] = true;
+    });
+    
+    try {
+      final String? userId = authProvider.userId;
+      
+      if (userId == null) {
+        throw Exception('User ID not found');
+      }
+      
+      final result = await pcProvider.addPCComponentsToCart(pcId, userId);
+      
+      if (result) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('All components added to cart successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${pcProvider.errorMessage}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error adding components to cart: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      // Reset loading state
+      if (mounted) {
+        setState(() {
+          _addingToCartMap[pcId] = false;
+        });
+      }
+    }
   }
 
   @override
@@ -88,6 +153,9 @@ class _SavedBuildsScreenState extends State<SavedBuildsScreen> {
         itemCount: builds.length,
         itemBuilder: (context, index) {
           final build = builds[index];
+          // Check if this build is currently being added to cart
+          final bool isAddingToCart = _addingToCartMap[build.id ?? ''] ?? false;
+          
           return Card(
             margin: const EdgeInsets.only(bottom: 16),
             elevation: 3,
@@ -276,33 +344,43 @@ class _SavedBuildsScreenState extends State<SavedBuildsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          // TODO: Add to cart functionality
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Adding to cart feature coming soon')),
-                          );
-                        },
-                        icon: const Icon(Icons.shopping_cart),
-                        label: const Text('Add to Cart'),
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: isAddingToCart || build.id == null
+                              ? null // Disable when already adding to cart or no build ID
+                              : () => _addComponentsToCart(build.id!),
+                          icon: isAddingToCart 
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.shopping_cart),
+                          label: Text(isAddingToCart ? 'Adding...' : 'Add to Cart'),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          // Show delete confirmation
-                          _showDeleteConfirmation(context, build.id!, provider);
-                        },
-                        icon: const Icon(Icons.delete_outline),
-                        label: const Text('Delete Build'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: isAddingToCart
+                              ? null // Disable delete while adding to cart
+                              : () {
+                                  // Show delete confirmation
+                                  _showDeleteConfirmation(context, build.id!, provider);
+                                },
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('Delete Build'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),

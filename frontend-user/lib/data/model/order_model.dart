@@ -25,6 +25,18 @@ class OrderModel {
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(dynamic value) {
+      if (value is String) {
+        return DateTime.parse(value);
+      } else if (value is List && value.length >= 6) {
+        // [year, month, day, hour, minute, second, ...]
+        return DateTime(
+          value[0], value[1], value[2], value[3], value[4], value[5]
+        );
+      } else {
+        return DateTime.now();
+      }
+    }
     return OrderModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
@@ -35,12 +47,8 @@ class OrderModel {
       status: OrderStatus.fromString(json['status'] ?? 'PENDING'),
       paymentMethod: json['paymentMethod'] ?? '',
       shippingAddress: json['shippingAddress'] ?? '',
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.now(),
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.now(),
+      createdAt: parseDate(json['createdAt']),
+      updatedAt: parseDate(json['updatedAt']),
     );
   }
 

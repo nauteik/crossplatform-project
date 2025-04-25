@@ -245,6 +245,32 @@ class PCProvider extends ChangeNotifier {
     }
   }
   
+  // Add all components of a PC build to the user's cart
+  Future<bool> addPCComponentsToCart(String pcId, String userId) async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+    
+    try {
+      final result = await _repository.addPCComponentsToCart(pcId, userId);
+      
+      _isLoading = false;
+      notifyListeners();
+      
+      if (result.status == 1) {
+        return true;
+      } else {
+        _errorMessage = result.message;
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+  
   // Update component suggestions based on selected components
   void updateSuggestions(List<ProductModel> products) {
     _suggestedCpus = products.where((p) => p.productType['name'] == 'CPU').toList();

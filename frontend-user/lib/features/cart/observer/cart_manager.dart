@@ -59,7 +59,7 @@ class CartManager implements CartSubject {
           price: item.price,
           name: item.name,
           imageUrl: item.imageUrl);
-
+    print('Response: $response');
       if (response.status == 1) {
         _items.add(item);
         notify();
