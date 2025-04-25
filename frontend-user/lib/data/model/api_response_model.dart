@@ -16,4 +16,4 @@ class ApiResponse<T> {
       data: json['data'] != null ? fromJsonT(json['data']) : null,
     );
   }
-} 
+}

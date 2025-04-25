@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping(path = "/user")
+@RequestMapping("/user")
 @CrossOrigin("*") // Cho phép frontend gọi API
 public class UserController {
 
@@ -155,6 +155,42 @@ public class UserController {
                     "Failed to retrieve current user: " + e.getMessage(),
                     null
                 ));
+        }
+    }
+
+    /**
+     * Xóa người dùng theo ID
+     * @param userId ID của người dùng cần xóa
+     * @return ResponseEntity với ApiResponse thông báo kết quả xóa
+     */
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<ApiResponse<?>> deleteUser(@PathVariable String userId) {
+        try {
+            // Kiểm tra xem user có tồn tại không
+            if (!userRepo.existsById(userId)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(
+                                ApiStatus.SERVER_ERROR.getCode(),
+                                "Không tìm thấy người dùng với ID: " + userId,
+                                null
+                        ));
+            }
+
+            // Xóa user
+            userRepo.deleteById(userId);
+
+            return ResponseEntity.ok(new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    "Đã xóa người dùng thành công",
+                    null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(
+                            ApiStatus.SERVER_ERROR.getCode(),
+                            "Lỗi khi xóa người dùng: " + e.getMessage(),
+                            null
+                    ));
         }
     }
 }

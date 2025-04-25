@@ -36,13 +36,15 @@ class AdminSidebar extends StatelessWidget {
       ),
       items: const [
         SidebarXItem(icon: FontAwesomeIcons.house, label: 'Home'),
-        SidebarXItem(icon: FontAwesomeIcons.chartSimple, label: 'View Statistics'),
-        SidebarXItem(icon: FontAwesomeIcons.circleInfo, label: 'Customer Support'),
+        SidebarXItem(icon: FontAwesomeIcons.chartSimple, label: 'Statistics'),
+        SidebarXItem(icon: FontAwesomeIcons.circleInfo, label: 'Customers Support'),
         SidebarXItem(icon: FontAwesomeIcons.warehouse, label: 'Products Management'),
         SidebarXItem(icon: FontAwesomeIcons.users, label: 'Users Management'),
         SidebarXItem(icon: FontAwesomeIcons.ticketSimple, label: 'Coupons Management'),
         SidebarXItem(icon: FontAwesomeIcons.truckRampBox, label: 'Orders Management'),
         SidebarXItem(icon: FontAwesomeIcons.percent, label: 'Products Promotion'),
+        SidebarXItem(icon: FontAwesomeIcons.rightToBracket, label: 'Login'),
+        SidebarXItem(icon: FontAwesomeIcons.rightFromBracket, label: 'Logout'),
       ],
     );
   }
