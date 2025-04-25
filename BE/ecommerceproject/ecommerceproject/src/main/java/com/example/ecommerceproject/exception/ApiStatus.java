@@ -8,7 +8,8 @@ public enum ApiStatus {
     EMAIL_ALREADY_EXISTS(401, "Email is already in use!"),
     NOT_AUTHOR(405, "Not Author"),
     INVALID_CREDENTIALS(402, "Invalid username or password"),
-    INVALID_TOKEN(406, "Invalid token");
+    INVALID_TOKEN(406, "Invalid token"),
+    BAD_REQUEST(400, "Bad Request");
 
     private final int code;
     private final String message;

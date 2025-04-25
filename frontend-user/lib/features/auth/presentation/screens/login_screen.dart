@@ -43,19 +43,19 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
+
       try {
         final success = await authProvider.login(
           _usernameController.text.trim(),
           _passwordController.text,
         );
-        
+
         if (success && mounted) {
           // Đăng nhập thành công
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Đăng nhập thành công')),
           );
-          
+
           // Quay lại màn hình trước đó
           Navigator.pop(context);
         } else if (mounted) {
@@ -71,7 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text('Đăng nhập thất bại'),
                   ],
                 ),
-                content: Text(authProvider.errorMessage ?? 'Đăng nhập thất bại'),
+                content:
+                    Text(authProvider.errorMessage ?? 'Đăng nhập thất bại'),
                 actions: [
                   TextButton(
                     child: const Text('OK'),
@@ -96,7 +97,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("LoginScreen build");
     return Scaffold(
       appBar: AppBar(
         title: const Text('Đăng nhập'),
@@ -115,6 +115,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.blue,
               ),
               const SizedBox(height: 40),
+
+              // Các field đăng nhập hiện tại
               TextFormField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
@@ -139,7 +141,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
                     onPressed: _togglePasswordVisibility,
                   ),
@@ -152,6 +156,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 20),
+
+              // Nút đăng nhập hiện tại
               ElevatedButton(
                 onPressed: _isLoading ? null : _login,
                 style: ElevatedButton.styleFrom(
@@ -163,6 +169,42 @@ class _LoginScreenState extends State<LoginScreen> {
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text('ĐĂNG NHẬP', style: TextStyle(fontSize: 16)),
               ),
+
+              // Đường phân cách
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                child: Row(
+                  children: [
+                    Expanded(child: Divider(thickness: 1)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text('HOẶC', style: TextStyle(color: Colors.grey)),
+                    ),
+                    Expanded(child: Divider(thickness: 1)),
+                  ],
+                ),
+              ),
+
+              // Nút đăng nhập bằng Google
+              ElevatedButton.icon(
+                icon: Image.asset(
+                  'assets/images/google_logo.png', // Thêm logo Google vào assets
+                  height: 24.0,
+                ),
+                label: const Text(
+                  'Đăng nhập bằng Google',
+                  style: TextStyle(color: Colors.black87),
+                ),
+                onPressed: _isLoading ? null : _signInWithGoogle,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
+                  elevation: 1,
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -182,4 +224,73 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-} 
+
+  // Thêm phương thức xử lý đăng nhập Google
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    try {
+
+      print("Đang xử lý đăng nhập Google...");
+      final success = await authProvider.signInWithGoogle();
+      print("Kết thúc xử lý đăng nhập Google");
+      if (success && mounted) {
+        // Đăng nhập thành công
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Đăng nhập Google thành công'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Quay lại màn hình trước đó
+        Navigator.pop(context);
+      } else if (mounted) {
+        // Hiển thị lỗi đăng nhập
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Row(
+                children: const [
+                  Icon(Icons.error_outline, color: Colors.red),
+                  SizedBox(width: 10),
+                  Text('Đăng nhập thất bại'),
+                ],
+              ),
+              content: Text(
+                  authProvider.errorMessage ?? 'Đăng nhập Google thất bại'),
+              actions: [
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+}

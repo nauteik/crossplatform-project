@@ -3,6 +3,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/product/presentation/screens/product_detail_screen.dart';
 import '../../features/product/presentation/screens/product_review_screen.dart';
+import '../../features/cart/presentation/screens/cart_screen.dart';
 import '../../utils/route_transitions.dart';
 
 class NavigationHelper {
@@ -32,4 +33,11 @@ class NavigationHelper {
       page: ProductReviewScreen(productId: productId),
     );
   }
-} 
+  
+  static Future<T?> navigateToCart<T>(BuildContext context) {
+    return pushWithSlideTransition(
+      context: context,
+      page: const CartScreen(),
+    );
+  }
+}

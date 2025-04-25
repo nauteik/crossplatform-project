@@ -13,11 +13,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class JwtUtil {
-
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    // Use a consistent secret key instead of generating a new one on each restart
+    private static final String SECRET_KEY = "eCommerceSecretKey123456789012345678901234567890";
+    private final Key key;
+    
+    public JwtUtil() {
+        // Create a consistent key using the SECRET_KEY string
+        this.key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    }
 
     @Value("${jwt.expiration:86400000}")
     private long jwtExpiration; // 24 giờ theo mặc định

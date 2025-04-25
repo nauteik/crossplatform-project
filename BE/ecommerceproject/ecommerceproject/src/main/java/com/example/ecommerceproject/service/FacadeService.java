@@ -32,7 +32,7 @@ public class FacadeService {
 
     // Quy trình thêm sản phẩn vào giỏ hàng
     @Transactional
-    public ApiResponse<?> addItemToCart(String userId, CartItem cartItem) {
+    public ApiResponse<?> addToCart(String userId, CartItem cartItem) {
         // 1. Kiểm tra người dùng
         User user = userService.getUserById(userId);
         if (user == null) {
@@ -58,7 +58,7 @@ public class FacadeService {
     }
 
     @Transactional
-    public ApiResponse<?> removeItemFromCart(String userId, String productId) {
+    public ApiResponse<?> removeFromCart(String userId, String productId) {
         // 1. Kiểm tra người dùng
         User user = userService.getUserById(userId);
         if (user == null) {
@@ -104,7 +104,7 @@ public class FacadeService {
         return new ApiResponse<>(ApiStatus.SUCCESS.getCode(), "Cart Items List", cart);
     }
 
-    public ApiResponse<?> clearCartItemsList(String userId) {
+    public ApiResponse<?> clearCart(String userId) {
         // 1. Kiểm tra người dùng
         User user = userService.getUserById(userId);
         if (user == null) {

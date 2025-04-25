@@ -3,6 +3,8 @@ import 'package:frontend_user/data/model/cart_item_model.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../../../core/utils/image_helper.dart';
+import '../../../auth/providers/auth_provider.dart';
+import '../../../payment/payment_feature.dart';
 
 // Changed from StatelessWidget to StatefulWidget
 class CartScreen extends StatefulWidget {
@@ -16,7 +18,7 @@ class _CartScreenState extends State<CartScreen> {
   // Add a loading state
   var _isLoading = false;
   List<CartItemModel> items = [];
-
+  
   @override
   void initState() {
     // Call the data loading function when the screen initializes
@@ -55,6 +57,9 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     // Consumer is still used here to react to provider changes AFTER loading
+    final authProvider = Provider.of<AuthProvider>(context);
+    final bool isAuthenticated = authProvider.isAuthenticated;
+    
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
@@ -157,14 +162,24 @@ class _CartScreenState extends State<CartScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundImage:
-                                        NetworkImage(ImageHelper.getImage(item.imageUrl)),
-                                    backgroundColor:
-                                        Colors.grey[200], // Placeholder color
-                                    onBackgroundImageError: (e, stackTrace) =>
-                                        print(
-                                            'Image failed to load: $e'), // Handle image loading errors
+                                  // Add a checkbox for item selection
+                                  leading: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Checkbox(
+                                        value: cart.isItemSelected(item.id),
+                                        onChanged: (_) => cart.toggleItemSelection(item.id),
+                                      ),
+                                      CircleAvatar(
+                                        backgroundImage:
+                                            NetworkImage(ImageHelper.getImage(item.imageUrl)),
+                                        backgroundColor:
+                                            Colors.grey[200], // Placeholder color
+                                        onBackgroundImageError: (e, stackTrace) =>
+                                            print(
+                                                'Image failed to load: $e'), // Handle image loading errors
+                                      ),
+                                    ],
                                   ),
                                   title: Text(item.name),
                                   subtitle: Text(
@@ -174,7 +189,7 @@ class _CartScreenState extends State<CartScreen> {
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold),
                                   ),
-                                  // TODO: Add quantity adjustment buttons here if needed
+                                  onTap: () => cart.toggleItemSelection(item.id),
                                 ),
                               ),
                             ),
@@ -190,17 +205,16 @@ class _CartScreenState extends State<CartScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text(
-                              'Tổng tiền:',
+                              'Tổng tiền (đã chọn):',
                               style: TextStyle(fontSize: 18),
                             ),
-                            // Use Text.rich for potentially different styles if needed,
-                            // but simple Text is fine here.
+                            // Display total for selected items
                             Text(
-                              _formatCurrency(cart.totalPrice),
+                              _formatCurrency(cart.selectedItems.isEmpty ? 0 : cart.selectedItemsTotalPrice),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
-                                color: Colors.blue, // Or Colors.blue
+                                color: Colors.blue,
                               ),
                             ),
                           ],
@@ -210,19 +224,28 @@ class _CartScreenState extends State<CartScreen> {
                     Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: ElevatedButton(
-                        // Disable button if cart is empty
-                        onPressed: cart.itemCount <= 0
+                        // Disable button if no items are selected
+                        onPressed: cart.selectedItems.isEmpty
                             ? null
                             : () {
-                                // Xử lý chức năng thanh toán
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        'Chức năng thanh toán sẽ được triển khai sau'),
-                                    duration: Duration(seconds: 2),
-                                  ),
+                                // Check if user is authenticated
+                                if (!isAuthenticated) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Vui lòng đăng nhập để thanh toán'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                
+                                // Navigate to checkout screen using our payment feature with selected items
+                                PaymentFeature.navigateToCheckout(
+                                  context: context,
+                                  userId: authProvider.userId!,
+                                  cartItems: cart.selectedItems,
+                                  totalAmount: cart.selectedItemsTotalPrice,
                                 );
-                                // TODO: Navigate to checkout screen
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
@@ -233,9 +256,11 @@ class _CartScreenState extends State<CartScreen> {
                           disabledBackgroundColor: Colors.grey,
                           disabledForegroundColor: Colors.white70,
                         ),
-                        child: const Text(
-                          'THANH TOÁN',
-                          style: TextStyle(fontSize: 18),
+                        child: Text(
+                          cart.selectedItems.isEmpty
+                              ? 'CHỌN SẢN PHẨM'
+                              : 'THANH TOÁN (${cart.selectedItems.length} sản phẩm)',
+                          style: const TextStyle(fontSize: 18),
                         ),
                       ),
                     ),

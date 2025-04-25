@@ -13,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     final bool isAuthenticated = authProvider.isAuthenticated;
-
+    
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
