@@ -81,7 +81,6 @@ public class ProductService {
         return true;
     }
 
-    // Phương thức để áp dụng giảm giá cho sản phẩm theo ID
     public Product applyDiscountToProduct(String productId, double discountPercent) {
         Optional<Product> optionalProduct = productRepository.findById(productId);
         if (optionalProduct.isPresent()) {
@@ -92,7 +91,6 @@ public class ProductService {
         return null;
     }
 
-    // Phương thức để áp dụng giảm giá cho tất cả sản phẩm của một hãng
     public void applyDiscountToBrand(String brandId, double discountPercent) {
         Optional<Brand> optionalBrand = brandRepository.findById(brandId);
         if (optionalBrand.isPresent()) {
@@ -101,7 +99,7 @@ public class ProductService {
             productRepository.saveAll(products);
         }
     }
-    // Phương thức để áp dụng giảm giá cho tất cả sản phẩm của một loại
+
     public void applyDiscountToProductType(String productTypeId, double discountPercent) {
         Optional<ProductType> optionalProductType = productTypeRepository.findById(productTypeId);
         if (optionalProductType.isPresent()) {
@@ -111,7 +109,6 @@ public class ProductService {
         }
     }
 
-    // Phương thức để tăng số lượng sản phảm theo Id
     public void increaseQuantity(String productId, int quantity) {
         Optional<Product> optionalProduct = productRepository.findById(productId);
         if (optionalProduct.isPresent()) {
@@ -122,7 +119,6 @@ public class ProductService {
         }
     }
 
-    // Phương thức để giảm số lượng sản phảm theo Id
     public void decreaseQuantity(String productId, int quantity) {
         Optional<Product> optionalProduct = productRepository.findById(productId);
         if (optionalProduct.isPresent()) {
