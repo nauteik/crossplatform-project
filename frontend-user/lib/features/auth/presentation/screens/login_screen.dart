@@ -195,7 +195,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Đăng nhập bằng Google',
                   style: TextStyle(color: Colors.black87),
                 ),
-                onPressed: _isLoading ? null : _signInWithGoogle,
+                // onPressed: _isLoading ? null : _signInWithGoogle,
+                onPressed: null,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: Colors.white,
@@ -226,71 +227,71 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // Thêm phương thức xử lý đăng nhập Google
-  Future<void> _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
+  // Future<void> _signInWithGoogle() async {
+  //   setState(() {
+  //     _isLoading = true;
+  //   });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  //   final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    try {
+  //   try {
 
-      print("Đang xử lý đăng nhập Google...");
-      final success = await authProvider.signInWithGoogle();
-      print("Kết thúc xử lý đăng nhập Google");
-      if (success && mounted) {
-        // Đăng nhập thành công
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Đăng nhập Google thành công'),
-            backgroundColor: Colors.green,
-          ),
-        );
+  //     print("Đang xử lý đăng nhập Google...");
+  //     final success = await authProvider.signInWithGoogle();
+  //     print("Kết thúc xử lý đăng nhập Google");
+  //     if (success && mounted) {
+  //       // Đăng nhập thành công
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(
+  //           content: Text('Đăng nhập Google thành công'),
+  //           backgroundColor: Colors.green,
+  //         ),
+  //       );
 
-        // Quay lại màn hình trước đó
-        Navigator.pop(context);
-      } else if (mounted) {
-        // Hiển thị lỗi đăng nhập
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Row(
-                children: const [
-                  Icon(Icons.error_outline, color: Colors.red),
-                  SizedBox(width: 10),
-                  Text('Đăng nhập thất bại'),
-                ],
-              ),
-              content: Text(
-                  authProvider.errorMessage ?? 'Đăng nhập Google thất bại'),
-              actions: [
-                TextButton(
-                  child: const Text('OK'),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // Close dialog
-                  },
-                ),
-              ],
-            );
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Lỗi: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
+  //       // Quay lại màn hình trước đó
+  //       Navigator.pop(context);
+  //     } else if (mounted) {
+  //       // Hiển thị lỗi đăng nhập
+  //       showDialog(
+  //         context: context,
+  //         builder: (BuildContext context) {
+  //           return AlertDialog(
+  //             title: Row(
+  //               children: const [
+  //                 Icon(Icons.error_outline, color: Colors.red),
+  //                 SizedBox(width: 10),
+  //                 Text('Đăng nhập thất bại'),
+  //               ],
+  //             ),
+  //             content: Text(
+  //                 authProvider.errorMessage ?? 'Đăng nhập Google thất bại'),
+  //             actions: [
+  //               TextButton(
+  //                 child: const Text('OK'),
+  //                 onPressed: () {
+  //                   Navigator.of(context).pop(); // Close dialog
+  //                 },
+  //               ),
+  //             ],
+  //           );
+  //         },
+  //       );
+  //     }
+  //   } catch (e) {
+  //     if (mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text('Lỗi: $e'),
+  //           backgroundColor: Colors.red,
+  //         ),
+  //       );
+  //     }
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() {
+  //         _isLoading = false;
+  //       });
+  //     }
+  //   }
+  // }
 }

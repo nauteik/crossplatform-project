@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../../core/services/auth_service.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+// import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
 class AuthProvider extends ChangeNotifier {
@@ -126,79 +126,79 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile', 'openid'],
-    clientId:
-        '72454882219-um2q06itq7th3r62r12dc9nn64vivp8b.apps.googleusercontent.com', // Replace with the correct clientId from Google Cloud Console
-  );
+  // final GoogleSignIn _googleSignIn = GoogleSignIn(
+  //   scopes: ['email', 'profile', 'openid'],
+  //   clientId:
+  //       '72454882219-um2q06itq7th3r62r12dc9nn64vivp8b.apps.googleusercontent.com', // Replace with the correct clientId from Google Cloud Console
+  // );
 
-  // Phương thức đăng nhập bằng Google
-  Future<bool> signInWithGoogle() async {
-    try {
-      _errorMessage = null;
+  // // Phương thức đăng nhập bằng Google
+  // Future<bool> signInWithGoogle() async {
+  //   try {
+  //     _errorMessage = null;
 
-      // Hiển thị dialog chọn tài khoản Google
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+  //     // Hiển thị dialog chọn tài khoản Google
+  //     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
-      if (googleUser == null) {
-        // Người dùng hủy quá trình đăng nhập
-        return false;
-      }
+  //     if (googleUser == null) {
+  //       // Người dùng hủy quá trình đăng nhập
+  //       return false;
+  //     }
 
-      // Lấy token ID
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final String? idToken = googleAuth.idToken;
-      final String? accessToken = googleAuth.accessToken;
-      print('accessToken: $accessToken'); // Debug print to see accessToken
-      print('idToken: $idToken'); // Debug print to see idToken
-      if (idToken == null) {
-        _errorMessage = 'Không thể lấy token xác thực từ Google';
-        notifyListeners();
-        return false;
-      }
+  //     // Lấy token ID
+  //     final GoogleSignInAuthentication googleAuth =
+  //         await googleUser.authentication;
+  //     final String? idToken = googleAuth.idToken;
+  //     final String? accessToken = googleAuth.accessToken;
+  //     print('accessToken: $accessToken'); // Debug print to see accessToken
+  //     print('idToken: $idToken'); // Debug print to see idToken
+  //     if (idToken == null) {
+  //       _errorMessage = 'Không thể lấy token xác thực từ Google';
+  //       notifyListeners();
+  //       return false;
+  //     }
 
-      // Gửi token ID đến backend để xác thực
-      // Lưu ý API endpoint không thay đổi - backend sẽ xử lý bằng OAuth2AuthenticationAdapter
-      final response = await http.post(
-        Uri.parse('${ApiConstants.baseApiUrl}/api/auth/login/google'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'token': idToken}),
-      );
-      if (response.statusCode != 200) {
-        _errorMessage = 'Backend error: ${response.statusCode}';
-        notifyListeners();
-        return false;
-      }
+  //     // Gửi token ID đến backend để xác thực
+  //     // Lưu ý API endpoint không thay đổi - backend sẽ xử lý bằng OAuth2AuthenticationAdapter
+  //     final response = await http.post(
+  //       Uri.parse('${ApiConstants.baseApiUrl}/api/auth/login/google'),
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: jsonEncode({'token': idToken}),
+  //     );
+  //     if (response.statusCode != 200) {
+  //       _errorMessage = 'Backend error: ${response.statusCode}';
+  //       notifyListeners();
+  //       return false;
+  //     }
 
-      final responseData = jsonDecode(response.body);
+  //     final responseData = jsonDecode(response.body);
 
-      // Xử lý response như trước
-      if (response.statusCode == 200 && responseData['status'] == 200) {
-        _token = responseData['data']['token'];
-        _userData = responseData['data']['user'];
-        _username = _userData?['name'] ?? googleUser.displayName ?? '';
-        _isAuthenticated = true;
+  //     // Xử lý response như trước
+  //     if (response.statusCode == 200 && responseData['status'] == 200) {
+  //       _token = responseData['data']['token'];
+  //       _userData = responseData['data']['user'];
+  //       _username = _userData?['name'] ?? googleUser.displayName ?? '';
+  //       _isAuthenticated = true;
       
-        // Lưu vào SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('jwt_token', _token!);
-        await prefs.setString('user_data', jsonEncode(_userData));
+  //       // Lưu vào SharedPreferences
+  //       final prefs = await SharedPreferences.getInstance();
+  //       await prefs.setString('jwt_token', _token!);
+  //       await prefs.setString('user_data', jsonEncode(_userData));
       
-        notifyListeners();
-        return true;
-      } else {
-        // Đăng nhập thất bại
-        _errorMessage = responseData['message'] ?? 'Đăng nhập Google thất bại';
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      _errorMessage = 'Lỗi đăng nhập Google: $e';
-      notifyListeners();
-      return false;
-    }
-  }
+  //       notifyListeners();
+  //       return true;
+  //     } else {
+  //       // Đăng nhập thất bại
+  //       _errorMessage = responseData['message'] ?? 'Đăng nhập Google thất bại';
+  //       notifyListeners();
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     _errorMessage = 'Lỗi đăng nhập Google: $e';
+  //     notifyListeners();
+  //     return false;
+  //   }
+  // }
 
   Future<void> logout() async {
     _token = null;

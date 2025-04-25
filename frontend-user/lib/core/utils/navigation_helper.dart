@@ -4,6 +4,7 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/product/presentation/screens/product_detail_screen.dart';
 import '../../features/product/presentation/screens/product_review_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
+import '../../features/payment/screens/order_history_screen.dart';
 import '../../utils/route_transitions.dart';
 
 class NavigationHelper {
@@ -38,6 +39,13 @@ class NavigationHelper {
     return pushWithSlideTransition(
       context: context,
       page: const CartScreen(),
+    );
+  }
+  
+  static Future<T?> navigateToOrderHistory<T>(BuildContext context, String userId) {
+    return pushWithSlideTransition(
+      context: context,
+      page: OrderHistoryScreen(userId: userId),
     );
   }
 }

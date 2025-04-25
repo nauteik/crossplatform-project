@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../../navigation/providers/navigation_provider.dart';
+import '../../../../core/utils/navigation_helper.dart';
 import '../screens/setting_screen.dart';
 
 class ProfileMenu extends StatelessWidget {
@@ -8,6 +10,8 @@ class ProfileMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -15,7 +19,7 @@ class ProfileMenu extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -41,10 +45,20 @@ class ProfileMenu extends StatelessWidget {
             title: 'Đơn hàng của tôi',
             subtitle: 'Xem lịch sử đơn hàng và trạng thái',
             onTap: () {
-              // TODO: Điều hướng đến màn hình đơn hàng khi được tạo
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng đang phát triển!')),
-              );
+              if (authProvider.isAuthenticated) {
+                final userId = authProvider.userId;
+                if (userId != null) {
+                  NavigationHelper.navigateToOrderHistory(context, userId);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Không thể xác định người dùng. Vui lòng đăng nhập lại.')),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Vui lòng đăng nhập để xem đơn hàng')),
+                );
+              }
             },
           ),
           Divider(height: 1, color: Colors.grey.shade200),

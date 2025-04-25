@@ -32,16 +32,206 @@ class ProductSpecifications extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
+                // Basic info
                 _buildSpecItem('Loại sản phẩm', product.productType['name'] ?? 'N/A'),
                 _buildSpecItem('Thương hiệu', product.brand['name'] ?? 'N/A'),
                 _buildSpecItem('Mã sản phẩm', product.id),
                 _buildSpecItem('Bảo hành', '24 tháng'),
+                
+                // Divider before detailed specifications
+                if (product.specifications != null && product.specifications!.isNotEmpty)
+                  const Divider(height: 24),
+                
+                // Technical specifications
+                if (product.specifications != null && product.specifications!.isNotEmpty)
+                  ...buildDetailedSpecifications(product.specifications!),
+                
+                // Special handling based on product type
+                if (product.productType['name'] == 'CPU')
+                  ..._buildCpuSpecificInfo(),
+                if (product.productType['name'] == 'Mainboard' || product.productType['name'] == 'Motherboard')
+                  ..._buildMotherboardSpecificInfo(),
+                if (product.productType['name'] == 'RAM')
+                  ..._buildRamSpecificInfo(),
               ],
             ),
           ),
         ),
       ],
     );
+  }
+  
+  List<Widget> buildDetailedSpecifications(Map<String, dynamic> specs) {
+    List<Widget> specWidgets = [];
+    
+    // Sort the keys for a consistent display
+    final sortedKeys = specs.keys.toList()..sort();
+    
+    for (String key in sortedKeys) {
+      // Skip null or empty values
+      if (specs[key] == null || specs[key].toString().trim().isEmpty) {
+        continue;
+      }
+      
+      // Format the key for display (replace underscores with spaces and capitalize)
+      String formattedKey = key.replaceAll('_', ' ');
+      formattedKey = formattedKey.split(' ').map((word) => 
+        word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : ''
+      ).join(' ');
+      
+      // Add the spec item
+      specWidgets.add(_buildSpecItem(formattedKey, specs[key].toString()));
+    }
+    
+    return specWidgets;
+  }
+  
+  // Special handling for CPU products
+  List<Widget> _buildCpuSpecificInfo() {
+    // Extract CPU-specific info from description or specs
+    final description = product.description.toLowerCase();
+    final List<Widget> cpuInfo = [];
+    
+    // Try to identify socket type
+    String socketType = 'N/A';
+    if (product.specifications != null && product.specifications!['socket'] != null) {
+      socketType = product.specifications!['socket'].toString();
+    } else {
+      if (description.contains('lga1700')) socketType = 'LGA1700';
+      else if (description.contains('lga1200')) socketType = 'LGA1200';
+      else if (description.contains('am5')) socketType = 'AM5';
+      else if (description.contains('am4')) socketType = 'AM4';
+    }
+    
+    // Try to identify cores/threads
+    if (!(product.specifications != null && 
+         (product.specifications!.containsKey('cores') || 
+          product.specifications!.containsKey('threads')))) {
+      final coreRegex = RegExp(r'(\d+)\s*cores?', caseSensitive: false);
+      final threadRegex = RegExp(r'(\d+)\s*threads?', caseSensitive: false);
+      
+      final coreMatch = coreRegex.firstMatch(description);
+      final threadMatch = threadRegex.firstMatch(description);
+      
+      if (coreMatch != null) {
+        cpuInfo.add(_buildSpecItem('Cores', coreMatch.group(1) ?? 'N/A'));
+      }
+      
+      if (threadMatch != null) {
+        cpuInfo.add(_buildSpecItem('Threads', threadMatch.group(1) ?? 'N/A'));
+      }
+    }
+    
+    // Add socket type if not already in specs
+    if (!(product.specifications != null && product.specifications!.containsKey('socket'))) {
+      cpuInfo.add(_buildSpecItem('Socket', socketType));
+    }
+    
+    return cpuInfo;
+  }
+  
+  // Special handling for motherboard products
+  List<Widget> _buildMotherboardSpecificInfo() {
+    // Extract motherboard-specific info
+    final description = product.description.toLowerCase();
+    final List<Widget> moboInfo = [];
+    
+    // Try to identify socket type
+    String socketType = 'N/A';
+    if (product.specifications != null && product.specifications!['socket'] != null) {
+      socketType = product.specifications!['socket'].toString();
+    } else {
+      if (description.contains('lga1700')) socketType = 'LGA1700';
+      else if (description.contains('lga1200')) socketType = 'LGA1200';
+      else if (description.contains('am5')) socketType = 'AM5';
+      else if (description.contains('am4')) socketType = 'AM4';
+    }
+    
+    // Try to identify chipset
+    String chipset = 'N/A';
+    if (product.specifications != null && product.specifications!['chipset'] != null) {
+      chipset = product.specifications!['chipset'].toString();
+    } else {
+      if (description.contains('z690')) chipset = 'Z690';
+      else if (description.contains('b660')) chipset = 'B660';
+      else if (description.contains('x570')) chipset = 'X570';
+      else if (description.contains('b550')) chipset = 'B550';
+    }
+    
+    // Try to identify form factor
+    String formFactor = 'N/A';
+    if (product.specifications != null && product.specifications!['form_factor'] != null) {
+      formFactor = product.specifications!['form_factor'].toString();
+    } else {
+      if (description.contains('atx') && !description.contains('micro') && !description.contains('mini')) {
+        formFactor = 'ATX';
+      } else if (description.contains('micro-atx') || description.contains('matx')) {
+        formFactor = 'Micro-ATX';
+      } else if (description.contains('mini-itx') || description.contains('itx')) {
+        formFactor = 'Mini-ITX';
+      }
+    }
+    
+    // Add socket type if not already in specs
+    if (!(product.specifications != null && product.specifications!.containsKey('socket'))) {
+      moboInfo.add(_buildSpecItem('Socket', socketType));
+    }
+    
+    // Add chipset if not already in specs
+    if (!(product.specifications != null && product.specifications!.containsKey('chipset'))) {
+      moboInfo.add(_buildSpecItem('Chipset', chipset));
+    }
+    
+    // Add form factor if not already in specs
+    if (!(product.specifications != null && product.specifications!.containsKey('form_factor'))) {
+      moboInfo.add(_buildSpecItem('Form Factor', formFactor));
+    }
+    
+    return moboInfo;
+  }
+  
+  // Special handling for RAM products
+  List<Widget> _buildRamSpecificInfo() {
+    // Extract RAM-specific info
+    final description = product.description.toLowerCase();
+    final name = product.name.toLowerCase();
+    final List<Widget> ramInfo = [];
+    
+    // Try to identify RAM type
+    String ramType = 'N/A';
+    if (product.specifications != null && product.specifications!['memory_type'] != null) {
+      ramType = product.specifications!['memory_type'].toString();
+    } else {
+      if (description.contains('ddr5') || name.contains('ddr5')) ramType = 'DDR5';
+      else if (description.contains('ddr4') || name.contains('ddr4')) ramType = 'DDR4';
+      else if (description.contains('ddr3') || name.contains('ddr3')) ramType = 'DDR3';
+    }
+    
+    // Try to identify capacity
+    String capacity = 'N/A';
+    if (product.specifications != null && product.specifications!['capacity'] != null) {
+      capacity = product.specifications!['capacity'].toString();
+    } else {
+      final capacityRegex = RegExp(r'(\d+)(?:\s*gb|\s*tb)', caseSensitive: false);
+      final capacityMatch = capacityRegex.firstMatch(name) ?? 
+                           capacityRegex.firstMatch(description);
+      
+      if (capacityMatch != null) {
+        capacity = '${capacityMatch.group(1)}GB';
+      }
+    }
+    
+    // Add memory type if not already in specs
+    if (!(product.specifications != null && product.specifications!.containsKey('memory_type'))) {
+      ramInfo.add(_buildSpecItem('Memory Type', ramType));
+    }
+    
+    // Add capacity if not already in specs
+    if (!(product.specifications != null && product.specifications!.containsKey('capacity'))) {
+      ramInfo.add(_buildSpecItem('Capacity', capacity));
+    }
+    
+    return ramInfo;
   }
   
   Widget _buildSpecItem(String label, String value) {
@@ -73,4 +263,4 @@ class ProductSpecifications extends StatelessWidget {
       ),
     );
   }
-} 
+}
