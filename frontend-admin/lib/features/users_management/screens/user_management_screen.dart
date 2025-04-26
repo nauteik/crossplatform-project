@@ -31,7 +31,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   int? _selectedRoleInt;
 
   final List<String> _genders = ['Nam', 'Nữ', 'Khác'];
-  final List<String> _ranks = ['Thường', 'Đồng', 'Bạc', 'Vàng', 'Kim Cương'];
+  final List<String> _ranks = ['Đồng', 'Bạc', 'Vàng', 'Kim Cương'];
   final Map<int, String> _roleMap = {0: 'user', 1: 'admin'};
 
   User? _editingUser;
