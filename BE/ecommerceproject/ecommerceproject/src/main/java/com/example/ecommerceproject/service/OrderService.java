@@ -2,6 +2,7 @@ package com.example.ecommerceproject.service;
 
 import com.example.ecommerceproject.model.*;
 import com.example.ecommerceproject.repository.OrderRepository;
+import com.example.ecommerceproject.singleton.AppLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.example.ecommerceproject.mediator.OrderCreationMediator; // Import Order Creation Mediator
@@ -23,7 +24,7 @@ import java.util.Map;
 @Service
 public class OrderService {
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
+    private static final AppLogger logger = AppLogger.getInstance();
 
     @Autowired
     private OrderRepository orderRepository;

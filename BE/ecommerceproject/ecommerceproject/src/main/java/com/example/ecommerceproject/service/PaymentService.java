@@ -1,6 +1,7 @@
 package com.example.ecommerceproject.service;
 
 import com.example.ecommerceproject.model.Order;
+import com.example.ecommerceproject.singleton.AppLogger;
 import com.example.ecommerceproject.strategy.PaymentStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,7 @@ import java.util.Map;
 @Service
 public class PaymentService {
 
-    private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
+    private static final AppLogger logger = AppLogger.getInstance();
     private final Map<String, PaymentStrategy> paymentStrategies = new HashMap<>();
 
     @Autowired

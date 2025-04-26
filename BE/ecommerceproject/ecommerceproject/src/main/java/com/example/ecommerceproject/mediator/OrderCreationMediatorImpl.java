@@ -10,6 +10,7 @@ import com.example.ecommerceproject.repository.OrderRepository;
 import com.example.ecommerceproject.service.CartService;
 import com.example.ecommerceproject.service.ProductService;
 import com.example.ecommerceproject.service.PaymentService; // Needed for payment method validation
+import com.example.ecommerceproject.singleton.AppLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +25,15 @@ import java.util.stream.Collectors;
 @Component
 public class OrderCreationMediatorImpl implements OrderCreationMediator {
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderCreationMediatorImpl.class);
-
+    private static final AppLogger logger = AppLogger.getInstance();
     private final CartService cartService;
     private final PaymentService paymentService;
     private final ProductService productService;
     private final OrderRepository orderRepository;
 
     @Autowired
-    public OrderCreationMediatorImpl(CartService cartService, PaymentService paymentService, ProductService productService, OrderRepository orderRepository) {
+    public OrderCreationMediatorImpl(CartService cartService, PaymentService paymentService,
+                                     ProductService productService, OrderRepository orderRepository) {
         this.cartService = cartService;
         this.paymentService = paymentService;
         this.productService = productService;
@@ -41,7 +42,8 @@ public class OrderCreationMediatorImpl implements OrderCreationMediator {
 
     @Override
     @Transactional
-    public Order createOrder(String userId, String shippingAddress, String paymentMethod, List<String> selectedItemIds) {
+    public Order createOrder(String userId, String shippingAddress,
+                             String paymentMethod, List<String> selectedItemIds) {
         logger.info("Mediator coordinating order creation for user: {}", userId);
 
         // Step 1: Validate payment method (Interacts with PaymentService 'colleague')
@@ -78,7 +80,6 @@ public class OrderCreationMediatorImpl implements OrderCreationMediator {
             if (product == null) {
                 throw new IllegalArgumentException("Product not found in catalog: " + cartItem.getProductId());
             }
-
             if (product.getQuantity() < cartItem.getQuantity()) {
                 logger.warn("Not enough stock for product: {} (Requested: {}, Available: {})",
                         product.getName(), cartItem.getQuantity(), product.getQuantity());
@@ -96,7 +97,6 @@ public class OrderCreationMediatorImpl implements OrderCreationMediator {
                     cartItem.getImageUrl()
             );
             orderItems.add(orderItem);
-
             totalAmount += cartItem.getPrice() * cartItem.getQuantity();
         }
 
@@ -118,3 +118,7 @@ public class OrderCreationMediatorImpl implements OrderCreationMediator {
         return savedOrder;
     }
 }
+
+
+
+

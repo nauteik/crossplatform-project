@@ -1,5 +1,6 @@
 package com.example.ecommerceproject.security;
 
+import com.example.ecommerceproject.singleton.AppLogger;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,7 +14,7 @@ import java.util.Enumeration;
 @Component
 public class RequestLoggingFilter implements Filter {
 
-    private static final Logger logger = LoggerFactory.getLogger(RequestLoggingFilter.class);
+    private static final AppLogger logger = AppLogger.getInstance();
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)

@@ -3,6 +3,7 @@ package com.example.ecommerceproject.service;
 import com.example.ecommerceproject.model.Cart;
 import com.example.ecommerceproject.model.CartItem;
 import com.example.ecommerceproject.repository.CartRepository;
+import com.example.ecommerceproject.singleton.AppLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 public class CartService {
 
-    private static final Logger logger = LoggerFactory.getLogger(CartService.class);
+    private static final AppLogger logger = AppLogger.getInstance();
 
     @Autowired
     private CartRepository cartRepository;

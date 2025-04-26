@@ -5,6 +5,7 @@ import com.example.ecommerceproject.model.OrderItem;
 import com.example.ecommerceproject.model.OrderStatus;
 import com.example.ecommerceproject.repository.OrderRepository;
 import com.example.ecommerceproject.service.CartService;
+import com.example.ecommerceproject.singleton.AppLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 @Component
 public class OrderPaymentMediatorImpl implements OrderPaymentMediator {
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderPaymentMediatorImpl.class);
+    private static final AppLogger logger = AppLogger.getInstance();
 
     private final OrderRepository orderRepository;
     private final CartService cartService;
@@ -65,3 +66,7 @@ public class OrderPaymentMediatorImpl implements OrderPaymentMediator {
                 order.getId(), order.getStatus());
     }
 }
+
+
+
+
