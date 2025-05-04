@@ -44,6 +44,9 @@ dependencies:
   provider: ^6.1.2
 
   intl: ^0.18.0
+  
+  jwt_decoder: ^2.0.1
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:

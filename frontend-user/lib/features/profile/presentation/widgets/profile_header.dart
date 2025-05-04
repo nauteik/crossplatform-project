@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../screens/edit_profile_screen.dart';
 
 class ProfileHeader extends StatelessWidget {
   final AuthProvider authProvider;
@@ -59,8 +60,20 @@ class ProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Điều hướng đến màn hình chỉnh sửa hồ sơ
+            onPressed: () async {
+              // Điều hướng đến màn hình chỉnh sửa hồ sơ
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditProfileScreen(),
+                ),
+              );
+
+              // Nếu có sự thay đổi (result == true), có thể refresh lại thông tin
+              if (result == true) {
+                // Refresh thông tin người dùng
+                authProvider.refreshUserData();
+              }
             },
             icon: const Icon(Icons.edit, color: Colors.white),
             label: const Text(
@@ -78,4 +91,4 @@ class ProfileHeader extends StatelessWidget {
       ),
     );
   }
-} 
+}

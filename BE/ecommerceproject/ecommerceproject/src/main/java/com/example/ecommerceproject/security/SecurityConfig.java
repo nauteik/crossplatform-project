@@ -16,6 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 @Configuration
@@ -53,6 +54,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/user/getAll").permitAll()
+                .requestMatchers("/api/user/get/**").permitAll()
                 .requestMatchers("/user/**").permitAll()
                 .requestMatchers("/login/oauth2/**").permitAll()
                 // Image API paths
@@ -95,6 +98,7 @@ public class SecurityConfig {
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(form -> form.disable());
