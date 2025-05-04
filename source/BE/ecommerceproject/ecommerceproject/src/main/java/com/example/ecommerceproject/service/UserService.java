@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -69,62 +68,19 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
-    /**
-     * Cập nhật thông tin người dùng
-     * @param userId ID của người dùng cần cập nhật
-     * @param updatedUser Thông tin người dùng mới
-     * @return User đã cập nhật
-     */
     public User updateUser(String userId, User updatedUser) {
-        User existingUser = getUserById(userId);
-        if (existingUser == null) {
-            throw new RuntimeException("User not found with id: " + userId);
-        }
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-        // Kiểm tra email mới (nếu có) xem đã được sử dụng bởi người dùng khác chưa
-        if (updatedUser.getEmail() != null && !updatedUser.getEmail().isEmpty()
-                && !updatedUser.getEmail().equals(existingUser.getEmail())) {
-            Optional<User> userWithSameEmail = userRepository.findByEmail(updatedUser.getEmail());
-            if (userWithSameEmail != null && !userWithSameEmail.get().getId().equals(userId)) {
-                throw new RuntimeException("Email already in use by another user");
+        if (updatedUser.getEmail() != null) {
+            // Kiểm tra nếu email mới khác email cũ và đã tồn tại
+            if (!existingUser.getEmail().equals(updatedUser.getEmail()) && 
+                userRepository.existsByEmail(updatedUser.getEmail())) {
+                throw new RuntimeException("Email already in use");
             }
-        }
-
-        // Cập nhật thông tin cơ bản
-        if (updatedUser.getName() != null) existingUser.setName(updatedUser.getName());
-        if (updatedUser.getEmail() != null) existingUser.setEmail(updatedUser.getEmail());
-        if (updatedUser.getPhone() != null) existingUser.setPhone(updatedUser.getPhone());
-        if (updatedUser.getAddress() != null) existingUser.setAddress(updatedUser.getAddress());
-        if (updatedUser.getGender() != null) existingUser.setGender(updatedUser.getGender());
-        if (updatedUser.getBirthday() != null) existingUser.setBirthday(updatedUser.getBirthday());
-        if (updatedUser.getAvatar() != null) existingUser.setAvatar(updatedUser.getAvatar());
-        
-<<<<<<< HEAD:BE/ecommerceproject/ecommerceproject/src/main/java/com/example/ecommerceproject/service/UserService.java
-        // Cập nhật username nếu được phép
-        if (updatedUser.getUsername() != null) {
-            // Kiểm tra xem username đã tồn tại chưa
-            if (!updatedUser.getUsername().equals(existingUser.getUsername())) {
-                Optional<User> userWithSameUsername = userRepository.findByUsername(updatedUser.getUsername());
-                if (userWithSameUsername != null) {
-                    throw new RuntimeException("Username already taken");
-                }
-                existingUser.setUsername(updatedUser.getUsername());
-            }
+            existingUser.setEmail(updatedUser.getEmail());
         }
         
-        // Cập nhật mật khẩu nếu được cung cấp
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-            // Mã hóa mật khẩu trước khi lưu
-            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
-        }
-        
-//        // Cập nhật role - chỉ được gọi sau khi đã kiểm tra quyền
-//        if (updatedUser.getRole() != null) {
-//            existingUser.setRole(updatedUser.getRole());
-//        }
-        
-        // Lưu các thay đổi vào database
-=======
         if (updatedUser.getUsername() != null) {
             // Kiểm tra nếu username mới khác username cũ và đã tồn tại
             if (!existingUser.getUsername().equals(updatedUser.getUsername()) && 
@@ -177,7 +133,6 @@ public class UserService implements UserDetailsService {
         existingUser.setRole(updatedUser.getRole());
         
         // Lưu người dùng đã cập nhật
->>>>>>> Kiet:source/BE/ecommerceproject/ecommerceproject/src/main/java/com/example/ecommerceproject/service/UserService.java
         return userRepository.save(existingUser);
     }
 

@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Wrapper để xử lý trạng thái xác thực
+// Wrapper to handle authentication state
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({Key? key}) : super(key: key);
 
@@ -96,10 +96,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
       );
     }
 
-<<<<<<< HEAD:frontend-admin/lib/main.dart
-    final authProvider = Provider.of<AuthProvider>(context);
-    return authProvider.isLoggedIn ? const Admin() : const LoginScreen();
-=======
     // Get auth provider but DON'T listen to changes here
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
@@ -108,11 +104,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
     } else {
       return const LoginScreen();
     }
->>>>>>> Kiet:source/frontend-admin/lib/main.dart
   }
 }
 
-// Trang chính của Admin
+// ADMIN LANDING PAGE
 class Admin extends StatefulWidget {
   const Admin({super.key});
 
@@ -126,11 +121,11 @@ class _AdminState extends State<Admin> {
 
   @override
   Widget build(BuildContext context) {
-    // Kiểm tra trạng thái đăng nhập
+    // Get auth provider to check login state
     final authProvider = Provider.of<AuthProvider>(context);
 
     if (!authProvider.isLoggedIn) {
-      // Chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
+      // Redirect to login if not logged in
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushReplacementNamed('/login');
       });
@@ -143,12 +138,11 @@ class _AdminState extends State<Admin> {
           AdminSidebar(sidebarXController: sidebarXController),
           Expanded(
             child: AnimatedBuilder(
-              animation: sidebarXController,
-              builder: (context, _) {
-                return navigateToScreen(
-                    sidebarXController.selectedIndex, context);
-              },
-            ),
+                animation: sidebarXController,
+                builder: (context, _) {
+                  return navigateToScreen(
+                      sidebarXController.selectedIndex, context);
+                }),
           )
         ],
       ),
