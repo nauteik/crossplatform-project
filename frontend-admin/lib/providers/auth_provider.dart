@@ -5,131 +5,120 @@ import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:admin_interface/models/user_model.dart';
+import '../constants/api_constants.dart';
 
-class AuthProvider extends ChangeNotifier {
+class AuthProvider with ChangeNotifier {
   bool _isLoggedIn = false;
   bool _isLoading = false;
   String? _token;
+  Map<String, dynamic>? _userData;
   String? _errorMessage;
-  User? _currentUser;
+  int _userRole = 0; // 0 = user, 1 = admin
 
+  // Getters
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-  User? get currentUser => _currentUser;
   String? get token => _token;
+  Map<String, dynamic>? get userData => _userData;
+  String? get errorMessage => _errorMessage;
+  int get userRole => _userRole;
 
-  // Check if user is already logged in from stored token
+  // Kiểm tra trạng thái đăng nhập từ SharedPreferences
   Future<void> checkLoginStatus() async {
-    _setLoading(true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedToken = prefs.getString('admin_token');
 
-    final prefs = await SharedPreferences.getInstance();
-    final storedToken = prefs.getString('auth_token');
+      if (storedToken != null) {
+        _token = storedToken;
 
-    if (storedToken != null && !_isTokenExpired(storedToken)) {
-      _token = storedToken;
-      _extractUserFromToken(storedToken);
-      _isLoggedIn = true;
+        final storedUserData = prefs.getString('admin_user_data');
+        if (storedUserData != null) {
+          _userData = jsonDecode(storedUserData);
+          _userRole = _userData?['role'] ?? 0;
+          _isLoggedIn = true;
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      print('Error checking login status: $e');
     }
-
-    _setLoading(false);
   }
 
-  // Login with username and password
+  // Đăng nhập
   Future<bool> login(String username, String password) async {
-    _setLoading(true);
-    _setErrorMessage(null);
-
     try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      final loginUrl = '${ApiConstants.baseApiUrl}/api/auth/login/local';
+
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/api/auth/login/local'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'username': username, 'password': password}),
+        Uri.parse(loginUrl),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'username': username,
+          'password': password,
+        }),
       );
 
-      final responseData = json.decode(response.body);
+      final responseBody = utf8.decode(response.bodyBytes);
+      print('Login response: $responseBody');
+      final data = jsonDecode(responseBody);
 
-      if (response.statusCode == 200 && responseData['status'] == 200) {
-        final data = responseData['data'];
-        if (data != null && data['token'] != null) {
-          _token = data['token'];
+      _isLoading = false;
 
-          // Extract user from token
-          _extractUserFromToken(_token!);
-
-          // Save token to shared preferences
-          final prefs = await SharedPreferences.getInstance();
-          prefs.setString('auth_token', _token!);
-
+      if (response.statusCode == 200 && data['status'] == 200) {
+        if (data['data'] != null) {
+          _token = data['data']['token'];
+          _userData = data['data']['user'];
+          _userRole = _userData?['role'] ?? 0;
           _isLoggedIn = true;
-          _setLoading(false);
+          _errorMessage = null;
+
+          // Lưu thông tin đăng nhập
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('admin_token', _token!);
+          await prefs.setString('admin_user_data', jsonEncode(_userData));
+
           notifyListeners();
           return true;
         }
       }
 
-      _setErrorMessage(responseData['message'] ?? 'Đăng nhập thất bại');
-      _setLoading(false);
+      _errorMessage = data['message'] ?? 'Đăng nhập thất bại';
       notifyListeners();
       return false;
-    } catch (error) {
-      _setErrorMessage('Đăng nhập thất bại: $error');
-      _setLoading(false);
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Lỗi kết nối: ${e.toString()}';
       notifyListeners();
       return false;
     }
   }
 
-  // Logout user and clear token
-  Future<void> logout() async {
-    _token = null;
-    _currentUser = null;
-    _isLoggedIn = false;
-
-    final prefs = await SharedPreferences.getInstance();
-    prefs.remove('auth_token');
-
-    notifyListeners();
-  }
-
-  // Extract user information from JWT token
-  void _extractUserFromToken(String token) {
-    try {
-      final decodedToken = JwtDecoder.decode(token);
-
-      // The JWT payload should contain user information
-      // Adjust the fields based on your actual JWT structure
-      _currentUser = User(
-        id: decodedToken['sub'] ?? '',
-        email: decodedToken['email'] ?? '',
-        name: decodedToken['name'] ?? '',
-        role: decodedToken['role'] ?? 0,
-      );
-    } catch (e) {
-      print('Error extracting user from token: $e');
-    }
-  }
-
-  // Check if token is expired
-  bool _isTokenExpired(String token) {
-    try {
-      return JwtDecoder.isExpired(token);
-    } catch (e) {
-      return true;
-    }
-  }
-
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
-
-  void _setErrorMessage(String? message) {
-    _errorMessage = message;
-    notifyListeners();
-  }
-
+  // Kiểm tra quyền admin
   bool isAdmin() {
-    return _currentUser?.role == 1;
+    return _userRole == 1;
+  }
+
+  // Đăng xuất
+  Future<void> logout() async {
+    try {
+      _isLoggedIn = false;
+      _token = null;
+      _userData = null;
+      _userRole = 0;
+
+      // Xóa thông tin đăng nhập
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('admin_token');
+      await prefs.remove('admin_user_data');
+
+      notifyListeners();
+    } catch (e) {
+      print('Error during logout: $e');
+    }
   }
 }

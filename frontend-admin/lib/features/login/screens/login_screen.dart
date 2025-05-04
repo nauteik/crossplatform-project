@@ -14,12 +14,80 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // Xử lý đăng nhập
+  Future<void> _handleLogin() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      try {
+        final success = await authProvider.login(
+          _usernameController.text.trim(),
+          _passwordController.text,
+        );
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+
+        if (success && mounted) {
+          // Hiển thị thông báo thành công
+          final roleText =
+              authProvider.isAdmin() ? 'với quyền Admin' : 'với quyền User';
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đăng nhập thành công $roleText'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+
+          // Thông báo giới hạn quyền nếu không phải admin
+          if (!authProvider.isAdmin()) {
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        'Lưu ý: Tài khoản của bạn bị giới hạn một số quyền quản trị'),
+                    backgroundColor: Colors.orange,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              }
+            });
+          }
+
+          // Chuyển hướng đến trang chính
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Đã xảy ra lỗi: $e')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -115,31 +183,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       const SizedBox(height: 8),
                       ElevatedButton(
-                        onPressed: authProvider.isLoading
+                        onPressed: _isLoading || authProvider.isLoading
                             ? null
-                            : () async {
-                                if (_formKey.currentState!.validate()) {
-                                  final success = await authProvider.login(
-                                    _usernameController.text.trim(),
-                                    _passwordController.text,
-                                  );
-
-                                  if (success && mounted) {
-                                    // Chuyển trang khi đăng nhập thành công
-                                    Navigator.of(context).pushNamedAndRemoveUntil(
-                                      '/home',
-                                      (route) => false, // Xóa tất cả route trước đó
-                                    );
-                                  }
-                                }
-                              },
+                            : _handleLogin,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           backgroundColor: const Color(0xFF17153B),
                         ),
-                        child: authProvider.isLoading
-                            ? const CircularProgressIndicator(
-                                color: Colors.white)
+                        child: _isLoading || authProvider.isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : const Text(
                                 'Đăng nhập',
                                 style: TextStyle(

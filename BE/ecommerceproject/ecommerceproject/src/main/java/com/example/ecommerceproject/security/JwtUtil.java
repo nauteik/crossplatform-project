@@ -43,6 +43,12 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
+    // Thêm phương thức để trích xuất role từ token
+    public Integer extractRole(String token) {
+        final Claims claims = extractAllClaims(token);
+        return claims.get("role", Integer.class);
+    }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
@@ -54,6 +60,13 @@ public class JwtUtil {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, userDetails.getUsername());
+    }
+
+    // Thêm phương thức tạo token với role
+    public String generateTokenWithRole(String username, int role) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        return createToken(claims, username);
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
@@ -69,5 +82,15 @@ public class JwtUtil {
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+    
+    // Thêm phương thức kiểm tra token hợp lệ không cần UserDetails
+    public Boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

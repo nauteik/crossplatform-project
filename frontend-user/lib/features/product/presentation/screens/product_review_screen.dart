@@ -11,6 +11,8 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/models/review_model.dart';
 import '../widgets/review_item.dart';
 import '../../../../core/utils/image_helper.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:path/path.dart' as p;
 
 class ProductReviewScreen extends StatefulWidget {
   final String productId;
@@ -158,47 +160,66 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
           Uri.parse('${ApiConstants.baseUrl}/reviews'),
         );
 
-        // Add text fields
+        // Add text fields với encoding UTF-8
         request.fields['productId'] = widget.productId;
         request.fields['userId'] = userId;
         request.fields['rating'] = _rating.toString();
         request.fields['comment'] = _commentController.text;
 
-        // Add images
+        // Thêm headers cho UTF-8
+        request.headers['Content-Type'] = 'multipart/form-data; charset=UTF-8';
+        request.headers['Accept'] = 'application/json; charset=UTF-8';
+
+        // Add images với thông tin thêm về tên file và mimetype
         for (var i = 0; i < _selectedImages.length; i++) {
           final image = _selectedImages[i];
           final imageBytes = await image.readAsBytes();
-          final filename = image.name;
+          final filename =
+              'image_${DateTime.now().millisecondsSinceEpoch}_$i${_getFileExtension(image.path)}';
           print("Thêm hình ảnh: $filename");
+
+          // Thêm thông tin về mimetype
           request.files.add(http.MultipartFile.fromBytes(
             'files',
             imageBytes,
             filename: filename,
+            contentType: MediaType('image', _getImageMimeType(image.path)),
           ));
         }
 
-        // Add video if selected
+        // Add video nếu được chọn, với thông tin về mimetype
         if (_selectedVideo != null) {
           final videoBytes = await _selectedVideo!.readAsBytes();
-          final filename = _selectedVideo!.name;
+          final filename =
+              'video_${DateTime.now().millisecondsSinceEpoch}${_getFileExtension(_selectedVideo!.path)}';
           print("Thêm video: $filename");
+
+          // Thêm thông tin về mimetype
           request.files.add(http.MultipartFile.fromBytes(
             'files',
             videoBytes,
             filename: filename,
+            contentType:
+                MediaType('video', _getVideoMimeType(_selectedVideo!.path)),
           ));
         }
+
+        // Thêm log trước khi gửi
+        print("Đang gửi đánh giá: ${request.fields}");
+        print("Số file đính kèm: ${request.files.length}");
 
         // Send the request
         var streamedResponse = await request.send();
         var response = await http.Response.fromStream(streamedResponse);
 
+        // Decode UTF-8 cho response
+        final String responseBody = utf8.decode(response.bodyBytes);
         print("Phản hồi server: ${response.statusCode}");
-        print("Response body: ${response.body}");
+        print("Response body: $responseBody");
 
         if (response.statusCode == 200) {
-          // Parse response body
-          var responseData = jsonDecode(response.body);
+          // Parse response body với UTF-8
+          var responseData = jsonDecode(responseBody);
 
           if (responseData['status'] == 200) {
             // Success status
@@ -208,9 +229,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
                 const SnackBar(
                   content: Text('Cảm ơn bạn đã đánh giá sản phẩm'),
                   backgroundColor: Colors.green,
-                  duration: Duration(
-                      seconds:
-                          1), // Giảm thời gian hiển thị để chuyển màn hình nhanh hơn
+                  duration: Duration(seconds: 1),
                 ),
               );
 
@@ -219,11 +238,13 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
                 'success': true,
                 'rating': _rating,
                 'comment': _commentController.text,
+                'imageCount': _selectedImages.length,
+                'hasVideo': _selectedVideo != null,
               };
 
               // Trì hoãn chuyển màn hình để người dùng thấy thông báo thành công
               Future.delayed(const Duration(milliseconds: 700), () {
-                Navigator.pop(context, reviewResult); // Trả về kết quả đánh giá
+                Navigator.pop(context, reviewResult);
               });
             }
           } else {
@@ -651,6 +672,54 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
         return 'Tuyệt vời';
       default:
         return '';
+    }
+  }
+
+  String _getFileExtension(String filePath) {
+    final extension = p.extension(filePath).toLowerCase();
+    return extension.isEmpty
+        ? '.jpg'
+        : extension; // Mặc định là .jpg nếu không có extension
+  }
+
+  String _getImageMimeType(String filePath) {
+    final extension =
+        _getFileExtension(filePath).toLowerCase().replaceAll('.', '');
+
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'jpeg';
+      case 'png':
+        return 'png';
+      case 'gif':
+        return 'gif';
+      case 'webp':
+        return 'webp';
+      case 'heic':
+        return 'heic';
+      default:
+        return 'jpeg'; // Mặc định là jpeg
+    }
+  }
+
+  String _getVideoMimeType(String filePath) {
+    final extension =
+        _getFileExtension(filePath).toLowerCase().replaceAll('.', '');
+
+    switch (extension) {
+      case 'mp4':
+        return 'mp4';
+      case 'mov':
+        return 'quicktime';
+      case 'avi':
+        return 'x-msvideo';
+      case 'wmv':
+        return 'x-ms-wmv';
+      case 'webm':
+        return 'webm';
+      default:
+        return 'mp4'; // Mặc định là mp4
     }
   }
 }

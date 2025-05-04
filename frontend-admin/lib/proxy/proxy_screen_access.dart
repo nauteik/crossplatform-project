@@ -4,30 +4,45 @@ import 'package:admin_interface/proxy/real_screen_access.dart';
 import 'package:admin_interface/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
-// The ProxyScreenAccess adds access control before allowing access to screens
 class ProxyScreenAccess implements ScreenAccessInterface {
   final RealScreenAccess _realScreenAccess = RealScreenAccess();
 
-  // List of screen indices that require admin permission
+  // Danh sách các màn hình yêu cầu quyền admin (role = 1)
   final List<int> _adminOnlyScreens = [
-    4
-  ]; // UsersManagementScreen is at index 4
+    4, // UsersManagementScreen
+  ];
 
   @override
   Widget getScreen(int index, BuildContext context) {
+    // Chỉ kiểm tra quyền nếu là màn hình dành riêng cho admin
     if (_adminOnlyScreens.contains(index)) {
-      // Get auth provider to check role
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-      if (!authProvider.isAdmin()) {
-        return _buildAccessDeniedScreen(context);
+      if (!authProvider.isLoggedIn) {
+        // Chưa đăng nhập
+        return _buildAccessDeniedScreen(
+          context,
+          'Bạn cần đăng nhập để truy cập trang này',
+          needLogin: true,
+        );
+      } else if (!authProvider.isAdmin()) {
+        // Đã đăng nhập nhưng không phải admin
+        return _buildAccessDeniedScreen(
+          context,
+          'Bạn không có quyền truy cập vào trang này.'
+        );
       }
     }
+
+    // Trả về màn hình thực tế
     return _realScreenAccess.getScreen(index, context);
   }
 
-  // Build an access denied screen
-  Widget _buildAccessDeniedScreen(BuildContext context) {
+  // Màn hình thông báo không có quyền truy cập
+  Widget _buildAccessDeniedScreen(BuildContext context, String message,
+      {bool needLogin = false}) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Quyền truy cập bị từ chối'),
@@ -37,31 +52,62 @@ class ProxyScreenAccess implements ScreenAccessInterface {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.no_accounts,
-              size: 80,
-              color: Colors.red,
-            ),
-            const SizedBox(height: 24),
+            const Icon(Icons.lock, size: 80, color: Colors.red),
+            const SizedBox(height: 20),
             const Text(
               'Quyền truy cập bị từ chối',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Bạn không có quyền truy cập vào trang này.\nVui lòng liên hệ quản trị viên nếu bạn cần truy cập.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
+            const SizedBox(height: 12),
+            if (authProvider.isLoggedIn)
+              Text(
+                'Quyền hiện tại: ${authProvider.isAdmin() ? "Admin" : "User thường"} (role=${authProvider.userRole})',
+                style: TextStyle(
+                  color: Colors.red[700],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pushReplacementNamed('/login');
-              },
-              child: const Text('Đăng nhập lại'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    // Quay lại màn hình dashboard
+                    Navigator.of(context).pushReplacementNamed('/home');
+                  },
+                  child: const Text('Quay lại Dashboard'),
+                ),
+                const SizedBox(width: 16),
+                if (needLogin)
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pushReplacementNamed('/login');
+                    },
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                    child: const Text('Đăng nhập'),
+                  )
+                else
+                  ElevatedButton(
+                    onPressed: () {
+                      authProvider.logout();
+                      Navigator.of(context).pushReplacementNamed('/login');
+                    },
+                    style:
+                        ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    child: const Text('Đăng xuất'),
+                  ),
+              ],
             ),
           ],
         ),

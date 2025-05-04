@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Wrapper to handle authentication state
+// Wrapper để xử lý trạng thái xác thực
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({Key? key}) : super(key: key);
 
@@ -84,16 +84,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
     }
 
     final authProvider = Provider.of<AuthProvider>(context);
-
-    if (authProvider.isLoggedIn) {
-      return const Admin();
-    } else {
-      return const LoginScreen();
-    }
+    return authProvider.isLoggedIn ? const Admin() : const LoginScreen();
   }
 }
 
-// ADMIN LANDING PAGE
+// Trang chính của Admin
 class Admin extends StatefulWidget {
   const Admin({super.key});
 
@@ -107,11 +102,11 @@ class _AdminState extends State<Admin> {
 
   @override
   Widget build(BuildContext context) {
-    // Get auth provider to check login state
+    // Kiểm tra trạng thái đăng nhập
     final authProvider = Provider.of<AuthProvider>(context);
 
     if (!authProvider.isLoggedIn) {
-      // Redirect to login if not logged in
+      // Chuyển hướng đến trang đăng nhập nếu chưa đăng nhập
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushReplacementNamed('/login');
       });
@@ -124,11 +119,12 @@ class _AdminState extends State<Admin> {
           AdminSidebar(sidebarXController: sidebarXController),
           Expanded(
             child: AnimatedBuilder(
-                animation: sidebarXController,
-                builder: (context, _) {
-                  return navigateToScreen(
-                      sidebarXController.selectedIndex, context);
-                }),
+              animation: sidebarXController,
+              builder: (context, _) {
+                return navigateToScreen(
+                    sidebarXController.selectedIndex, context);
+              },
+            ),
           )
         ],
       ),
