@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("api/user")
 @CrossOrigin("*") // Cho phép frontend gọi API
 public class UserController {
 
@@ -48,8 +48,38 @@ public class UserController {
     @PutMapping("/edit/{userId}")
     public ResponseEntity<ApiResponse<?>> updateUser(
             @PathVariable String userId,
-            @RequestBody User updatedUser) {
+            @RequestBody User updatedUser,
+            HttpServletRequest request) {
         try {
+            // Xác thực người dùng từ token JWT
+            String authHeader = request.getHeader("Authorization");
+            
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(
+                            401,
+                            "Authorization token is required",
+                            null
+                        ));
+            }
+            
+            String token = authHeader.substring(7);
+            String username = jwtUtil.extractUsername(token);
+            
+            // Kiểm tra người dùng hiện tại
+            User currentUser = userService.getUserByUsername(username);
+            
+            // Chỉ admin (role = 1) hoặc chính người dùng đó mới có thể chỉnh sửa
+            if (currentUser.getRole() != 1 && !currentUser.getId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse<>(
+                            403,
+                            "You don't have permission to edit this user",
+                            null
+                        ));
+            }
+            
+            // Tiến hành cập nhật nếu có quyền
             User updated = userService.updateUser(userId, updatedUser);
             return ResponseEntity.ok(new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
@@ -164,13 +194,43 @@ public class UserController {
      * @return ResponseEntity với ApiResponse thông báo kết quả xóa
      */
     @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<ApiResponse<?>> deleteUser(@PathVariable String userId) {
+    public ResponseEntity<ApiResponse<?>> deleteUser(
+            @PathVariable String userId,
+            HttpServletRequest request) {
         try {
+            // Xác thực người dùng từ token JWT
+            String authHeader = request.getHeader("Authorization");
+            
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(
+                            401,
+                            "Authorization token is required",
+                            null
+                        ));
+            }
+            
+            String token = authHeader.substring(7);
+            String username = jwtUtil.extractUsername(token);
+            
+            // Kiểm tra người dùng hiện tại
+            User currentUser = userService.getUserByUsername(username);
+            
+            // Chỉ admin mới có thể xóa người dùng
+            if (currentUser.getRole() != 1) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse<>(
+                            403,
+                            "Only administrators can delete users",
+                            null
+                        ));
+            }
+            
             // Kiểm tra xem user có tồn tại không
             if (!userRepo.existsById(userId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(new ApiResponse<>(
-                                ApiStatus.SERVER_ERROR.getCode(),
+                                ApiStatus.NOT_FOUND.getCode(),
                                 "Không tìm thấy người dùng với ID: " + userId,
                                 null
                         ));

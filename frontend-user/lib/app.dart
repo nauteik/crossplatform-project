@@ -11,7 +11,6 @@ import 'core/routes/app_router.dart';
 import 'package:frontend_user/features/build_pc/providers/pc_provider.dart';
 import 'package:frontend_user/features/build_pc/presentation/screens/build_configuration_screen.dart';
 import 'package:frontend_user/features/build_pc/presentation/screens/saved_builds_screen.dart';
-import 'features/profile/providers/user_provider.dart';
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -23,7 +22,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()), // Keep one CartProvider
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider()),
         // Add PaymentProvider using the static method from PaymentFeature
         ...PaymentFeature.getProviders(),
         ChangeNotifierProvider(create: (context) => PCProvider()),

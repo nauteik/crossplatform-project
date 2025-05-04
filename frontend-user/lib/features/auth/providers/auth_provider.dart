@@ -23,7 +23,7 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() {
     _loadAuthState();
   }
-
+  //
   Future<void> _loadAuthState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -39,21 +39,20 @@ class AuthProvider extends ChangeNotifier {
           // Kiểm tra và lưu lại userId nếu chưa có
           if (_userData != null && _userData!['id'] != null) {
             await prefs.setString('userId', _userData!['id']);
-          }
 
-          // Kiểm tra token còn hạn hay không (nếu backend có hỗ trợ)
-          // Có thể thêm logic kiểm tra token còn hạn ở đây
+            // Tải thông tin chi tiết người dùng
+            await loadUserDetails();
+          }
         } catch (e) {
           print('Lỗi khi parse userData: $e');
-          // Xử lý lỗi khi parse userData
-          await logout(); // Logout nếu dữ liệu không hợp lệ
+          await logout();
           return;
         }
         notifyListeners();
       }
     } catch (e) {
       print('Lỗi khi load trạng thái đăng nhập: $e');
-      await logout(); // Logout nếu có lỗi
+      await logout();
     }
   }
 
@@ -94,6 +93,9 @@ class AuthProvider extends ChangeNotifier {
         if (_userData != null) {
           await prefs.setString('user_data', jsonEncode(_userData));
         }
+
+        // Tải thông tin chi tiết người dùng
+        await loadUserDetails();
 
         notifyListeners();
         return true;
@@ -216,6 +218,20 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> refreshUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? userDataStr = prefs.getString('user_data');
+
+      if (userDataStr != null) {
+        _userData = jsonDecode(userDataStr);
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error refreshing user data: $e');
+    }
+  }
+
   Future<void> _fetchUserDetails(String token, String userId) async {
     try {
       final response = await http.get(
@@ -258,6 +274,30 @@ class AuthProvider extends ChangeNotifier {
       }
     } catch (e) {
       print('Error fetching user details: $e');
+    }
+  }
+
+  // Thêm phương thức này vào class AuthProvider
+  Future<void> loadUserDetails() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+      final userDataString = prefs.getString('user_data');
+
+      if (token == null || userDataString == null) {
+        return;
+      }
+
+      final userData = jsonDecode(userDataString);
+      final userId = userData['id'];
+
+      if (userId == null) {
+        return;
+      }
+
+      await _fetchUserDetails(token, userId);
+    } catch (e) {
+      print('Lỗi khi tải thông tin người dùng chi tiết: $e');
     }
   }
 }
