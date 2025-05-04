@@ -8,6 +8,8 @@ import 'package:sidebarx/sidebarx.dart';
 import 'package:admin_interface/screens_controller.dart';
 import 'package:provider/provider.dart';
 import 'package:admin_interface/providers/product_provider.dart';
+import 'package:admin_interface/providers/brand_provider.dart';
+import 'package:admin_interface/providers/product_type_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,6 +31,12 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => ProductProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => BrandProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => ProductTypeProvider(),
         ),
       ],
       child: MaterialApp(
@@ -62,15 +70,20 @@ class _AuthWrapperState extends State<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    // Defer the check to after the first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkLoginStatus();
+    });
   }
 
   Future<void> _checkLoginStatus() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     await authProvider.checkLoginStatus();
-    setState(() {
-      _checking = false;
-    });
+    if (mounted) {
+      setState(() {
+        _checking = false;
+      });
+    }
   }
 
   @override
@@ -83,7 +96,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
       );
     }
 
-    final authProvider = Provider.of<AuthProvider>(context);
+    // Get auth provider but DON'T listen to changes here
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     if (authProvider.isLoggedIn) {
       return const Admin();

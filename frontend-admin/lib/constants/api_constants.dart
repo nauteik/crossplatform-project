@@ -25,4 +25,9 @@ class ApiConstants {
       return localUrl;
     }
   }
-} 
+
+  // Thêm getter cho baseUrl để tương thích với code hiện tại
+  static String get baseUrl {
+    return baseApiUrl + '/api';
+  }
+}

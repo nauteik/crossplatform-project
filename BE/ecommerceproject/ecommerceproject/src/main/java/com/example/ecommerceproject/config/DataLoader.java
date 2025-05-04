@@ -12,6 +12,7 @@ import com.example.ecommerceproject.repository.ProductTypeRepository;
 import com.example.ecommerceproject.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -26,14 +27,16 @@ public class DataLoader implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository) {
+    public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository, PasswordEncoder passwordEncoder) {
         this.brandRepository = brandRepository;
         this.productTypeRepository = productTypeRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.cartRepository = cartRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -385,19 +388,27 @@ public class DataLoader implements CommandLineRunner {
         // Tạo admin user
         User admin = new User();
         admin.setEmail("admin@example.com");
-        admin.setPassword("$2a$10$rDkPvvAFV6GgW5K7w5L0QO5v5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z"); // password: admin123
+        admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setName("Admin");
         admin.setUsername("admin");
         admin.setRole(1); // 1 là admin
+        admin.setAvatar("Chưa cập nhật");
+        admin.setPhone("Chưa cập nhật");
+        admin.setAddress("Chưa cập nhật");
+        admin.setGender("Chưa cập nhật");
         admin = userRepository.save(admin);
 
         // Tạo user thường
         User user = new User();
         user.setEmail("user@example.com");
-        user.setPassword("$2a$10$rDkPvvAFV6GgW5K7w5L0QO5v5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z"); // password: user123
+        user.setPassword(passwordEncoder.encode("user123"));
         user.setName("User");
         user.setUsername("user");
         user.setRole(0); // 0 là user thường
+        user.setAvatar("Chưa cập nhật");
+        user.setPhone("Chưa cập nhật");
+        user.setAddress("Chưa cập nhật");
+        user.setGender("Chưa cập nhật");
         user = userRepository.save(user);
 
         // Tạo cart cho user

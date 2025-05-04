@@ -4,21 +4,29 @@ import 'package:admin_interface/constants/api_constants.dart';
 import 'package:admin_interface/models/api_response_model.dart';
 import 'package:admin_interface/models/user_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserManagementRepository {
-  final String _baseUrl = "${ApiConstants.baseApiUrl}/user";
+  final String _baseUrl = "${ApiConstants.baseApiUrl}/api/user";
 
-  Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    // 'Authorization': 'Bearer YOUR_JWT_TOKEN_HERE', // Thêm token nếu cần
-  };
+  // Cập nhật để lấy token từ SharedPreferences
+  Future<Map<String, String>> get _headers async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': token != null ? 'Bearer $token' : '',
+    };
+  }
 
   // --- Lấy danh sách người dùng (GET /user/getAll) ---
   Future<ApiResponse<List<User>>> fetchUsers() async {
     try {
+      final headers = await _headers;
       final response = await http.get(
         Uri.parse('$_baseUrl/getAll'),
-        headers: _headers,
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -57,9 +65,10 @@ class UserManagementRepository {
   // --- Thêm người dùng mới (POST /user/add) ---
   Future<ApiResponse<User>> addUser(Map<String, dynamic> userData) async {
     try {
+      final headers = await _headers;
       final response = await http.post(
         Uri.parse('$_baseUrl/add'),
-        headers: _headers,
+        headers: headers,
         body: jsonEncode(userData),
       );
 
@@ -85,9 +94,10 @@ class UserManagementRepository {
   // --- Cập nhật thông tin người dùng (PUT /user/edit/{userId}) ---
    Future<ApiResponse<User>> updateUser(String userId, Map<String, dynamic> userData) async {
      try {
+      final headers = await _headers;
       final response = await http.put(
         Uri.parse('$_baseUrl/edit/$userId'),
-        headers: _headers,
+        headers: headers,
         body: jsonEncode(userData),
       );
 
@@ -105,9 +115,10 @@ class UserManagementRepository {
   // --- Xóa người dùng (Endpoint KHÔNG CÓ trong UserController.txt) ---
    Future<ApiResponse<dynamic>> deleteUser(String userId) async {
     try {
+      final headers = await _headers;
       final response = await http.delete(
         Uri.parse('$_baseUrl/delete/$userId'),
-        headers: _headers,
+        headers: headers,
       );
 
       final jsonResponse = jsonDecode(response.body);
@@ -124,9 +135,10 @@ class UserManagementRepository {
    // --- Lấy thông tin người dùng theo ID (GET /user/get/{userId}) ---
   Future<ApiResponse<User>> getUserById(String userId) async {
      try {
+      final headers = await _headers;
       final response = await http.get(
         Uri.parse('$_baseUrl/get/$userId'),
-        headers: _headers,
+        headers: headers,
       );
 
       final jsonResponse = jsonDecode(response.body);
@@ -143,12 +155,10 @@ class UserManagementRepository {
    // --- Lấy thông tin người dùng hiện tại (GET /user/me) ---
   Future<ApiResponse<User>> getCurrentUser(String jwtToken) async {
      try {
+      final headers = await _headers;
       final response = await http.get(
         Uri.parse('$_baseUrl/me'),
-        headers: {
-           'Content-Type': 'application/json',
-           'Authorization': 'Bearer $jwtToken',
-        },
+        headers: headers,
       );
 
       final jsonResponse = jsonDecode(response.body);

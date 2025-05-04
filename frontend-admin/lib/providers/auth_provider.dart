@@ -12,16 +12,21 @@ class AuthProvider extends ChangeNotifier {
   String? _token;
   String? _errorMessage;
   User? _currentUser;
+  bool _initialized = false;
 
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   User? get currentUser => _currentUser;
   String? get token => _token;
+  bool get initialized => _initialized;
 
   // Check if user is already logged in from stored token
   Future<void> checkLoginStatus() async {
-    _setLoading(true);
+    if (_initialized) return;
+    
+    _isLoading = true;
+    // Don't call notifyListeners() here to avoid build-time updates
 
     final prefs = await SharedPreferences.getInstance();
     final storedToken = prefs.getString('auth_token');
@@ -32,13 +37,17 @@ class AuthProvider extends ChangeNotifier {
       _isLoggedIn = true;
     }
 
-    _setLoading(false);
+    _isLoading = false;
+    _initialized = true;
+    // Now we can notify after the initialization is complete
+    notifyListeners();
   }
 
   // Login with username and password
   Future<bool> login(String username, String password) async {
-    _setLoading(true);
-    _setErrorMessage(null);
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
 
     try {
       final response = await http.post(
@@ -62,19 +71,20 @@ class AuthProvider extends ChangeNotifier {
           prefs.setString('auth_token', _token!);
 
           _isLoggedIn = true;
-          _setLoading(false);
+          _isLoading = false;
+          _initialized = true;
           notifyListeners();
           return true;
         }
       }
 
-      _setErrorMessage(responseData['message'] ?? 'Đăng nhập thất bại');
-      _setLoading(false);
+      _errorMessage = responseData['message'] ?? 'Đăng nhập thất bại';
+      _isLoading = false;
       notifyListeners();
       return false;
     } catch (error) {
-      _setErrorMessage('Đăng nhập thất bại: $error');
-      _setLoading(false);
+      _errorMessage = 'Đăng nhập thất bại: $error';
+      _isLoading = false;
       notifyListeners();
       return false;
     }
@@ -96,7 +106,7 @@ class AuthProvider extends ChangeNotifier {
   void _extractUserFromToken(String token) {
     try {
       final decodedToken = JwtDecoder.decode(token);
-
+      print('Decoded token: $decodedToken');
       // The JWT payload should contain user information
       // Adjust the fields based on your actual JWT structure
       _currentUser = User(
@@ -117,16 +127,6 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       return true;
     }
-  }
-
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
-
-  void _setErrorMessage(String? message) {
-    _errorMessage = message;
-    notifyListeners();
   }
 
   bool isAdmin() {

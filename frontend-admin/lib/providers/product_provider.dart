@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:admin_interface/models/product_model.dart';
 import 'package:admin_interface/repository/product_repository.dart';
 import 'package:flutter/material.dart';
@@ -139,4 +140,97 @@ class ProductProvider with ChangeNotifier {
     _currentCategory = category;
     notifyListeners();
   }
-} 
+
+  // Tạo sản phẩm mới
+  Future<bool> createProduct(Product product, {File? imageFile}) async {
+    _status = ProductStatus.loading;
+    notifyListeners();
+    
+    try {
+      final response = await _repository.createProduct(product, imageFile: imageFile);
+      
+      if (response.status == 200 && response.data != null) {
+        // Thêm sản phẩm mới vào danh sách
+        _products.add(response.data!);
+        _status = ProductStatus.loaded;
+        notifyListeners();
+        return true;
+      } else {
+        _status = ProductStatus.error;
+        _errorMessage = response.message;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _status = ProductStatus.error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+  
+  // Cập nhật sản phẩm
+  Future<bool> updateProduct(String id, Product product, {File? imageFile}) async {
+    _status = ProductStatus.loading;
+    notifyListeners();
+    
+    try {
+      final response = await _repository.updateProduct(id, product, imageFile: imageFile);
+      
+      if (response.status == 200 && response.data != null) {
+        // Cập nhật sản phẩm trong danh sách
+        final index = _products.indexWhere((p) => p.id == id);
+        if (index != -1) {
+          _products[index] = response.data!;
+        }
+        
+        // Nếu đang xem chi tiết sản phẩm này, cập nhật luôn
+        if (_currentProduct?.id == id) {
+          _currentProduct = response.data;
+        }
+        
+        _status = ProductStatus.loaded;
+        notifyListeners();
+        return true;
+      } else {
+        _status = ProductStatus.error;
+        _errorMessage = response.message;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _status = ProductStatus.error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+  
+  // Xóa sản phẩm
+  Future<bool> deleteProduct(String id) async {
+    _status = ProductStatus.loading;
+    notifyListeners();
+    
+    try {
+      final response = await _repository.deleteProduct(id);
+      
+      if (response.status == 200) {
+        // Xóa sản phẩm khỏi danh sách
+        _products.removeWhere((product) => product.id == id);
+        _status = ProductStatus.loaded;
+        notifyListeners();
+        return true;
+      } else {
+        _status = ProductStatus.error;
+        _errorMessage = response.message;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _status = ProductStatus.error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+}

@@ -30,8 +30,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   String? _selectedRank;
   int? _selectedRoleInt;
 
-  final List<String> _genders = ['Nam', 'Nữ', 'Khác'];
-  final List<String> _ranks = ['Đồng', 'Bạc', 'Vàng', 'Kim Cương'];
+  // Các giá trị cố định cho dropdown phải khớp với backend
+  final List<String> _genders = ['Nam', 'Nữ', 'Khác', 'Chưa cập nhật'];
+  final List<String> _ranks = ['Thành viên đồng', 'Thành viên bạc', 'Thành viên vàng', 'Thành viên kim cương'];
   final Map<int, String> _roleMap = {0: 'user', 1: 'admin'};
 
   User? _editingUser;
@@ -69,8 +70,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     _addressController.text = user?.address ?? '';
     _totalSpendController.text = user?.totalSpend?.toString() ?? '0';
     _birthdayController.text = user?.birthday != null ? DateFormat('dd/MM/yyyy').format(user!.birthday!) : '';
-    _selectedGender = user?.gender;
-    _selectedRank = user?.rank;
+    
+    // Đảm bảo giá trị gender và rank chỉ được đặt nếu chúng tồn tại trong danh sách
+    _selectedGender = user?.gender != null && _genders.contains(user!.gender) ? user.gender : null;
+    _selectedRank = user?.rank != null && _ranks.contains(user!.rank) ? user.rank : null;
     _selectedRoleInt = user?.role ?? 0;
   }
 
@@ -156,29 +159,27 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                         controller: _phoneController,
                         decoration: const InputDecoration(labelText: 'Số Điện Thoại'),
                         keyboardType: TextInputType.phone,
-                        // validator: (value) { /* Thêm validation SĐT nếu cần */ return null; },
                       ),
                       TextFormField(
                         controller: _addressController,
                         decoration: const InputDecoration(labelText: 'Địa Chỉ'),
                       ),
                       TextFormField(
-                        controller: _avatarController, // Sử dụng avatarController
+                        controller: _avatarController,
                         decoration: const InputDecoration(labelText: 'URL Ảnh Đại Diện'),
                         keyboardType: TextInputType.url,
                       ),
-                       TextFormField( // Trường Birthday
-                          controller: _birthdayController,
-                          decoration: InputDecoration(
-                            labelText: 'Ngày Sinh (dd/MM/yyyy)',
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.calendar_today),
-                              onPressed: () => _selectDate(context), // Mở date picker
-                            ),
+                      TextFormField(
+                        controller: _birthdayController,
+                        decoration: InputDecoration(
+                          labelText: 'Ngày Sinh (dd/MM/yyyy)',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.calendar_today),
+                            onPressed: () => _selectDate(context),
                           ),
-                          readOnly: true, // Không cho nhập trực tiếp
-                          // validator: (value) { /* Thêm validation ngày sinh nếu cần */ return null; },
-                       ),
+                        ),
+                        readOnly: true,
+                      ),
                       DropdownButtonFormField<String>(
                         value: _selectedGender,
                         decoration: const InputDecoration(labelText: 'Giới Tính'),
@@ -189,14 +190,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                           );
                         }).toList(),
                         onChanged: (newValue) {
-                           setState(() { // Sử dụng setState của StatefulBuilder
+                          setState(() {
                             _selectedGender = newValue;
                           });
                         },
-                        // validator: (value) { /* Thêm validation nếu giới tính là bắt buộc */ return null; },
                       ),
-                      const SizedBox(height: 16), // Khoảng cách giữa các trường
-                       DropdownButtonFormField<String>(
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
                         value: _selectedRank,
                         decoration: const InputDecoration(labelText: 'Cấp Bậc'),
                         items: _ranks.map((String rank) {
@@ -206,47 +206,46 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                           );
                         }).toList(),
                         onChanged: (newValue) {
-                          setState(() { // Sử dụng setState của StatefulBuilder
+                          setState(() {
                             _selectedRank = newValue;
                           });
                         },
-                         // validator: (value) { /* Thêm validation nếu cấp bậc là bắt buộc */ return null; },
                       ),
-                       const SizedBox(height: 16), // Khoảng cách
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _totalSpendController,
                         decoration: const InputDecoration(labelText: 'Tổng Tiền Đã Chi Tiêu (int)'),
                         keyboardType: TextInputType.number,
-                         validator: (value) {
+                        validator: (value) {
                           if (value != null && value.isNotEmpty) {
-                            if (int.tryParse(value) == null) { // Kiểm tra là int
+                            if (int.tryParse(value) == null) {
                               return 'Vui lòng nhập số nguyên hợp lệ';
                             }
                           }
-                           return null;
-                         },
+                          return null;
+                        },
                       ),
-                       const SizedBox(height: 16), // Khoảng cách
-                       DropdownButtonFormField<int>( // Role là int
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<int>(
                         value: _selectedRoleInt,
                         decoration: const InputDecoration(labelText: 'Vai Trò'),
                         items: _roleMap.entries.map((MapEntry<int, String> entry) {
                           return DropdownMenuItem<int>(
-                            value: entry.key, // Value là int
-                            child: Text(entry.value), // Hiển thị là String
+                            value: entry.key,
+                            child: Text(entry.value),
                           );
                         }).toList(),
                         onChanged: (newValue) {
-                           setState(() { // Sử dụng setState của StatefulBuilder
+                          setState(() {
                             _selectedRoleInt = newValue;
                           });
                         },
-                         validator: (value) {
-                          if (value == null) { // Kiểm tra null (vì là int?)
-                             return 'Vui lòng chọn vai trò';
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Vui lòng chọn vai trò';
                           }
                           return null;
-                         },
+                        },
                       ),
                     ],
                   ),
@@ -264,81 +263,68 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
 
                       final provider = Provider.of<UserManagementProvider>(context, listen: false);
 
-                      // Chuyển đổi birthday string sang DateTime?
                       DateTime? birthdayDateTime;
                       if (_birthdayController.text.isNotEmpty) {
-                         try {
-                           birthdayDateTime = DateFormat('dd/MM/yyyy').parse(_birthdayController.text);
-                         } catch (e) {
-                           // Xử lý lỗi parse ngày tháng nếu cần, hoặc validator đã bắt
-                            ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(content: Text('Lỗi định dạng ngày sinh.')),
-                            );
-                           return;
-                         }
+                        try {
+                          birthdayDateTime = DateFormat('dd/MM/yyyy').parse(_birthdayController.text);
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Lỗi định dạng ngày sinh.')),
+                          );
+                          return;
+                        }
                       }
 
-                      final User tempUser = User( // Tạo User tạm thời để dùng toJson
-                        id: user?.id ?? '', // ID chỉ cần khi sửa, toJson sẽ bỏ qua khi thêm
+                      final User tempUser = User(
+                        id: user?.id ?? '',
                         email: _emailController.text.trim(),
-                        username: _usernameController.text.trim().isEmpty ? null : _usernameController.text.trim(), // Username có thể null? Backend model có field username.
-                        // Password không đưa vào đây, xử lý riêng
+                        username: _usernameController.text.trim().isEmpty ? null : _usernameController.text.trim(),
                         password: null,
-                        avatar: _avatarController.text.trim().isEmpty ? null : _avatarController.text.trim(), // Sử dụng avatarController
+                        avatar: _avatarController.text.trim().isEmpty ? null : _avatarController.text.trim(),
                         name: _nameController.text.trim(),
                         phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
                         address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
                         gender: _selectedGender,
-                        birthday: birthdayDateTime, // Birthday là DateTime
+                        birthday: birthdayDateTime,
                         rank: _selectedRank,
-                        totalSpend: int.tryParse(_totalSpendController.text.trim()) ?? 0, // totalSpend là int
-                        role: _selectedRoleInt ?? 0, // role là int
+                        totalSpend: int.tryParse(_totalSpendController.text.trim()) ?? 0,
+                        role: _selectedRoleInt ?? 0,
                       );
 
-                      // Lấy dữ liệu JSON từ User tạm thời
                       final Map<String, dynamic> userData = tempUser.toJson();
 
-                      // Thêm password vào userData CHỈ KHI form password có giá trị
                       if (_passwordController.text.isNotEmpty) {
                         userData['password'] = _passwordController.text;
                       }
-                      // Nếu sửa và không nhập pass mới, backend sẽ dùng pass cũ.
-                      // Nếu thêm mới và pass rỗng, validator đã bắt.
 
                       bool success;
                       if (_editingUser == null) {
-                        // Thêm người dùng mới
                         success = await provider.addUser(userData);
-                         if (success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Đã thêm người dùng thành công!')),
-                            );
-                         } else {
-                            // Hiển thị lỗi từ provider
-                             ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Lỗi: ${provider.errorMessage ?? "Không rõ lỗi"}')),
-                              );
-                            return; // Không đóng dialog nếu lỗi
-                         }
-
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Đã thêm người dùng thành công!')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Lỗi: ${provider.errorMessage ?? "Không rõ lỗi"}')),
+                          );
+                          return;
+                        }
                       } else {
-                        // Sửa người dùng
                         success = await provider.updateUser(_editingUser!.id, userData);
                         if (success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Đã cập nhật người dùng thành công!')),
-                            );
-                         } else {
-                           // Hiển thị lỗi từ provider
-                             ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Lỗi: ${provider.errorMessage ?? "Không rõ lỗi"}')),
-                              );
-                            return; // Không đóng dialog nếu lỗi
-                         }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Đã cập nhật người dùng thành công!')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Lỗi: ${provider.errorMessage ?? "Không rõ lỗi"}')),
+                          );
+                          return;
+                        }
                       }
 
-                      Navigator.pop(context); // Đóng dialog nếu thành công
-
+                      Navigator.pop(context);
                     }
                   },
                   child: Text(user == null ? 'Thêm' : 'Lưu'),
@@ -365,20 +351,20 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
               child: const Text('Hủy'),
             ),
             ElevatedButton(
-              onPressed: () async { // Make onPressed async
+              onPressed: () async {
                 final provider = Provider.of<UserManagementProvider>(context, listen: false);
-                bool success = await provider.deleteUser(userToDelete.id); // Sử dụng user.id
+                bool success = await provider.deleteUser(userToDelete.id);
 
                 if (success) {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Đã xóa người dùng: ${userToDelete.name}')),
-                    );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Đã xóa người dùng: ${userToDelete.name}')),
+                  );
                 } else {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Lỗi xóa người dùng: ${provider.errorMessage ?? "Không rõ lỗi"}')),
-                    );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi xóa người dùng: ${provider.errorMessage ?? "Không rõ lỗi"}')),
+                  );
                 }
-                Navigator.pop(context); // Đóng dialog xác nhận
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('Xóa', style: TextStyle(color: Colors.white)),
@@ -417,7 +403,6 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                               child: ListTile(
                                 leading: CircleAvatar(
                                   backgroundColor: Theme.of(context).primaryColor,
-                                  // Sử dụng user.avatar
                                   child: user.avatar != null && user.avatar!.isNotEmpty
                                       ? ClipOval(
                                           child: Image.network(
@@ -443,18 +428,15 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('Email: ${user.email}'),
-                                    // Hiển thị role dưới dạng String
                                     Text('Vai trò: ${user.roleString}'),
                                     if (user.username != null && user.username!.isNotEmpty) Text('Username: ${user.username!}'),
-                                    Text('Mật khẩu: ****'), // Hiển thị dạng bảo mật tĩnh
+                                    Text('Mật khẩu: ****'),
                                     if (user.phone != null && user.phone!.isNotEmpty) Text('SĐT: ${user.phone!}'),
                                     if (user.address != null && user.address!.isNotEmpty) Text('Địa chỉ: ${user.address!}'),
                                     if (user.gender != null && user.gender!.isNotEmpty) Text('Giới tính: ${user.gender!}'),
-                                    // Hiển thị birthday
                                     Text('Ngày sinh: ${user.birthdayString}'),
                                     if (user.rank != null && user.rank!.isNotEmpty) Text('Cấp bậc: ${user.rank!}'),
-                                    // Hiển thị totalSpend (int)
-                                    Text('Tổng chi tiêu: ${user.totalSpend ?? 0}'), // Hiển thị 0 nếu null
+                                    Text('Tổng chi tiêu: ${user.totalSpend ?? 0}'),
                                   ],
                                 ),
                                 trailing: Row(
@@ -464,14 +446,14 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                                       icon: const Icon(Icons.edit, color: Colors.blue),
                                       tooltip: 'Sửa',
                                       onPressed: () {
-                                        _showUserFormDialog(user: user); // Mở dialog sửa với dữ liệu user
+                                        _showUserFormDialog(user: user);
                                       },
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red),
                                       tooltip: 'Xóa',
                                       onPressed: () {
-                                        _confirmDeleteUser(user); // Mở dialog xác nhận xóa
+                                        _confirmDeleteUser(user);
                                       },
                                     ),
                                   ],
@@ -483,7 +465,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                     ),
       floatingActionButton: FloatingActionButton(
         onPressed: isLoading ? null : () {
-          _showUserFormDialog(); // Mở dialog thêm người dùng mới
+          _showUserFormDialog();
         },
         child: const Icon(Icons.add),
         tooltip: 'Thêm người dùng mới',

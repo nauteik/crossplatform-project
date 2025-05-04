@@ -16,25 +16,13 @@ class RealScreenAccess implements ScreenAccessInterface {
   Widget getScreen(int index, BuildContext context) {
     switch (index) {
       case 0:
-        return const HomeScreen();
-      case 1:
-        return const StatisticsScreen();
-      case 2:
-        return const CustomersSupportScreen();
-      case 3:
         return const ProductsManagementScreen();
-      case 4:
+      case 1:
         return const UsersManagementScreen();
-      case 5:
-        return const CouponsManagementScreen();
-      case 6:
+      case 2:
         return const OrdersManagementScreen();
-      case 7:
-        return const ProductsPromotionScreen();
-      case 8:
-        return const LoginScreen();
       default:
-        return const HomeScreen();
+        return const ProductsManagementScreen();
     }
   }
 }

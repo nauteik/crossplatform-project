@@ -17,8 +17,8 @@ class ProxyScreenAccess implements ScreenAccessInterface {
   Widget getScreen(int index, BuildContext context) {
     if (_adminOnlyScreens.contains(index)) {
       // Get auth provider to check role
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
+      final authProvider = Provider.of<AuthProvider>(context);
+      print('Current user role: ${authProvider.currentUser?.role}');
       if (!authProvider.isAdmin()) {
         return _buildAccessDeniedScreen(context);
       }
