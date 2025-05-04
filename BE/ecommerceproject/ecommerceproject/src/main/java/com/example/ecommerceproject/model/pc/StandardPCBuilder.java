@@ -6,81 +6,56 @@ import org.springframework.stereotype.Component;
 @Component
 public class StandardPCBuilder implements PCBuilder {
     private PC pc;
-    
     public StandardPCBuilder() {
         this.reset();
     }
-    
     @Override
-    public PCBuilder reset() {
+    public void reset() {
         this.pc = new PC();
-        return this;
     }
-    
     @Override
-    public PCBuilder setName(String name) {
+    public void setName(String name) {
         this.pc.setName(name);
-        return this;
     }
-    
     @Override
-    public PCBuilder setUserId(String userId) {
+    public void setUserId(String userId) {
         this.pc.setUserId(userId);
-        return this;
     }
-    
     @Override
-    public PCBuilder setCpu(Product cpu) {
+    public void setCpu(Product cpu) {
         this.pc.setCpu(cpu);
-        return this;
     }
-    
     @Override
-    public PCBuilder setMotherboard(Product motherboard) {
+    public void setMotherboard(Product motherboard) {
         this.pc.setMotherboard(motherboard);
-        return this;
     }
-    
     @Override
-    public PCBuilder setGpu(Product gpu) {
+    public void setGpu(Product gpu) {
         this.pc.setGpu(gpu);
-        return this;
     }
-    
     @Override
-    public PCBuilder setRam(Product ram) {
+    public void setRam(Product ram) {
         this.pc.setRam(ram);
-        return this;
     }
-    
     @Override
-    public PCBuilder setStorage(Product storage) {
+    public void setStorage(Product storage) {
         this.pc.setStorage(storage);
-        return this;
     }
-    
     @Override
-    public PCBuilder setPowerSupply(Product powerSupply) {
+    public void setPowerSupply(Product powerSupply) {
         this.pc.setPowerSupply(powerSupply);
-        return this;
     }
-    
     @Override
-    public PCBuilder setPcCase(Product pcCase) {
+    public void setPcCase(Product pcCase) {
         this.pc.setPcCase(pcCase);
-        return this;
     }
-    
     @Override
-    public PCBuilder setCooling(Product cooling) {
+    public void setCooling(Product cooling) {
         this.pc.setCooling(cooling);
-        return this;
     }
-    
     @Override
-    public PCBuilder validateCompatibility() {
+    public void validateCompatibility() {
         boolean isCompatible = true;
-        
         // Calculate total price
         double totalPrice = 0;
         if (pc.getCpu() != null) totalPrice += pc.getCpu().getPrice();
@@ -91,35 +66,27 @@ public class StandardPCBuilder implements PCBuilder {
         if (pc.getPowerSupply() != null) totalPrice += pc.getPowerSupply().getPrice();
         if (pc.getPcCase() != null) totalPrice += pc.getPcCase().getPrice();
         if (pc.getCooling() != null) totalPrice += pc.getCooling().getPrice();
-        
         pc.setTotalPrice(totalPrice);
-        
-        // Check if all required components are present
         if (pc.getCpu() == null) {
             pc.getCompatibilityNotes().put("cpu", "CPU is required");
             isCompatible = false;
         }
-        
         if (pc.getMotherboard() == null) {
             pc.getCompatibilityNotes().put("motherboard", "Motherboard is required");
             isCompatible = false;
         }
-        
         if (pc.getRam() == null) {
             pc.getCompatibilityNotes().put("ram", "RAM is required");
             isCompatible = false;
         }
-        
         if (pc.getStorage() == null) {
             pc.getCompatibilityNotes().put("storage", "Storage is required");
             isCompatible = false;
         }
-        
         if (pc.getPowerSupply() == null) {
             pc.getCompatibilityNotes().put("powerSupply", "Power Supply is required");
             isCompatible = false;
         }
-        
         // IMPROVED CPU and Motherboard socket compatibility check
         if (pc.getCpu() != null && pc.getMotherboard() != null) {
             String cpuSocketType = pc.getCpu().getSocketType();
@@ -212,22 +179,6 @@ public class StandardPCBuilder implements PCBuilder {
         } else {
             pc.setBuildStatus("incompatible");
         }
-        
-        return this;
-    }
-    
-    @Override
-    public PCBuilder suggestWorkstationComponents() {
-        // Basic implementation for standard builder
-        // This would normally be implemented by WorkstationPCBuilder
-        return this;
-    }
-    
-    @Override
-    public PCBuilder suggestGamingComponents() {
-        // Basic implementation for standard builder
-        // This would normally be implemented by GamingPCBuilder
-        return this;
     }
     
     @Override
@@ -235,5 +186,15 @@ public class StandardPCBuilder implements PCBuilder {
         PC result = this.pc;
         this.reset();
         return result;
+    }
+
+    @Override
+    public void suggestWorkstationComponents() {
+      
+    }
+
+    @Override
+    public void suggestGamingComponents() {
+        
     }
 }

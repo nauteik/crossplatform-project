@@ -48,16 +48,49 @@ public class OrderService {
     public Order processOrderPayment(String orderId, Map<String, Object> paymentDetails) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> Kiet
         if (order.getStatus() != OrderStatus.PENDING) {
             throw new IllegalArgumentException("Cannot process payment for order with status: " + order.getStatus());
         }
 
         logger.info("OrderService initiating payment process via PaymentService for order: {}", order.getId());
         boolean paymentSuccess = paymentService.processPayment(order, paymentDetails);
+<<<<<<< HEAD
 
         logger.info("Payment process completed. OrderService delegating result handling to OrderPaymentMediator for order: {}", order.getId());
         return orderPaymentMediator.handlePaymentResult(order, paymentSuccess);
+=======
+        
+        // Update order status based on payment result
+        if (paymentSuccess) {
+            order.updateStatus(OrderStatus.PAID);
+            logger.info("Payment successful for order: {}, updating status to: {}", 
+                      order.getId(), order.getStatus());
+                      
+            List<String> productIds = order.getItems().stream()
+                .map(OrderItem::getProductId)
+                .collect(Collectors.toList());
+            
+            cartService.removeItemsFromCart(order.getUserId(), productIds);
+            logger.info("Removed {} items from cart for user: {} after successful payment", 
+                      productIds.size(), order.getUserId());
+        } else {
+            order.updateStatus(OrderStatus.FAILED);
+            logger.warn("Payment failed for order: {}, updating status to: {}", 
+                      order.getId(), order.getStatus());
+                      
+            // Restore product quantities if payment fails
+            restoreProductQuantities(order);
+        }
+        
+        // Save the updated order
+        Order updatedOrder = orderRepository.save(order);
+        return updatedOrder;
+>>>>>>> Kiet
     }
 
     @Transactional
@@ -79,5 +112,15 @@ public class OrderService {
 
     public List<Order> getOrdersByUserId(String userId) {
         return orderRepository.findByUserId(userId);
+    }
+    
+    /**
+     * Get all orders
+     * 
+     * @return List of all orders in the system
+     */
+    public List<Order> getAllOrders() {
+        logger.info("Retrieving all orders");
+        return orderRepository.findAll();
     }
 }

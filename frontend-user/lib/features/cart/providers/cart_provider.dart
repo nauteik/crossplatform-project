@@ -140,6 +140,34 @@ class CartProvider extends ChangeNotifier {
     return response;
   }
   
+  // Update quantity of an existing cart item
+  Future<void> updateItemQuantity(String productId, int newQuantity) async {
+    if (newQuantity < 1) return; // Don't allow quantity less than 1
+    
+    try {
+      // First, find the item in the cart
+      final itemIndex = items.indexWhere((item) => item.id == productId);
+      if (itemIndex == -1) return; // Item not found
+      
+      // Create a new item with updated quantity
+      final updatedItem = CartItemModel(
+        id: items[itemIndex].id,
+        name: items[itemIndex].name,
+        price: items[itemIndex].price,
+        imageUrl: items[itemIndex].imageUrl,
+        quantity: newQuantity,
+      );
+      
+      // Update the item in the cart manager
+      await _cartManager.updateItemQuantity(productId, newQuantity);
+      
+      // Notify listeners about the change
+      notifyListeners();
+    } catch (e) {
+      print('Error updating cart item quantity: $e');
+    }
+  }
+  
   // Remove multiple items (after payment)
   Future<void> removePaidItems(List<String> itemIds) async {
     if (itemIds.isEmpty) return;

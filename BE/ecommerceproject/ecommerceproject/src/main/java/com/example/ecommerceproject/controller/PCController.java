@@ -118,20 +118,6 @@ public class PCController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     
-    @PostMapping("/budget")
-    public ResponseEntity<ApiResponse<PC>> buildBudgetPC(@RequestBody Map<String, Object> request) {
-        String name = (String) request.get("name");
-        String userId = (String) request.get("userId");
-        
-        PC pc = pcService.buildBudgetPC(name, userId);
-        
-        ApiResponse<PC> response = new ApiResponse<>(
-                ApiStatus.SUCCESS.getCode(),
-                "Budget PC build created successfully",
-                pc
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
     
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PC>> updatePC(@PathVariable String id, @RequestBody Map<String, String> componentUpdates) {

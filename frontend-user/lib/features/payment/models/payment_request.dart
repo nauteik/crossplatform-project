@@ -36,6 +36,36 @@ class PaymentRequest {
       },
     );
   }
+  
+  // Factory method to create a Bank Transfer payment request
+  factory PaymentRequest.bankTransfer({
+    required String accountNumber,
+    required String bankName,
+    String? transferCode,
+  }) {
+    return PaymentRequest(
+      paymentMethod: 'BANK_TRANSFER',
+      paymentDetails: {
+        'accountNumber': accountNumber,
+        'bankName': bankName,
+        'transferCode': transferCode ?? '',
+      },
+    );
+  }
+  
+  // Factory method to create a MoMo payment request
+  factory PaymentRequest.momo({
+    required String phoneNumber,
+    String? transactionId,
+  }) {
+    return PaymentRequest(
+      paymentMethod: 'MOMO',
+      paymentDetails: {
+        'phoneNumber': phoneNumber,
+        'transactionId': transactionId ?? '',
+      },
+    );
+  }
 
   Map<String, dynamic> toJson() {
     return paymentDetails;
@@ -67,5 +97,49 @@ class CreditCardModel {
     bool hasValidCvv = cvv.length >= 3 && cvv.length <= 4;
     
     isValid = hasValidCardNumber && hasValidName && hasValidExpiry && hasValidCvv;
+  }
+}
+
+// Model for Bank Transfer data validation and form handling
+class BankTransferModel {
+  String accountNumber;
+  String bankName;
+  String transferCode;
+  bool isValid;
+  
+  BankTransferModel({
+    this.accountNumber = '',
+    this.bankName = '',
+    this.transferCode = '',
+    this.isValid = false,
+  });
+  
+  // Simple validation logic
+  void validate() {
+    bool hasValidAccountNumber = accountNumber.length >= 10;
+    bool hasValidBankName = bankName.isNotEmpty;
+    
+    isValid = hasValidAccountNumber && hasValidBankName;
+  }
+}
+
+// Model for MoMo payment data validation and form handling
+class MomoPaymentModel {
+  String phoneNumber;
+  String transactionId;
+  bool isValid;
+  
+  MomoPaymentModel({
+    this.phoneNumber = '',
+    this.transactionId = '',
+    this.isValid = false,
+  });
+  
+  // Simple validation logic
+  void validate() {
+    // Phone number should be a valid Vietnamese phone number format
+    bool hasValidPhoneNumber = phoneNumber.length == 10;
+    
+    isValid = hasValidPhoneNumber;
   }
 }

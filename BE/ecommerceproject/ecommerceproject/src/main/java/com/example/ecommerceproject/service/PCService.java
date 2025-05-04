@@ -101,15 +101,7 @@ public class PCService {
         // Save and return the PC
         return pcRepository.save(pc);
     }
-    
-    public PC buildBudgetPC(String name, String userId) {
-        // Use the PCDirector to build a budget PC
-        PC pc = pcDirector.buildBudgetPC(name, userId);
-        
-        // Save and return the PC
-        return pcRepository.save(pc);
-    }
-    
+
     public PC updatePC(String id, Map<String, String> componentUpdates) {
         Optional<PC> optionalPC = pcRepository.findById(id);
         

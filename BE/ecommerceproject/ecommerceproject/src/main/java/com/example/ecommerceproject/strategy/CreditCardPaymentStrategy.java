@@ -24,13 +24,12 @@ public class CreditCardPaymentStrategy implements PaymentStrategy {
         String cardName = (String) paymentDetails.getOrDefault("cardName", "");
         String expiryDate = (String) paymentDetails.getOrDefault("expiryDate", "");
         String cvv = (String) paymentDetails.getOrDefault("cvv", "");
-        
         // Log payment attempt (for demonstration purposes)
         logger.info("Processing CREDIT CARD payment for Order ID: {}", order.getId());
         logger.info("Payment Amount: ${}", order.getTotalAmount());
         logger.info("Card Details: {} (ending with {})", cardName, 
                 cardNumber.length() > 4 ? cardNumber.substring(cardNumber.length() - 4) : "****");
-        
+
         // Simulate payment processing
         boolean isValid = isValidCardDetails(cardNumber, expiryDate, cvv);
         
@@ -42,7 +41,6 @@ public class CreditCardPaymentStrategy implements PaymentStrategy {
             return false;
         }
     }
-    
     @Override
     public String getPaymentMethodName() {
         return PAYMENT_METHOD;
@@ -52,12 +50,10 @@ public class CreditCardPaymentStrategy implements PaymentStrategy {
      * Simple validation for card details (in a real system, this would be much more comprehensive)
      */
     private boolean isValidCardDetails(String cardNumber, String expiryDate, String cvv) {
-        // This is a very basic simulation - in reality, would validate format, check Luhn algorithm, etc.
         boolean hasCardNumber = cardNumber != null && !cardNumber.trim().isEmpty();
         boolean hasExpiryDate = expiryDate != null && !expiryDate.trim().isEmpty();
         boolean hasCvv = cvv != null && !cvv.trim().isEmpty();
-        
-        // For demo purposes: 90% success rate, 10% simulated failure
+
         double randomValue = Math.random();
         
         return hasCardNumber && hasExpiryDate && hasCvv && (randomValue < 0.9);
