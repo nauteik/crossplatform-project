@@ -5,6 +5,7 @@ import '../../../core/services/auth_service.dart';
 // import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
+
 class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
   String? _token;
@@ -179,12 +180,12 @@ class AuthProvider extends ChangeNotifier {
   //       _userData = responseData['data']['user'];
   //       _username = _userData?['name'] ?? googleUser.displayName ?? '';
   //       _isAuthenticated = true;
-      
+
   //       // Lưu vào SharedPreferences
   //       final prefs = await SharedPreferences.getInstance();
   //       await prefs.setString('jwt_token', _token!);
   //       await prefs.setString('user_data', jsonEncode(_userData));
-      
+
   //       notifyListeners();
   //       return true;
   //     } else {
@@ -213,5 +214,50 @@ class AuthProvider extends ChangeNotifier {
     await prefs.remove('userId'); // Thêm dòng này
 
     notifyListeners();
+  }
+
+  Future<void> _fetchUserDetails(String token, String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/user/get/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200 && responseData['status'] == 200) {
+        final userDetails = responseData['data'];
+
+        // Cập nhật thông tin người dùng đầy đủ
+        final prefs = await SharedPreferences.getInstance();
+        final userDataJson = prefs.getString('user_data');
+
+        if (userDataJson != null) {
+          final userData = json.decode(userDataJson) as Map<String, dynamic>;
+
+          // Kết hợp thông tin cũ với thông tin chi tiết
+          userData.addAll({
+            'email': userDetails['email'],
+            'name': userDetails['name'],
+            'phone': userDetails['phone'],
+            'address': userDetails['address'],
+            'gender': userDetails['gender'],
+            'birthday': userDetails['birthday'],
+            'rank': userDetails['rank'] ?? 'Bronze',
+            'totalSpend': userDetails['totalSpend'] ?? 0,
+            'avatar': userDetails['avatar'],
+          });
+
+          await prefs.setString('user_data', jsonEncode(userData));
+          _userData = userData; // Sửa từ this.userData thành _userData
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      print('Error fetching user details: $e');
+    }
   }
 }

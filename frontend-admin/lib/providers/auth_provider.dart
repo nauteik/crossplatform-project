@@ -129,7 +129,6 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Check if user has admin role
   bool isAdmin() {
     return _currentUser?.role == 1;
   }

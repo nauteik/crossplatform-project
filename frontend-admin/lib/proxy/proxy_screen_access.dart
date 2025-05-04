@@ -15,19 +15,14 @@ class ProxyScreenAccess implements ScreenAccessInterface {
 
   @override
   Widget getScreen(int index, BuildContext context) {
-    // Check if screen requires admin permission
     if (_adminOnlyScreens.contains(index)) {
       // Get auth provider to check role
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-      // If user is not admin, show access denied screen
       if (!authProvider.isAdmin()) {
         return _buildAccessDeniedScreen(context);
       }
     }
-
-    // If permission check passes or screen doesn't require special permission,
-    // delegate to real screen access
     return _realScreenAccess.getScreen(index, context);
   }
 

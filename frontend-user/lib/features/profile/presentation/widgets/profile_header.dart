@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../auth/providers/auth_provider.dart';
-
+import '../screens/edit_profile_screen.dart';
 class ProfileHeader extends StatelessWidget {
   final AuthProvider authProvider;
 
