@@ -131,9 +131,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 
                 const SizedBox(height: 24),
                 
-                // Conditional Credit Card Form
+                // Conditional Payment Form based on selection
                 if (paymentProvider.selectedPaymentMethod == 'CREDIT_CARD')
-                  _buildCreditCardForm(paymentProvider),
+                  _buildCreditCardForm(paymentProvider)
+                else if (paymentProvider.selectedPaymentMethod == 'BANK_TRANSFER')
+                  _buildBankTransferForm(paymentProvider)
+                else if (paymentProvider.selectedPaymentMethod == 'MOMO')
+                  _buildMomoPaymentForm(paymentProvider)
+                else if (paymentProvider.selectedPaymentMethod == 'COD')
+                  _buildCodForm(),
                 
                 const SizedBox(height: 32),
                 
@@ -301,6 +307,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         return 'Credit Card';
       case 'COD':
         return 'Cash on Delivery';
+      case 'BANK_TRANSFER':
+        return 'Bank Transfer';
+      case 'MOMO':
+        return 'MoMo E-Wallet';
       default:
         return method;
     }
@@ -411,6 +421,302 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildBankTransferForm(PaymentProvider paymentProvider) {
+    // List of common Vietnamese banks
+    final banks = [
+      'Vietcombank',
+      'BIDV',
+      'Agribank',
+      'Techcombank',
+      'VPBank',
+      'MB Bank',
+      'ACB',
+      'Sacombank',
+      'TPBank',
+      'VIB',
+      'Other'
+    ];
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Bank Transfer Details',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        
+        // Bank name dropdown
+        DropdownButtonFormField<String>(
+          decoration: const InputDecoration(
+            labelText: 'Bank Name',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.account_balance),
+          ),
+          items: banks.map((bank) => DropdownMenuItem<String>(
+            value: bank,
+            child: Text(bank),
+          )).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              paymentProvider.updateBankTransferData(bankName: value);
+            }
+          },
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please select your bank';
+            }
+            return null;
+          },
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // Account number
+        TextFormField(
+          decoration: const InputDecoration(
+            labelText: 'Account Number',
+            hintText: 'Enter your bank account number',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.account_box),
+          ),
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter account number';
+            }
+            if (value.length < 10) {
+              return 'Account number should be at least 10 digits';
+            }
+            return null;
+          },
+          onChanged: (value) {
+            paymentProvider.updateBankTransferData(accountNumber: value);
+          },
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // Optional transfer code
+        TextFormField(
+          decoration: const InputDecoration(
+            labelText: 'Transfer Code (Optional)',
+            hintText: 'Enter transfer reference code if available',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.confirmation_number),
+          ),
+          onChanged: (value) {
+            paymentProvider.updateBankTransferData(transferCode: value);
+          },
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // Bank transfer instructions
+        Card(
+          color: Colors.blue[50],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: const [
+                    Icon(Icons.info, color: Colors.blue),
+                    SizedBox(width: 8),
+                    Text(
+                      'Transfer Instructions',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text('1. Transfer the exact amount to our account.'),
+                const Text('2. Use your Order ID as reference.'),
+                const Text('3. Your order will be processed after payment confirmation.'),
+                const SizedBox(height: 8),
+                Text('Amount to transfer: ${_formatCurrency(widget.totalAmount)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Account name: E-commerce Store JSC',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Account number: 12345678900',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Bank: Vietcombank',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildMomoPaymentForm(PaymentProvider paymentProvider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'MoMo E-Wallet Payment',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        
+        // Phone number linked to MoMo account
+        TextFormField(
+          decoration: const InputDecoration(
+            labelText: 'MoMo Phone Number',
+            hintText: 'Enter your MoMo-linked phone number',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.phone_android),
+          ),
+          keyboardType: TextInputType.phone,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your MoMo phone number';
+            }
+            if (value.length != 10) {
+              return 'Phone number should be 10 digits';
+            }
+            return null;
+          },
+          onChanged: (value) {
+            paymentProvider.updateMomoPaymentData(phoneNumber: value);
+          },
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // Optional transaction ID
+        TextFormField(
+          decoration: const InputDecoration(
+            labelText: 'Transaction ID (Optional)',
+            hintText: 'Enter MoMo transaction ID if already paid',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.confirmation_number),
+          ),
+          onChanged: (value) {
+            paymentProvider.updateMomoPaymentData(transactionId: value);
+          },
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // MoMo payment instructions with QR code mock
+        Card(
+          color: Colors.pink[50],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info, color: Colors.pink[700]),
+                    const SizedBox(width: 8),
+                    Text(
+                      'MoMo Payment Instructions',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.pink[700],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text('1. Open your MoMo app.'),
+                const Text('2. Scan the QR code below or search for our MoMo number.'),
+                const Text('3. Enter the exact amount and order ID as reference.'),
+                const SizedBox(height: 16),
+                // Centered QR code placeholder
+                Center(
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.pink.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.qr_code,
+                        size: 120,
+                        color: Colors.pink[700],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text('Amount to transfer: ${_formatCurrency(widget.totalAmount)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const Text('MoMo number: 0987654321',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Recipient name: E-commerce Store',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildCodForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Cash on Delivery',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        Card(
+          color: Colors.green[50],
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info, color: Colors.green[700]),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Payment Information',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text('You will pay cash to the delivery person when your order arrives.'),
+                const SizedBox(height: 8),
+                Text('Amount to pay on delivery: ${_formatCurrency(widget.totalAmount)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text('Make sure to have exact change if possible.'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          decoration: const InputDecoration(
+            labelText: 'Delivery Notes (Optional)',
+            hintText: 'Any special instructions for delivery',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 2,
         ),
       ],
     );

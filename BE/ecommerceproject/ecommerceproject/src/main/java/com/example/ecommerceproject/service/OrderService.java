@@ -134,11 +134,9 @@ public class OrderService {
      */
     @Transactional
     public Order processOrderPayment(String orderId, Map<String, Object> paymentDetails) {
-        // Get the order
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
         
-        // Check order status
         if (order.getStatus() != OrderStatus.PENDING) {
             throw new IllegalArgumentException("Cannot process payment for order with status: " + order.getStatus());
         }
@@ -152,7 +150,6 @@ public class OrderService {
             logger.info("Payment successful for order: {}, updating status to: {}", 
                       order.getId(), order.getStatus());
                       
-            // Remove only the ordered items from cart instead of clearing the entire cart
             List<String> productIds = order.getItems().stream()
                 .map(OrderItem::getProductId)
                 .collect(Collectors.toList());
@@ -225,5 +222,15 @@ public class OrderService {
      */
     public List<Order> getOrdersByUserId(String userId) {
         return orderRepository.findByUserId(userId);
+    }
+    
+    /**
+     * Get all orders
+     * 
+     * @return List of all orders in the system
+     */
+    public List<Order> getAllOrders() {
+        logger.info("Retrieving all orders");
+        return orderRepository.findAll();
     }
 }
