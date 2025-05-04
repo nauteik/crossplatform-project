@@ -21,22 +21,22 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
-    
+
     @Autowired
     private OrderRepository orderRepository;
-    
+
     @Autowired
     private CartService cartService;
-    
+
     @Autowired
     private ProductService productService;
-    
+
     @Autowired
     private PaymentService paymentService;
-    
+
     /**
      * Create a new order with PENDING status
-     * 
+     *
      * @param userId User ID
      * @param shippingAddress Shipping address
      * @param paymentMethod Payment method (must be supported by PaymentService)
@@ -50,61 +50,61 @@ public class OrderService {
         if (!paymentService.getSupportedPaymentMethods().contains(paymentMethod)) {
             throw new IllegalArgumentException("Unsupported payment method: " + paymentMethod);
         }
-        
+
         // Get user's cart
         Cart cart = cartService.getCartByUserId(userId);
         if (cart.getItems().isEmpty()) {
             throw new IllegalArgumentException("Cannot create order with empty cart");
         }
-        
+
         // Filter items if selectedItemIds is provided
         List<CartItem> itemsToOrder = cart.getItems();
         if (selectedItemIds != null && !selectedItemIds.isEmpty()) {
-            logger.info("Creating order with selected items only. User: {}, Selected item count: {}", 
-                      userId, selectedItemIds.size());
-            
+            logger.info("Creating order with selected items only. User: {}, Selected item count: {}",
+                    userId, selectedItemIds.size());
+
             itemsToOrder = cart.getItems().stream()
-                .filter(item -> selectedItemIds.contains(item.getProductId()))
-                .collect(Collectors.toList());
-                
+                    .filter(item -> selectedItemIds.contains(item.getProductId()))
+                    .collect(Collectors.toList());
+
             if (itemsToOrder.isEmpty()) {
                 throw new IllegalArgumentException("None of the selected items were found in the cart");
             }
         }
-        
+
         // Convert CartItems to OrderItems and check product availability
         List<OrderItem> orderItems = new ArrayList<>();
         double totalAmount = 0.0;
-        
+
         for (CartItem cartItem : itemsToOrder) {
             // Check product availability/quantity
             Product product = productService.getProductById(cartItem.getProductId());
-            
+
             if (product == null) {
                 throw new IllegalArgumentException("Product not found: " + cartItem.getProductId());
             }
-            
+
             if (product.getQuantity() < cartItem.getQuantity()) {
                 throw new IllegalArgumentException("Not enough stock for product: " + product.getName());
             }
-            
+
             // Decrease product quantity
             productService.decreaseQuantity(cartItem.getProductId(), cartItem.getQuantity());
-            
+
             // Add to order items
             OrderItem orderItem = new OrderItem(
-                cartItem.getProductId(),
-                cartItem.getProductName(),
-                cartItem.getQuantity(),
-                cartItem.getPrice(),
-                cartItem.getImageUrl()
+                    cartItem.getProductId(),
+                    cartItem.getProductName(),
+                    cartItem.getQuantity(),
+                    cartItem.getPrice(),
+                    cartItem.getImageUrl()
             );
             orderItems.add(orderItem);
-            
+
             // Calculate total amount
             totalAmount += cartItem.getPrice() * cartItem.getQuantity();
         }
-        
+
         // Create order with PENDING status
         Order order = new Order();
         order.setUserId(userId);
@@ -115,18 +115,18 @@ public class OrderService {
         order.setShippingAddress(shippingAddress);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
-        
+
         // Save the order
         Order savedOrder = orderRepository.save(order);
-        logger.info("Created order: {} with status: {} for user: {}", 
-                  savedOrder.getId(), savedOrder.getStatus(), savedOrder.getUserId());
-                  
+        logger.info("Created order: {} with status: {} for user: {}",
+                savedOrder.getId(), savedOrder.getStatus(), savedOrder.getUserId());
+
         return savedOrder;
     }
-    
+
     /**
      * Process payment for an existing order
-     * 
+     *
      * @param orderId Order ID
      * @param paymentDetails Payment details (depends on payment method)
      * @return The updated order
@@ -136,55 +136,55 @@ public class OrderService {
     public Order processOrderPayment(String orderId, Map<String, Object> paymentDetails) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
-        
+
         if (order.getStatus() != OrderStatus.PENDING) {
             throw new IllegalArgumentException("Cannot process payment for order with status: " + order.getStatus());
         }
-        
+
         // Process the payment through PaymentService
         boolean paymentSuccess = paymentService.processPayment(order, paymentDetails);
-        
+
         // Update order status based on payment result
         if (paymentSuccess) {
             order.updateStatus(OrderStatus.PAID);
-            logger.info("Payment successful for order: {}, updating status to: {}", 
-                      order.getId(), order.getStatus());
-                      
+            logger.info("Payment successful for order: {}, updating status to: {}",
+                    order.getId(), order.getStatus());
+
             List<String> productIds = order.getItems().stream()
-                .map(OrderItem::getProductId)
-                .collect(Collectors.toList());
-            
+                    .map(OrderItem::getProductId)
+                    .collect(Collectors.toList());
+
             cartService.removeItemsFromCart(order.getUserId(), productIds);
-            logger.info("Removed {} items from cart for user: {} after successful payment", 
-                      productIds.size(), order.getUserId());
+            logger.info("Removed {} items from cart for user: {} after successful payment",
+                    productIds.size(), order.getUserId());
         } else {
             order.updateStatus(OrderStatus.FAILED);
-            logger.warn("Payment failed for order: {}, updating status to: {}", 
-                      order.getId(), order.getStatus());
-                      
+            logger.warn("Payment failed for order: {}, updating status to: {}",
+                    order.getId(), order.getStatus());
+
             // Restore product quantities if payment fails
             restoreProductQuantities(order);
         }
-        
+
         // Save the updated order
         Order updatedOrder = orderRepository.save(order);
         return updatedOrder;
     }
-    
+
     /**
      * Restore product quantities for failed orders
      */
     private void restoreProductQuantities(Order order) {
         for (OrderItem item : order.getItems()) {
             productService.increaseQuantity(item.getProductId(), item.getQuantity());
-            logger.info("Restored {} units of product: {} after failed payment", 
-                      item.getQuantity(), item.getProductId());
+            logger.info("Restored {} units of product: {} after failed payment",
+                    item.getQuantity(), item.getProductId());
         }
     }
-    
+
     /**
      * Update the status of an order
-     * 
+     *
      * @param orderId Order ID
      * @param newStatus New order status
      * @return The updated order
@@ -194,17 +194,17 @@ public class OrderService {
     public Order updateOrderStatus(String orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
-        
+
         order.updateStatus(newStatus);
-        logger.info("Updated order: {} status from: {} to: {}", 
-                  order.getId(), order.getStatus(), newStatus);
-                  
+        logger.info("Updated order: {} status from: {} to: {}",
+                order.getId(), order.getStatus(), newStatus);
+
         return orderRepository.save(order);
     }
-    
+
     /**
      * Get an order by ID
-     * 
+     *
      * @param orderId Order ID
      * @return The order
      * @throws IllegalArgumentException if order not found
@@ -213,20 +213,20 @@ public class OrderService {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
     }
-    
+
     /**
      * Get all orders for a user
-     * 
+     *
      * @param userId User ID
      * @return List of orders
      */
     public List<Order> getOrdersByUserId(String userId) {
         return orderRepository.findByUserId(userId);
     }
-    
+
     /**
      * Get all orders
-     * 
+     *
      * @return List of all orders in the system
      */
     public List<Order> getAllOrders() {

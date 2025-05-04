@@ -3,7 +3,6 @@ package com.example.ecommerceproject.controller;
 import com.example.ecommerceproject.auth.AuthenticationRequest;
 import com.example.ecommerceproject.auth.AuthenticationServiceManager;
 import com.example.ecommerceproject.auth.AuthenticationType;
-import com.example.ecommerceproject.auth.GoogleAuthClient;
 import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.LoginRequest;
 import com.example.ecommerceproject.model.User;
@@ -34,8 +33,6 @@ public class AuthController {
     @Autowired
     private AuthenticationServiceManager authManager;
 
-    @Autowired
-    private GoogleAuthClient googleAuthClient;
 
     @Autowired
     private JwtUtil jwtUtil; // Inject JwtUtil
@@ -81,36 +78,19 @@ public class AuthController {
 @PostMapping("/login/google")
 public ResponseEntity<ApiResponse<?>> googleLogin(@RequestBody Map<String, String> requestBody) {
     String googleToken = requestBody.get("token");
-
+    
     if (googleToken == null || googleToken.isEmpty()) {
         return ResponseEntity.badRequest().body(
             new ApiResponse<>(ApiStatus.INVALID_CREDENTIALS.getCode(),
-                             "Google token is required", null));
+                           "Google token is required", null));
     }
-
-    // Xác thực token Google và lấy thông tin người dùng
-    GoogleAuthClient.GoogleUserInfo userInfo = googleAuthClient.verifyGoogleToken(googleToken);
-
-    // Tạo đối tượng UserDetails từ thông tin người dùng
-    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-        userInfo.getEmail(),
-        "", // Password không cần thiết cho OAuth2
-        Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")) // Gán quyền mặc định
-    );
-
-    // Tạo JWT token
-    String jwtToken = jwtUtil.generateToken(userDetails);
-
-    // Trả về phản hồi
-    Map<String, Object> responseData = new HashMap<>();
-    responseData.put("token", jwtToken);
-    responseData.put("user", userInfo);
-
-    return ResponseEntity.ok(new ApiResponse<>(
-        ApiStatus.SUCCESS.getCode(),
-        "Google authentication successful",
-        responseData
-    ));
+    
+    // Sử dụng AuthenticationServiceManager với AuthenticationType.OAUTH2
+    AuthenticationRequest request = new AuthenticationRequest();
+    request.setType(AuthenticationType.OAUTH2);
+    request.setToken(googleToken);
+    
+    return authManager.authenticate(request);
 }
     // Endpoint cho OAuth2 success redirect
     @GetMapping("/oauth2-success")

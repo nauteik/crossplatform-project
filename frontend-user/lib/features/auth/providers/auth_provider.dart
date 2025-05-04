@@ -5,6 +5,7 @@ import '../../../core/services/auth_service.dart';
 // import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
+
 class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
   String? _token;
@@ -22,7 +23,7 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider() {
     _loadAuthState();
   }
-
+  //
   Future<void> _loadAuthState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -38,21 +39,20 @@ class AuthProvider extends ChangeNotifier {
           // Kiểm tra và lưu lại userId nếu chưa có
           if (_userData != null && _userData!['id'] != null) {
             await prefs.setString('userId', _userData!['id']);
-          }
 
-          // Kiểm tra token còn hạn hay không (nếu backend có hỗ trợ)
-          // Có thể thêm logic kiểm tra token còn hạn ở đây
+            // Tải thông tin chi tiết người dùng
+            await loadUserDetails();
+          }
         } catch (e) {
           print('Lỗi khi parse userData: $e');
-          // Xử lý lỗi khi parse userData
-          await logout(); // Logout nếu dữ liệu không hợp lệ
+          await logout();
           return;
         }
         notifyListeners();
       }
     } catch (e) {
       print('Lỗi khi load trạng thái đăng nhập: $e');
-      await logout(); // Logout nếu có lỗi
+      await logout();
     }
   }
 
@@ -93,6 +93,9 @@ class AuthProvider extends ChangeNotifier {
         if (_userData != null) {
           await prefs.setString('user_data', jsonEncode(_userData));
         }
+
+        // Tải thông tin chi tiết người dùng
+        await loadUserDetails();
 
         notifyListeners();
         return true;
@@ -179,12 +182,12 @@ class AuthProvider extends ChangeNotifier {
   //       _userData = responseData['data']['user'];
   //       _username = _userData?['name'] ?? googleUser.displayName ?? '';
   //       _isAuthenticated = true;
-      
+
   //       // Lưu vào SharedPreferences
   //       final prefs = await SharedPreferences.getInstance();
   //       await prefs.setString('jwt_token', _token!);
   //       await prefs.setString('user_data', jsonEncode(_userData));
-      
+
   //       notifyListeners();
   //       return true;
   //     } else {
@@ -213,5 +216,88 @@ class AuthProvider extends ChangeNotifier {
     await prefs.remove('userId'); // Thêm dòng này
 
     notifyListeners();
+  }
+
+  Future<void> refreshUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? userDataStr = prefs.getString('user_data');
+
+      if (userDataStr != null) {
+        _userData = jsonDecode(userDataStr);
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error refreshing user data: $e');
+    }
+  }
+
+  Future<void> _fetchUserDetails(String token, String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/user/get/$userId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200 && responseData['status'] == 200) {
+        final userDetails = responseData['data'];
+
+        // Cập nhật thông tin người dùng đầy đủ
+        final prefs = await SharedPreferences.getInstance();
+        final userDataJson = prefs.getString('user_data');
+
+        if (userDataJson != null) {
+          final userData = json.decode(userDataJson) as Map<String, dynamic>;
+
+          // Kết hợp thông tin cũ với thông tin chi tiết
+          userData.addAll({
+            'email': userDetails['email'],
+            'name': userDetails['name'],
+            'phone': userDetails['phone'],
+            'address': userDetails['address'],
+            'gender': userDetails['gender'],
+            'birthday': userDetails['birthday'],
+            'rank': userDetails['rank'] ?? 'Bronze',
+            'totalSpend': userDetails['totalSpend'] ?? 0,
+            'avatar': userDetails['avatar'],
+          });
+
+          await prefs.setString('user_data', jsonEncode(userData));
+          _userData = userData; // Sửa từ this.userData thành _userData
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      print('Error fetching user details: $e');
+    }
+  }
+
+  // Thêm phương thức này vào class AuthProvider
+  Future<void> loadUserDetails() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+      final userDataString = prefs.getString('user_data');
+
+      if (token == null || userDataString == null) {
+        return;
+      }
+
+      final userData = jsonDecode(userDataString);
+      final userId = userData['id'];
+
+      if (userId == null) {
+        return;
+      }
+
+      await _fetchUserDetails(token, userId);
+    } catch (e) {
+      print('Lỗi khi tải thông tin người dùng chi tiết: $e');
+    }
   }
 }

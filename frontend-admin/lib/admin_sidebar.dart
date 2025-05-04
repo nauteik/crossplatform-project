@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sidebarx/sidebarx.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:admin_interface/providers/auth_provider.dart';
 
 class AdminSidebar extends StatelessWidget {
   final SidebarXController sidebarXController;
@@ -9,6 +11,8 @@ class AdminSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return SidebarX(
       controller: sidebarXController,
       theme: SidebarXTheme(
@@ -34,17 +38,43 @@ class AdminSidebar extends StatelessWidget {
         ),
         selectedItemTextPadding: const EdgeInsets.only(left: 20),
       ),
+      footerBuilder: (context, extended) {
+        return Container(
+          padding: const EdgeInsets.all(8),
+          color: const Color(0xFF17153B),
+          child: Column(
+            children: [
+              const Divider(color: Colors.white38),
+              ListTile(
+                leading: const Icon(FontAwesomeIcons.rightFromBracket,
+                    color: Colors.white),
+                title: const Text('Đăng xuất',
+                    style: TextStyle(color: Colors.white)),
+                onTap: () async {
+                  await authProvider.logout();
+                  if (context.mounted) {
+                    Navigator.of(context).pushReplacementNamed('/login');
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
       items: const [
         SidebarXItem(icon: FontAwesomeIcons.house, label: 'Home'),
         SidebarXItem(icon: FontAwesomeIcons.chartSimple, label: 'Statistics'),
-        SidebarXItem(icon: FontAwesomeIcons.circleInfo, label: 'Customers Support'),
-        SidebarXItem(icon: FontAwesomeIcons.warehouse, label: 'Products Management'),
+        SidebarXItem(
+            icon: FontAwesomeIcons.circleInfo, label: 'Customers Support'),
+        SidebarXItem(
+            icon: FontAwesomeIcons.warehouse, label: 'Products Management'),
         SidebarXItem(icon: FontAwesomeIcons.users, label: 'Users Management'),
-        SidebarXItem(icon: FontAwesomeIcons.ticketSimple, label: 'Coupons Management'),
-        SidebarXItem(icon: FontAwesomeIcons.truckRampBox, label: 'Orders Management'),
-        SidebarXItem(icon: FontAwesomeIcons.percent, label: 'Products Promotion'),
-        SidebarXItem(icon: FontAwesomeIcons.rightToBracket, label: 'Login'),
-        SidebarXItem(icon: FontAwesomeIcons.rightFromBracket, label: 'Logout'),
+        SidebarXItem(
+            icon: FontAwesomeIcons.ticketSimple, label: 'Coupons Management'),
+        SidebarXItem(
+            icon: FontAwesomeIcons.truckRampBox, label: 'Orders Management'),
+        SidebarXItem(
+            icon: FontAwesomeIcons.percent, label: 'Products Promotion'),
       ],
     );
   }

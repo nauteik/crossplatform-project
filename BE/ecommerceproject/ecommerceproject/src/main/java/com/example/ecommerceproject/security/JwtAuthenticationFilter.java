@@ -1,6 +1,7 @@
 package com.example.ecommerceproject.security;
 
 import com.example.ecommerceproject.service.UserService;
+import com.example.ecommerceproject.singleton.AppLogger;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final AppLogger logger = AppLogger.getInstance();
 
     private UserService userService;
     private JwtUtil jwtUtil;
