@@ -5,12 +5,8 @@ import com.example.ecommerceproject.model.Order;
 import com.example.ecommerceproject.model.OrderStatus;
 import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.service.OrderService;
-<<<<<<< HEAD
-import com.example.ecommerceproject.service.PaymentService; // Still needed for getSupportedPaymentMethods
-=======
 import com.example.ecommerceproject.service.OrderStateManager;
 import com.example.ecommerceproject.service.PaymentService;
->>>>>>> Kiet
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,28 +14,24 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/orders")
 @CrossOrigin("*")
 public class OrderController {
+
     @Autowired
     private OrderService orderService;
 
     @Autowired
     private PaymentService paymentService;
-<<<<<<< HEAD
 
-=======
-    
     @Autowired
     private OrderStateManager orderStateManager;
-    
+
     /**
      * Create a new order with PENDING status
      */
->>>>>>> Kiet
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<?>> createOrder(
             @RequestBody Map<String, Object> orderRequest) {
@@ -48,24 +40,11 @@ public class OrderController {
             String shippingAddress = (String) orderRequest.get("shippingAddress");
             String paymentMethod = (String) orderRequest.get("paymentMethod");
 
+            // Get selectedItemIds from the request - handle potential null or type conversion
             List<String> selectedItemIds = null;
             Object selectedItemIdsObj = orderRequest.get("selectedItemIds");
-            if (selectedItemIdsObj != null) {
-                if (selectedItemIdsObj instanceof List) {
-                    try {
-                        selectedItemIds = ((List<?>) selectedItemIdsObj).stream()
-                                .map(String.class::cast)
-                                .collect(Collectors.toList());
-                    } catch (ClassCastException e) {
-                        return ResponseEntity.badRequest().body(
-                                new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(),
-                                        "Invalid format for selectedItemIds. Expected list of strings.", null));
-                    }
-                } else {
-                    return ResponseEntity.badRequest().body(
-                            new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(),
-                                    "Invalid format for selectedItemIds. Expected a list.", null));
-                }
+            if (selectedItemIdsObj instanceof List) {
+                selectedItemIds = (List<String>) selectedItemIdsObj;
             }
 
             if (userId == null || shippingAddress == null || paymentMethod == null) {
@@ -90,6 +69,9 @@ public class OrderController {
         }
     }
 
+    /**
+     * Process payment for an existing order
+     */
     @PostMapping("/{orderId}/pay")
     public ResponseEntity<ApiResponse<?>> processPayment(
             @PathVariable String orderId,
@@ -112,10 +94,7 @@ public class OrderController {
                             "Error processing payment: " + e.getMessage(), null));
         }
     }
-<<<<<<< HEAD
 
-=======
-    
     /**
      * Process an order to its next state using State Pattern
      */
@@ -124,30 +103,30 @@ public class OrderController {
         try {
             boolean success = orderStateManager.processOrder(orderId);
             Order order = orderService.getOrderById(orderId);
-            
+
             if (success) {
                 return ResponseEntity.ok(new ApiResponse<>(
-                    ApiStatus.SUCCESS.getCode(),
-                    "Order processed successfully to state: " + order.getStatus(),
-                    order
+                        ApiStatus.SUCCESS.getCode(),
+                        "Order processed successfully to state: " + order.getStatus(),
+                        order
                 ));
             } else {
                 return ResponseEntity.ok(new ApiResponse<>(
-                    ApiStatus.BAD_REQUEST.getCode(),
-                    "Cannot process order from current state: " + order.getStatus(),
-                    order
+                        ApiStatus.BAD_REQUEST.getCode(),
+                        "Cannot process order from current state: " + order.getStatus(),
+                        order
                 ));
             }
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), e.getMessage(), null));
+                    new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(), 
-                "Error processing order: " + e.getMessage(), null));
+                    new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
+                            "Error processing order: " + e.getMessage(), null));
         }
     }
-    
+
     /**
      * Cancel an order using State Pattern
      */
@@ -156,34 +135,33 @@ public class OrderController {
         try {
             boolean success = orderStateManager.cancelOrder(orderId);
             Order order = orderService.getOrderById(orderId);
-            
+
             if (success) {
                 return ResponseEntity.ok(new ApiResponse<>(
-                    ApiStatus.SUCCESS.getCode(),
-                    "Order cancelled successfully",
-                    order
+                        ApiStatus.SUCCESS.getCode(),
+                        "Order cancelled successfully",
+                        order
                 ));
             } else {
                 return ResponseEntity.ok(new ApiResponse<>(
-                    ApiStatus.BAD_REQUEST.getCode(),
-                    "Cannot cancel order from current state: " + order.getStatus(),
-                    order
+                        ApiStatus.BAD_REQUEST.getCode(),
+                        "Cannot cancel order from current state: " + order.getStatus(),
+                        order
                 ));
             }
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), e.getMessage(), null));
+                    new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), e.getMessage(), null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(), 
-                "Error cancelling order: " + e.getMessage(), null));
+                    new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
+                            "Error cancelling order: " + e.getMessage(), null));
         }
     }
-    
+
     /**
      * Get order by ID
      */
->>>>>>> Kiet
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<?>> getOrderById(@PathVariable String orderId) {
         try {
@@ -201,6 +179,9 @@ public class OrderController {
         }
     }
 
+    /**
+     * Get all orders for a user
+     */
     @GetMapping("/user/{userId}")
     public ResponseEntity<ApiResponse<?>> getOrdersByUser(@PathVariable String userId) {
         try {
@@ -214,49 +195,10 @@ public class OrderController {
                             "Error retrieving orders: " + e.getMessage(), null));
         }
     }
-<<<<<<< HEAD
 
-    @PutMapping("/{orderId}/status")
-    public ResponseEntity<ApiResponse<?>> updateOrderStatus(
-            @PathVariable String orderId,
-            @RequestBody Map<String, String> statusRequest) {
-        try {
-            String statusStr = statusRequest.get("status");
-            if (statusStr == null) {
-                return ResponseEntity.badRequest().body(
-                        new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(),
-                                "Status is required", null));
-            }
-
-            OrderStatus newStatus;
-            try {
-                newStatus = OrderStatus.valueOf(statusStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                return ResponseEntity.badRequest().body(
-                        new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(),
-                                "Invalid status value", null));
-            }
-
-            Order updatedOrder = orderService.updateOrderStatus(orderId, newStatus);
-            return ResponseEntity.ok(new ApiResponse<>(ApiStatus.SUCCESS.getCode(),
-                    "Order status updated successfully", updatedOrder));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), e.getMessage(), null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                    new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
-                            "Error updating order status: " + e.getMessage(), null));
-        }
-    }
-
-=======
-    
     /**
      * Get list of supported payment methods
      */
->>>>>>> Kiet
     @GetMapping("/payment-methods")
     public ResponseEntity<ApiResponse<?>> getSupportedPaymentMethods() {
         try {
@@ -270,7 +212,7 @@ public class OrderController {
                             "Error retrieving payment methods: " + e.getMessage(), null));
         }
     }
-    
+
     /**
      * Get all orders - new endpoint for admin interface
      */
@@ -279,14 +221,14 @@ public class OrderController {
         try {
             List<Order> orders = orderService.getAllOrders();
             return ResponseEntity.ok(new ApiResponse<>(
-                ApiStatus.SUCCESS.getCode(),
-                "All orders retrieved successfully",
-                orders
+                    ApiStatus.SUCCESS.getCode(),
+                    "All orders retrieved successfully",
+                    orders
             ));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(), 
-                "Error retrieving orders: " + e.getMessage(), null));
+                    new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
+                            "Error retrieving orders: " + e.getMessage(), null));
         }
     }
 }

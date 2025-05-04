@@ -17,10 +17,7 @@ public class PaymentService {
 
     private static final AppLogger logger = AppLogger.getInstance();
     private final Map<String, PaymentStrategy> paymentStrategies = new HashMap<>();
-<<<<<<< HEAD
 
-=======
->>>>>>> Kiet
     @Autowired
     public PaymentService(List<PaymentStrategy> strategyList) {
         strategyList.forEach(strategy ->
@@ -29,10 +26,7 @@ public class PaymentService {
         logger.info("Initialized payment strategies: {}",
                 paymentStrategies.keySet());
     }
-<<<<<<< HEAD
 
-=======
->>>>>>> Kiet
     public boolean processPayment(Order order, Map<String, Object> paymentDetails) {
         String paymentMethod = order.getPaymentMethod();
         PaymentStrategy strategy = paymentStrategies.get(paymentMethod);
@@ -60,10 +54,7 @@ public class PaymentService {
             return false;
         }
     }
-<<<<<<< HEAD
 
-=======
->>>>>>> Kiet
     public List<String> getSupportedPaymentMethods() {
         return List.copyOf(paymentStrategies.keySet());
     }
