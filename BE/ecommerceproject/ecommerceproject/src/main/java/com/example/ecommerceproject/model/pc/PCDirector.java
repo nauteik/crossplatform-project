@@ -25,9 +25,10 @@ public class PCDirector {
      * Build a PC from the components specified in the request
      */
     public PC buildCustomPC(String name, String userId, Map<String, Product> components) {
-        PCBuilder builder = standardPCBuilder.reset()
-            .setName(name)
-            .setUserId(userId);
+        PCBuilder builder = standardPCBuilder;
+        builder.reset();
+        builder.setName(name);
+        builder.setUserId(userId);
         
         if (components.containsKey("cpu")) {
             builder.setCpu(components.get("cpu"));
@@ -61,7 +62,8 @@ public class PCDirector {
             builder.setCooling(components.get("cooling"));
         }
         
-        return builder.validateCompatibility().build();
+        builder.validateCompatibility();
+        return builder.build();
     }
     
     /**
@@ -69,10 +71,10 @@ public class PCDirector {
      */
     public PC buildGamingPC(String name, String userId, Map<String, Product> customComponents) {
         // Start with suggested gaming components
-        gamingPCBuilder.reset()
-            .setName(name)
-            .setUserId(userId)
-            .suggestGamingComponents();
+        gamingPCBuilder.reset();
+        gamingPCBuilder.setName(name);
+        gamingPCBuilder.setUserId(userId);
+        gamingPCBuilder.suggestGamingComponents();
         
         // Override with any custom components the user specified
         if (customComponents != null) {
@@ -109,7 +111,8 @@ public class PCDirector {
             }
         }
         
-        return gamingPCBuilder.validateCompatibility().build();
+        gamingPCBuilder.validateCompatibility();
+        return gamingPCBuilder.build();
     }
     
     /**
@@ -117,10 +120,10 @@ public class PCDirector {
      */
     public PC buildWorkstationPC(String name, String userId, Map<String, Product> customComponents) {
         // Start with suggested workstation components
-        workstationPCBuilder.reset()
-            .setName(name)
-            .setUserId(userId)
-            .suggestWorkstationComponents();
+        workstationPCBuilder.reset();
+        workstationPCBuilder.setName(name);
+        workstationPCBuilder.setUserId(userId);
+        workstationPCBuilder.suggestWorkstationComponents();
         
         // Override with any custom components the user specified
         if (customComponents != null) {
@@ -157,21 +160,7 @@ public class PCDirector {
             }
         }
         
-        return workstationPCBuilder.validateCompatibility().build();
-    }
-    
-    /**
-     * Build a budget PC with cost-effective components
-     */
-    public PC buildBudgetPC(String name, String userId) {
-        // Budget PC prioritizes essential components at lower price points
-        StandardPCBuilder builder = (StandardPCBuilder) standardPCBuilder.reset()
-            .setName(name != null ? name : "Budget PC Build")
-            .setUserId(userId);
-        
-        // Logic for selecting budget components would go here
-        // This would typically involve querying for the lowest priced but functional components
-        
-        return builder.validateCompatibility().build();
+        workstationPCBuilder.validateCompatibility();
+        return workstationPCBuilder.build();
     }
 }

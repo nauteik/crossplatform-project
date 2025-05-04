@@ -106,6 +106,47 @@ class CartManager implements CartSubject {
       print('Error removing multiple items: $e');
     }
   }
+  
+  Future<void> updateItemQuantity(String productId, int newQuantity) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+
+      if (userId == null) return;
+
+      int index = _items.indexWhere((item) => item.id == productId);
+      if (index == -1) return;
+
+      final originalItem = _items[index];
+      _items.removeAt(index);
+
+      final updatedItem = CartItemModel(
+        id: productId,
+        name: originalItem.name,
+        price: originalItem.price,
+        imageUrl: originalItem.imageUrl,
+        quantity: newQuantity
+      );
+
+      _items.insert(index, updatedItem);
+      notify();
+
+      await _repository.removeFromCart(userId, productId);
+      
+      await _repository.addToCart(
+        userId: userId,
+        productId: productId,
+        quantity: newQuantity,
+        price: updatedItem.price,
+        name: updatedItem.name,
+        imageUrl: updatedItem.imageUrl
+      );
+
+    } catch (e) {
+      print('Error updating item quantity: $e');
+      await fetchCart();
+    }
+  }
 
   void setItems(List<CartItemModel> items) {
     _items.clear();
