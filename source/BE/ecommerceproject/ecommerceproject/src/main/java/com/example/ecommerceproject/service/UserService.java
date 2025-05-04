@@ -81,22 +81,56 @@ public class UserService implements UserDetailsService {
             existingUser.setEmail(updatedUser.getEmail());
         }
         
+        if (updatedUser.getUsername() != null) {
+            // Kiểm tra nếu username mới khác username cũ và đã tồn tại
+            if (!existingUser.getUsername().equals(updatedUser.getUsername()) && 
+                userRepository.existsByUsername(updatedUser.getUsername())) {
+                throw new RuntimeException("Username already in use");
+            }
+            existingUser.setUsername(updatedUser.getUsername());
+        }
+
+        // Cập nhật mật khẩu nếu được cung cấp
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+        }
+        
         if (updatedUser.getName() != null) {
             existingUser.setName(updatedUser.getName());
-        } 
+        }
         
-        if (updatedUser.getAddress() != null) {
-            existingUser.setAddress(updatedUser.getAddress());
+        if (updatedUser.getAvatar() != null) {
+            existingUser.setAvatar(updatedUser.getAvatar());
         }
         
         if (updatedUser.getPhone() != null) {
             existingUser.setPhone(updatedUser.getPhone());
         }
         
-        // Cập nhật mật khẩu nếu được cung cấp
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+        if (updatedUser.getAddress() != null) {
+            existingUser.setAddress(updatedUser.getAddress());
         }
+        
+        if (updatedUser.getGender() != null) {
+            existingUser.setGender(updatedUser.getGender());
+        }
+        
+        if (updatedUser.getBirthday() != null) {
+            existingUser.setBirthday(updatedUser.getBirthday());
+        }
+        
+        if (updatedUser.getRank() != null) {
+            existingUser.setRank(updatedUser.getRank());
+        }
+        
+        // totalSpend is a primitive int, so check if the updatedUser has a non-default value
+        if (updatedUser.getTotalSpend() != 0) {
+            existingUser.setTotalSpend(updatedUser.getTotalSpend());
+        }
+        
+        // role is a primitive int, but we still want to be able to update it to 0 (user role)
+        // Here we're assuming the role is explicitly set in the updatedUser object
+        existingUser.setRole(updatedUser.getRole());
         
         // Lưu người dùng đã cập nhật
         return userRepository.save(existingUser);
