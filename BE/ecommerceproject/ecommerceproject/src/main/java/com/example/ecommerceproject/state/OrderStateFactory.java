@@ -21,14 +21,12 @@ public class OrderStateFactory {
                 return new PendingState();
             case PAID:
                 return new PaidState();
-            case SHIPPED:
+            case SHIPPING:
                 return new ShippingState();
             case DELIVERED:
                 return new DeliveredState();
             case CANCELLED:
                 return new CancelledState();
-            case FAILED:
-                return new FailedState();
             default:
                 throw new IllegalArgumentException("Unknown order status: " + status);
         }
