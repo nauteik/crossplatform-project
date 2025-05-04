@@ -501,7 +501,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
           height: 200, // Increased height to avoid overflow
           decoration: BoxDecoration(
             color: isSelected 
-                ? Theme.of(context).primaryColor.withOpacity(0.1)
+                ? Colors.white
                 : Colors.white,
             border: Border.all(
               color: isSelected 

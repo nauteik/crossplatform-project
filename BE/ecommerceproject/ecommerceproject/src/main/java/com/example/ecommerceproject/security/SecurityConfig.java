@@ -60,8 +60,10 @@ public class SecurityConfig {
                 .requestMatchers("/login/oauth2/**").permitAll()
                 // Image API paths
                 .requestMatchers("/api/images/**").permitAll()
-                // Cart APT paths
+                // Cart API paths
                 .requestMatchers("/api/cart/**").permitAll()
+                // Order API paths - adding permission for all order endpoints
+                .requestMatchers("/api/orders/**").permitAll()
                 // Brand API paths
                 .requestMatchers("/api/brand/brands").permitAll()
                 .requestMatchers("/api/brand/{id}").permitAll()

@@ -17,12 +17,14 @@ class PaymentProvider extends ChangeNotifier {
   
   PaymentProcessState _state = PaymentProcessState.initial;
   String _selectedPaymentMethod = 'CREDIT_CARD'; // Default selection
-  List<String> _availablePaymentMethods = ['CREDIT_CARD', 'COD']; // Default options
+  List<String> _availablePaymentMethods = ['CREDIT_CARD', 'COD', 'BANK_TRANSFER', 'MOMO']; // Default options with new methods
   OrderModel? _currentOrder;
   String _errorMessage = '';
   CreditCardModel _creditCardData = CreditCardModel();
+  BankTransferModel _bankTransferData = BankTransferModel(); // New model for bank transfers
+  MomoPaymentModel _momoPaymentData = MomoPaymentModel(); // New model for MoMo payments
   String _shippingAddress = '';
-  List<String> _selectedItemIds = []; // New field to store selected item IDs
+  List<String> _selectedItemIds = []; // Field to store selected item IDs
   
   // Getters
   PaymentProcessState get state => _state;
@@ -31,6 +33,8 @@ class PaymentProvider extends ChangeNotifier {
   OrderModel? get currentOrder => _currentOrder;
   String get errorMessage => _errorMessage;
   CreditCardModel get creditCardData => _creditCardData;
+  BankTransferModel get bankTransferData => _bankTransferData; // Getter for bank transfer data
+  MomoPaymentModel get momoPaymentData => _momoPaymentData; // Getter for MoMo payment data
   String get shippingAddress => _shippingAddress;
   List<String> get selectedItemIds => _selectedItemIds;
   bool get isLoading => _state == PaymentProcessState.creatingOrder || 
@@ -66,11 +70,37 @@ class PaymentProvider extends ChangeNotifier {
     notifyListeners();
   }
   
+  // New method to update bank transfer data
+  void updateBankTransferData({
+    String? accountNumber,
+    String? bankName,
+    String? transferCode,
+  }) {
+    if (accountNumber != null) _bankTransferData.accountNumber = accountNumber;
+    if (bankName != null) _bankTransferData.bankName = bankName;
+    if (transferCode != null) _bankTransferData.transferCode = transferCode;
+    
+    _bankTransferData.validate();
+    notifyListeners();
+  }
+  
+  // New method to update MoMo payment data
+  void updateMomoPaymentData({
+    String? phoneNumber,
+    String? transactionId,
+  }) {
+    if (phoneNumber != null) _momoPaymentData.phoneNumber = phoneNumber;
+    if (transactionId != null) _momoPaymentData.transactionId = transactionId;
+    
+    _momoPaymentData.validate();
+    notifyListeners();
+  }
+  
   // Load available payment methods from the API
   Future<void> loadPaymentMethods() async {
     try {
       final response = await _orderRepository.getSupportedPaymentMethods();
-      _availablePaymentMethods = response.data ?? ['CREDIT_CARD', 'COD'];
+      _availablePaymentMethods = response.data ?? ['CREDIT_CARD', 'COD', 'BANK_TRANSFER', 'MOMO'];
       
       // Default to first available method if current selection is not available
       if (!_availablePaymentMethods.contains(_selectedPaymentMethod) && 
@@ -92,6 +122,8 @@ class PaymentProvider extends ChangeNotifier {
     _currentOrder = null;
     _errorMessage = '';
     _creditCardData = CreditCardModel();
+    _bankTransferData = BankTransferModel(); // Reset bank transfer data
+    _momoPaymentData = MomoPaymentModel(); // Reset MoMo payment data
     _selectedItemIds = []; // Reset selected items
     notifyListeners();
   }
@@ -119,7 +151,7 @@ class PaymentProvider extends ChangeNotifier {
         userId: userId,
         shippingAddress: _shippingAddress,
         paymentMethod: _selectedPaymentMethod,
-        selectedItemIds: _selectedItemIds, // Pass selected item IDs
+        selectedItemIds: _selectedItemIds,
       );
       
       _currentOrder = response.data;
@@ -150,26 +182,64 @@ class PaymentProvider extends ChangeNotifier {
       // Create payment request based on selected method
       PaymentRequest paymentRequest;
       
-      if (_selectedPaymentMethod == 'CREDIT_CARD') {
-        // Validate credit card data
-        _creditCardData.validate();
-        if (!_creditCardData.isValid) {
-          _errorMessage = 'Invalid credit card information';
-          _state = PaymentProcessState.orderCreated; // Back to order created state
-          notifyListeners();
-          return false;
-        }
-        
-        paymentRequest = PaymentRequest.creditCard(
-          cardNumber: _creditCardData.cardNumber,
-          cardName: _creditCardData.cardHolderName,
-          expiryDate: _creditCardData.expiryDate,
-          cvv: _creditCardData.cvv,
-        );
-      } else if (_selectedPaymentMethod == 'COD') {
-        paymentRequest = PaymentRequest.cod();
-      } else {
-        throw Exception('Unsupported payment method');
+      switch (_selectedPaymentMethod) {
+        case 'CREDIT_CARD':
+          // Validate credit card data
+          _creditCardData.validate();
+          if (!_creditCardData.isValid) {
+            _errorMessage = 'Invalid credit card information';
+            _state = PaymentProcessState.orderCreated;
+            notifyListeners();
+            return false;
+          }
+          
+          paymentRequest = PaymentRequest.creditCard(
+            cardNumber: _creditCardData.cardNumber,
+            cardName: _creditCardData.cardHolderName,
+            expiryDate: _creditCardData.expiryDate,
+            cvv: _creditCardData.cvv,
+          );
+          break;
+          
+        case 'BANK_TRANSFER':
+          // Validate bank transfer data
+          _bankTransferData.validate();
+          if (!_bankTransferData.isValid) {
+            _errorMessage = 'Invalid bank transfer information';
+            _state = PaymentProcessState.orderCreated;
+            notifyListeners();
+            return false;
+          }
+          
+          paymentRequest = PaymentRequest.bankTransfer(
+            accountNumber: _bankTransferData.accountNumber,
+            bankName: _bankTransferData.bankName,
+            transferCode: _bankTransferData.transferCode,
+          );
+          break;
+          
+        case 'MOMO':
+          // Validate MoMo payment data
+          _momoPaymentData.validate();
+          if (!_momoPaymentData.isValid) {
+            _errorMessage = 'Invalid MoMo payment information';
+            _state = PaymentProcessState.orderCreated;
+            notifyListeners();
+            return false;
+          }
+          
+          paymentRequest = PaymentRequest.momo(
+            phoneNumber: _momoPaymentData.phoneNumber,
+            transactionId: _momoPaymentData.transactionId,
+          );
+          break;
+          
+        case 'COD':
+          paymentRequest = PaymentRequest.cod();
+          break;
+          
+        default:
+          throw Exception('Unsupported payment method: $_selectedPaymentMethod');
       }
       
       // Process payment

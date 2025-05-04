@@ -6,7 +6,6 @@ import '../../../../core/utils/image_helper.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../payment/payment_feature.dart';
 
-// Changed from StatelessWidget to StatefulWidget
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
@@ -15,17 +14,12 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  // Add a loading state
   var _isLoading = false;
   List<CartItemModel> items = [];
   
   @override
   void initState() {
-    // Call the data loading function when the screen initializes
     super.initState();
-    // We use Future.microtask or a small delay to avoid calling
-    // Provider.of in initState directly before the widget is fully built.
-    // Alternatively, use listen: false which is safe in initState.
     _loadCartData();
   }
 
@@ -34,12 +28,9 @@ class _CartScreenState extends State<CartScreen> {
       _isLoading = true;
     });
     try {
-      // Access the provider using listen: false as we are in initState
-      // We only need to call a method, not rebuild based on its changes here
       await Provider.of<CartProvider>(context, listen: false).fetchCart();
       items = Provider.of<CartProvider>(context, listen: false).items;
     } catch (e) {
-      // Handle potential errors during loading (e.g., show a snackbar)
       print('Error loading cart: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -56,7 +47,6 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Consumer is still used here to react to provider changes AFTER loading
     final authProvider = Provider.of<AuthProvider>(context);
     final bool isAuthenticated = authProvider.isAuthenticated;
     
@@ -78,7 +68,6 @@ class _CartScreenState extends State<CartScreen> {
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.white),
             onPressed: () {
-              // Clear cart confirmation
               showDialog(
                 context: context,
                 builder: (ctx) => AlertDialog(
@@ -93,7 +82,6 @@ class _CartScreenState extends State<CartScreen> {
                     TextButton(
                       child: const Text('Xóa'),
                       onPressed: () {
-                        // Using listen: false here as it's inside a button press handler
                         Provider.of<CartProvider>(context, listen: false).clearCart();
                         Navigator.of(ctx).pop();
                       },
@@ -106,14 +94,12 @@ class _CartScreenState extends State<CartScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator()) // Show loading indicator
+          ? const Center(child: CircularProgressIndicator())
           : Consumer<CartProvider>(
               builder: (context, cart, child) {
                 if (cart.items.isEmpty) {
                   return const Center(
-                    child:
-                        Text('Giỏ hàng trống', style: TextStyle(fontSize: 18)),
+                    child: Text('Giỏ hàng trống', style: TextStyle(fontSize: 18)),
                   );
                 }
 
@@ -124,73 +110,153 @@ class _CartScreenState extends State<CartScreen> {
                         itemCount: cart.items.length,
                         itemBuilder: (ctx, index) {
                           final item = cart.items[index];
-                          return Dismissible(
-                            key: ValueKey(item.id),
-                            background: Container(
-                              color: Colors.red,
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 20),
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 5,
-                              ),
-                              child: const Icon(
-                                Icons.delete,
-                                color: Colors.white,
-                                size: 30,
-                              ),
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 5,
                             ),
-                            direction: DismissDirection.endToStart,
-                            onDismissed: (direction) {
-                              // Using listen: false here
-                              Provider.of<CartProvider>(context, listen: false)
-                                  .removeItem(item.id);
-                              // Optionally show a snackbar confirming removal
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content:
-                                      Text('${item.name} đã xóa khỏi giỏ hàng'),
-                                  duration: const Duration(seconds: 2),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: ListTile(
+                                leading: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Checkbox(
+                                      value: cart.isItemSelected(item.id),
+                                      onChanged: (_) => cart.toggleItemSelection(item.id),
+                                    ),
+                                    CircleAvatar(
+                                      backgroundImage:
+                                          NetworkImage(ImageHelper.getImage(item.imageUrl)),
+                                      backgroundColor: Colors.grey[200],
+                                      onBackgroundImageError: (e, stackTrace) =>
+                                          print('Image failed to load: $e'),
+                                    ),
+                                  ],
                                 ),
-                              );
-                            },
-                            child: Card(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 15,
-                                vertical: 5,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ListTile(
-                                  // Add a checkbox for item selection
-                                  leading: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Checkbox(
-                                        value: cart.isItemSelected(item.id),
-                                        onChanged: (_) => cart.toggleItemSelection(item.id),
+                                title: Text(item.name),
+                                subtitle: Text('${_formatCurrency(item.price)} x ${item.quantity}'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Decrease quantity button - will remove item if quantity becomes 0
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(18),
                                       ),
-                                      CircleAvatar(
-                                        backgroundImage:
-                                            NetworkImage(ImageHelper.getImage(item.imageUrl)),
-                                        backgroundColor:
-                                            Colors.grey[200], // Placeholder color
-                                        onBackgroundImageError: (e, stackTrace) =>
-                                            print(
-                                                'Image failed to load: $e'), // Handle image loading errors
+                                      child: IconButton(
+                                        icon: const Icon(Icons.remove, size: 16),
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () {
+                                          // Remove item if quantity would become 0
+                                          if (item.quantity <= 1) {
+                                            // Ask for confirmation before removing
+                                            showDialog(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                title: const Text('Xóa sản phẩm'),
+                                                content: Text(
+                                                    'Bạn có chắc muốn xóa ${item.name} khỏi giỏ hàng?'),
+                                                actions: [
+                                                  TextButton(
+                                                    child: const Text('Hủy'),
+                                                    onPressed: () => Navigator.of(ctx).pop(),
+                                                  ),
+                                                  TextButton(
+                                                    child: const Text('Xóa'),
+                                                    onPressed: () {
+                                                      Provider.of<CartProvider>(context, listen: false)
+                                                          .removeItem(item.id);
+                                                      Navigator.of(ctx).pop();
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          } else {
+                                            // Just decrease the quantity
+                                            _updateItemQuantity(item, item.quantity - 1);
+                                          }
+                                        },
                                       ),
-                                    ],
-                                  ),
-                                  title: Text(item.name),
-                                  subtitle: Text(
-                                      '${_formatCurrency(item.price)} x ${item.quantity}'),
-                                  trailing: Text(
-                                    _formatCurrency(item.price * item.quantity),
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  onTap: () => cart.toggleItemSelection(item.id),
+                                    ),
+                                    
+                                    // Quantity display
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: Colors.grey[300]!),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '${item.quantity}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    
+                                    // Increase quantity button
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () => _updateItemQuantity(item, item.quantity + 1),
+                                      ),
+                                    ),
+                                    
+                                    // Delete button
+                                    Container(
+                                      margin: const EdgeInsets.only(left: 12),
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(18),
+                                      ),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.delete_outline, size: 16, color: Colors.white),
+                                        padding: EdgeInsets.zero,
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (ctx) => AlertDialog(
+                                              title: const Text('Xóa sản phẩm'),
+                                              content: Text(
+                                                  'Bạn có chắc muốn xóa ${item.name} khỏi giỏ hàng?'),
+                                              actions: [
+                                                TextButton(
+                                                  child: const Text('Hủy'),
+                                                  onPressed: () => Navigator.of(ctx).pop(),
+                                                ),
+                                                TextButton(
+                                                  child: const Text('Xóa'),
+                                                  onPressed: () {
+                                                    Provider.of<CartProvider>(context, listen: false)
+                                                        .removeItem(item.id);
+                                                    Navigator.of(ctx).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                                onTap: () => cart.toggleItemSelection(item.id),
                               ),
                             ),
                           );
@@ -208,7 +274,6 @@ class _CartScreenState extends State<CartScreen> {
                               'Tổng tiền (đã chọn):',
                               style: TextStyle(fontSize: 18),
                             ),
-                            // Display total for selected items
                             Text(
                               _formatCurrency(cart.selectedItems.isEmpty ? 0 : cart.selectedItemsTotalPrice),
                               style: const TextStyle(
@@ -224,11 +289,9 @@ class _CartScreenState extends State<CartScreen> {
                     Padding(
                       padding: const EdgeInsets.all(15.0),
                       child: ElevatedButton(
-                        // Disable button if no items are selected
                         onPressed: cart.selectedItems.isEmpty
                             ? null
                             : () {
-                                // Check if user is authenticated
                                 if (!isAuthenticated) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -239,7 +302,6 @@ class _CartScreenState extends State<CartScreen> {
                                   return;
                                 }
                                 
-                                // Navigate to checkout screen using our payment feature with selected items
                                 PaymentFeature.navigateToCheckout(
                                   context: context,
                                   userId: authProvider.userId!,
@@ -252,7 +314,6 @@ class _CartScreenState extends State<CartScreen> {
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           minimumSize: const Size(double.infinity, 50),
-                          // Disable button color if disabled
                           disabledBackgroundColor: Colors.grey,
                           disabledForegroundColor: Colors.white70,
                         ),
@@ -269,6 +330,13 @@ class _CartScreenState extends State<CartScreen> {
               },
             ),
     );
+  }
+
+  // Helper method to update item quantity
+  void _updateItemQuantity(CartItemModel item, int newQuantity) {
+    if (newQuantity < 1) return; // Don't allow quantity to go below 1
+    
+    Provider.of<CartProvider>(context, listen: false).updateItemQuantity(item.id, newQuantity);
   }
 
   String _formatCurrency(double amount) {

@@ -5,7 +5,12 @@ import com.example.ecommerceproject.model.Order;
 import com.example.ecommerceproject.model.OrderStatus;
 import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.service.OrderService;
+<<<<<<< HEAD
 import com.example.ecommerceproject.service.PaymentService; // Still needed for getSupportedPaymentMethods
+=======
+import com.example.ecommerceproject.service.OrderStateManager;
+import com.example.ecommerceproject.service.PaymentService;
+>>>>>>> Kiet
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +29,17 @@ public class OrderController {
 
     @Autowired
     private PaymentService paymentService;
+<<<<<<< HEAD
 
+=======
+    
+    @Autowired
+    private OrderStateManager orderStateManager;
+    
+    /**
+     * Create a new order with PENDING status
+     */
+>>>>>>> Kiet
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<?>> createOrder(
             @RequestBody Map<String, Object> orderRequest) {
@@ -97,7 +112,78 @@ public class OrderController {
                             "Error processing payment: " + e.getMessage(), null));
         }
     }
+<<<<<<< HEAD
 
+=======
+    
+    /**
+     * Process an order to its next state using State Pattern
+     */
+    @PostMapping("/{orderId}/process")
+    public ResponseEntity<ApiResponse<?>> processOrder(@PathVariable String orderId) {
+        try {
+            boolean success = orderStateManager.processOrder(orderId);
+            Order order = orderService.getOrderById(orderId);
+            
+            if (success) {
+                return ResponseEntity.ok(new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    "Order processed successfully to state: " + order.getStatus(),
+                    order
+                ));
+            } else {
+                return ResponseEntity.ok(new ApiResponse<>(
+                    ApiStatus.BAD_REQUEST.getCode(),
+                    "Cannot process order from current state: " + order.getStatus(),
+                    order
+                ));
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(), 
+                "Error processing order: " + e.getMessage(), null));
+        }
+    }
+    
+    /**
+     * Cancel an order using State Pattern
+     */
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<ApiResponse<?>> cancelOrder(@PathVariable String orderId) {
+        try {
+            boolean success = orderStateManager.cancelOrder(orderId);
+            Order order = orderService.getOrderById(orderId);
+            
+            if (success) {
+                return ResponseEntity.ok(new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    "Order cancelled successfully",
+                    order
+                ));
+            } else {
+                return ResponseEntity.ok(new ApiResponse<>(
+                    ApiStatus.BAD_REQUEST.getCode(),
+                    "Cannot cancel order from current state: " + order.getStatus(),
+                    order
+                ));
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                new ApiResponse<>(ApiStatus.NOT_FOUND.getCode(), e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(), 
+                "Error cancelling order: " + e.getMessage(), null));
+        }
+    }
+    
+    /**
+     * Get order by ID
+     */
+>>>>>>> Kiet
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<?>> getOrderById(@PathVariable String orderId) {
         try {
@@ -128,6 +214,7 @@ public class OrderController {
                             "Error retrieving orders: " + e.getMessage(), null));
         }
     }
+<<<<<<< HEAD
 
     @PutMapping("/{orderId}/status")
     public ResponseEntity<ApiResponse<?>> updateOrderStatus(
@@ -164,6 +251,12 @@ public class OrderController {
         }
     }
 
+=======
+    
+    /**
+     * Get list of supported payment methods
+     */
+>>>>>>> Kiet
     @GetMapping("/payment-methods")
     public ResponseEntity<ApiResponse<?>> getSupportedPaymentMethods() {
         try {
@@ -175,6 +268,25 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
                             "Error retrieving payment methods: " + e.getMessage(), null));
+        }
+    }
+    
+    /**
+     * Get all orders - new endpoint for admin interface
+     */
+    @GetMapping
+    public ResponseEntity<ApiResponse<?>> getAllOrders() {
+        try {
+            List<Order> orders = orderService.getAllOrders();
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                "All orders retrieved successfully",
+                orders
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(), 
+                "Error retrieving orders: " + e.getMessage(), null));
         }
     }
 }

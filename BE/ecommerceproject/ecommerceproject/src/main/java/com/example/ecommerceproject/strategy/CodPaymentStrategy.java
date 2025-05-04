@@ -8,9 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
-/**
- * Concrete strategy for processing Cash on Delivery (COD) payments
- */
 @Component
 public class CodPaymentStrategy implements PaymentStrategy {
 
@@ -21,23 +18,18 @@ public class CodPaymentStrategy implements PaymentStrategy {
     public boolean pay(Order order, Map<String, Object> paymentDetails) {
         // For COD, payment is always considered "successful" at order time
         // Actual payment happens at delivery time
-        
         logger.info("Processing COD payment for Order ID: {}", order.getId());
         logger.info("Payment Amount: ${} will be collected upon delivery", order.getTotalAmount());
-        
         // Extract additional details if provided
         String deliveryNotes = (String) paymentDetails.getOrDefault("deliveryNotes", "");
-        
         if (!deliveryNotes.isEmpty()) {
             logger.info("Delivery Notes: {}", deliveryNotes);
         }
-        
         // COD orders are always successful during order placement
         // (payment will happen at delivery time)
         logger.info("COD payment recorded successfully for Order ID: {}", order.getId());
         return true;
     }
-    
     @Override
     public String getPaymentMethodName() {
         return PAYMENT_METHOD;
