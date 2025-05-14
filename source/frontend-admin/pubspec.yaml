@@ -46,10 +46,13 @@ dependencies:
   intl: ^0.18.0
   
   jwt_decoder: ^2.0.1
+
   shared_preferences: ^2.2.2
   
   # Thêm image_picker để hỗ trợ chức năng chọn và tải lên hình ảnh
   image_picker: ^1.1.2
+
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

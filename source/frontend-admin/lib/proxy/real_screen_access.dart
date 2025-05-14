@@ -21,6 +21,8 @@ class RealScreenAccess implements ScreenAccessInterface {
         return const UsersManagementScreen();
       case 2:
         return const OrdersManagementScreen();
+      case 3:
+        return const CouponsManagementScreen();
       default:
         return const ProductsManagementScreen();
     }

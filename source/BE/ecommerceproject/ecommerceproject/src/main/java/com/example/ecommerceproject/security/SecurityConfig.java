@@ -90,6 +90,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/product/discount-type/{productTypeId}").permitAll()
                 // Review API paths 
                 .requestMatchers("/api/reviews/**").permitAll()
+                // Coupon API paths
+                .requestMatchers("/api/coupon/**").permitAll()
                 // PC API paths
                 .requestMatchers("/api/pc/**").permitAll()
                 .anyRequest().authenticated()

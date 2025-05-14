@@ -1,20 +1,13 @@
 package com.example.ecommerceproject.config;
 
-import com.example.ecommerceproject.model.Brand;
-import com.example.ecommerceproject.model.Cart;
-import com.example.ecommerceproject.model.Product;
-import com.example.ecommerceproject.model.ProductType;
-import com.example.ecommerceproject.model.User;
-import com.example.ecommerceproject.repository.BrandRepository;
-import com.example.ecommerceproject.repository.CartRepository;
-import com.example.ecommerceproject.repository.ProductRepository;
-import com.example.ecommerceproject.repository.ProductTypeRepository;
-import com.example.ecommerceproject.repository.UserRepository;
+import com.example.ecommerceproject.model.*;
+import com.example.ecommerceproject.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,15 +21,17 @@ public class DataLoader implements CommandLineRunner {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CouponRepository couponRepository;
 
     @Autowired
-    public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository, PasswordEncoder passwordEncoder) {
+    public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository, PasswordEncoder passwordEncoder, CouponRepository couponRepository) {
         this.brandRepository = brandRepository;
         this.productTypeRepository = productTypeRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.cartRepository = cartRepository;
         this.passwordEncoder = passwordEncoder;
+        this.couponRepository = couponRepository;
     }
 
     @Override
@@ -58,7 +53,10 @@ public class DataLoader implements CommandLineRunner {
 
         // Tạo Users và Carts
         createUsersAndCarts();
-        
+
+        // Tạo Coupons
+        createCoupons();
+
         System.out.println("Đã khởi tạo dữ liệu thành công!");
     }
 
@@ -417,5 +415,77 @@ public class DataLoader implements CommandLineRunner {
         userCart.setItems(new ArrayList<>());
         userCart.setTotalPrice(0);
         cartRepository.save(userCart);
+    }
+
+    private void createCoupons() {
+        // Kiểm tra xem đã có coupon nào chưa
+        if (couponRepository.count() == 0) {
+            List<Coupon> coupons = new ArrayList<>();
+
+            // Coupon giảm giá 10% cho người dùng mới
+            Coupon welcome = new Coupon();
+            welcome.setCode("WELCOME10");
+            welcome.setValue(10);
+            welcome.setMaxUses(100);
+            welcome.setUsedCount(0);
+            welcome.setCreationTime(LocalDateTime.now());
+            welcome.setOrdersApplied(new ArrayList<>());
+            coupons.add(welcome);
+
+            // Coupon giảm giá 20% cho mùa hè
+            Coupon summer = new Coupon();
+            summer.setCode("SUMMER20");
+            summer.setValue(20);
+            summer.setMaxUses(50);
+            summer.setUsedCount(0);
+            summer.setCreationTime(LocalDateTime.now());
+            summer.setOrdersApplied(new ArrayList<>());
+            coupons.add(summer);
+
+            // Coupon giảm giá 30% cho VIP
+            Coupon vip = new Coupon();
+            vip.setCode("VIP30");
+            vip.setValue(30);
+            vip.setMaxUses(20);
+            vip.setUsedCount(0);
+            vip.setCreationTime(LocalDateTime.now());
+            vip.setOrdersApplied(new ArrayList<>());
+            coupons.add(vip);
+
+            // Coupon giảm giá 15% cho ngày lễ
+            Coupon holiday = new Coupon();
+            holiday.setCode("HOLIDAY15");
+            holiday.setValue(15);
+            holiday.setMaxUses(75);
+            holiday.setUsedCount(0);
+            holiday.setCreationTime(LocalDateTime.now());
+            holiday.setOrdersApplied(new ArrayList<>());
+            coupons.add(holiday);
+
+            // Coupon giảm giá 25% cho Black Friday
+            Coupon blackFriday = new Coupon();
+            blackFriday.setCode("BLACK25");
+            blackFriday.setValue(25);
+            blackFriday.setMaxUses(30);
+            blackFriday.setUsedCount(0);
+            blackFriday.setCreationTime(LocalDateTime.now());
+            blackFriday.setOrdersApplied(new ArrayList<>());
+            coupons.add(blackFriday);
+
+            // Coupon giảm giá 50% cho đơn hàng đầu tiên
+            Coupon firstOrder = new Coupon();
+            firstOrder.setCode("FIRST50");
+            firstOrder.setValue(50);
+            firstOrder.setMaxUses(10);
+            firstOrder.setUsedCount(0);
+            firstOrder.setCreationTime(LocalDateTime.now());
+            firstOrder.setOrdersApplied(new ArrayList<>());
+            coupons.add(firstOrder);
+
+            // Lưu tất cả coupons vào database
+            couponRepository.saveAll(coupons);
+
+            System.out.println("Created " + coupons.size() + " coupons successfully!");
+        }
     }
 } 
