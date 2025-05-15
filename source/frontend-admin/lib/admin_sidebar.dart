@@ -62,6 +62,8 @@ class AdminSidebar extends StatelessWidget {
         );
       },
       items: const [
+        SidebarXItem(icon: FontAwesomeIcons.house, label: 'Overview'),
+        SidebarXItem(icon: FontAwesomeIcons.chartSimple, label: 'Statistics'),
         SidebarXItem(icon: FontAwesomeIcons.warehouse, label: 'Products Management'),
         SidebarXItem(icon: FontAwesomeIcons.users, label: 'Users Management'),
         SidebarXItem(icon: FontAwesomeIcons.truckRampBox, label: 'Orders Management'),

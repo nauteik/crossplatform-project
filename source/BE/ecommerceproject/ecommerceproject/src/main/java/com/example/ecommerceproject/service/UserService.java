@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -146,5 +147,8 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
 
+    public int getUserCount() {
+        return (int) userRepository.count();
+    }
 }
 
