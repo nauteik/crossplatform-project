@@ -137,82 +137,82 @@ public class DashboardService {
                 categorySalesRatio
         );
     }
+//
+//    // Lấy dữ liệu tổng quan theo tháng
+//    public DashboardData getMonthlyOverview(int month, int year) {
+//        // Các chỉ số tổng
+//        long totalUsers = getTotalUsers();
+//        long totalOrders = getTotalOrders();
+//        long totalProductTypes = getTotalProductTypes();
+//        long totalProducts = getTotalProducts();
+//
+//        // Lấy dữ liệu doanh thu, lợi nhuận và số lượng bán theo tháng
+//        List<TimeBasedChartData> timeSeriesRevenueProfitData = orderService.getMonthlyRevenueAndProfitData(month, year);
+//        List<TimeBasedChartData> timeSeriesQuantityData = orderService.getMonthlyQuantitySoldData(month, year);
+//
+//        // Lấy dữ liệu bán theo danh mục trong tháng
+//        List<CategorySalesData> categorySalesRatio = orderService.getCategorySalesDataByMonth(month, year);
+//
+//        return new DashboardData(
+//                totalUsers,
+//                totalOrders,
+//                totalProductTypes,
+//                totalProducts,
+//                timeSeriesRevenueProfitData,
+//                timeSeriesQuantityData,
+//                categorySalesRatio
+//        );
+//    }
+//
+//    // Lấy dữ liệu tổng quan theo quý
+//    public DashboardData getQuarterlyOverview(int quarter, int year) {
+//        // Các chỉ số tổng
+//        long totalUsers = getTotalUsers();
+//        long totalOrders = getTotalOrders();
+//        long totalProductTypes = getTotalProductTypes();
+//        long totalProducts = getTotalProducts();
+//
+//        // Lấy dữ liệu doanh thu, lợi nhuận và số lượng bán theo quý
+//        List<TimeBasedChartData> timeSeriesRevenueProfitData = orderService.getQuarterlyRevenueAndProfitData(quarter, year);
+//        List<TimeBasedChartData> timeSeriesQuantityData = orderService.getQuarterlyQuantitySoldData(quarter, year);
+//
+//        // Lấy dữ liệu bán theo danh mục trong quý
+//        List<CategorySalesData> categorySalesRatio = orderService.getCategorySalesDataByQuarter(quarter, year);
+//
+//        return new DashboardData(
+//                totalUsers,
+//                totalOrders,
+//                totalProductTypes,
+//                totalProducts,
+//                timeSeriesRevenueProfitData,
+//                timeSeriesQuantityData,
+//                categorySalesRatio
+//        );
+//    }
 
-    // Lấy dữ liệu tổng quan theo tháng
-    public DashboardData getMonthlyOverview(int month, int year) {
-        // Các chỉ số tổng
-        long totalUsers = getTotalUsers();
-        long totalOrders = getTotalOrders();
-        long totalProductTypes = getTotalProductTypes();
-        long totalProducts = getTotalProducts();
-
-        // Lấy dữ liệu doanh thu, lợi nhuận và số lượng bán theo tháng
-        List<TimeBasedChartData> timeSeriesRevenueProfitData = orderService.getMonthlyRevenueAndProfitData(month, year);
-        List<TimeBasedChartData> timeSeriesQuantityData = orderService.getMonthlyQuantitySoldData(month, year);
-
-        // Lấy dữ liệu bán theo danh mục trong tháng
-        List<CategorySalesData> categorySalesRatio = orderService.getCategorySalesDataByMonth(month, year);
-
-        return new DashboardData(
-                totalUsers,
-                totalOrders,
-                totalProductTypes,
-                totalProducts,
-                timeSeriesRevenueProfitData,
-                timeSeriesQuantityData,
-                categorySalesRatio
-        );
-    }
-
-    // Lấy dữ liệu tổng quan theo quý
-    public DashboardData getQuarterlyOverview(int quarter, int year) {
-        // Các chỉ số tổng
-        long totalUsers = getTotalUsers();
-        long totalOrders = getTotalOrders();
-        long totalProductTypes = getTotalProductTypes();
-        long totalProducts = getTotalProducts();
-
-        // Lấy dữ liệu doanh thu, lợi nhuận và số lượng bán theo quý
-        List<TimeBasedChartData> timeSeriesRevenueProfitData = orderService.getQuarterlyRevenueAndProfitData(quarter, year);
-        List<TimeBasedChartData> timeSeriesQuantityData = orderService.getQuarterlyQuantitySoldData(quarter, year);
-
-        // Lấy dữ liệu bán theo danh mục trong quý
-        List<CategorySalesData> categorySalesRatio = orderService.getCategorySalesDataByQuarter(quarter, year);
-
-        return new DashboardData(
-                totalUsers,
-                totalOrders,
-                totalProductTypes,
-                totalProducts,
-                timeSeriesRevenueProfitData,
-                timeSeriesQuantityData,
-                categorySalesRatio
-        );
-    }
-
-    // Lấy dữ liệu tổng quan theo năm
-    public DashboardData getYearlyOverview(int year) {
-        // Các chỉ số tổng
-        long totalUsers = getTotalUsers();
-        long totalOrders = getTotalOrders();
-        long totalProductTypes = getTotalProductTypes();
-        long totalProducts = getTotalProducts();
-
-        // Lấy dữ liệu doanh thu, lợi nhuận và số lượng bán theo năm
-        List<TimeBasedChartData> timeSeriesRevenueProfitData = orderService.getYearlyRevenueAndProfitData(year);
-        List<TimeBasedChartData> timeSeriesQuantityData = orderService.getYearlyQuantitySoldData(year);
-
-        // Lấy dữ liệu bán theo danh mục trong năm
-        List<CategorySalesData> categorySalesRatio = orderService.getCategorySalesDataByYear(year);
-
-        return new DashboardData(
-                totalUsers,
-                totalOrders,
-                totalProductTypes,
-                totalProducts,
-                timeSeriesRevenueProfitData,
-                timeSeriesQuantityData,
-                categorySalesRatio
-        );
-    }
+//    // Lấy dữ liệu tổng quan theo năm
+//    public DashboardData getYearlyOverview(int year) {
+//        // Các chỉ số tổng
+//        long totalUsers = getTotalUsers();
+//        long totalOrders = getTotalOrders();
+//        long totalProductTypes = getTotalProductTypes();
+//        long totalProducts = getTotalProducts();
+//
+//        // Lấy dữ liệu doanh thu, lợi nhuận và số lượng bán theo năm
+//        List<TimeBasedChartData> timeSeriesRevenueProfitData = orderService.getYearlyRevenueAndProfitData(year);
+//        List<TimeBasedChartData> timeSeriesQuantityData = orderService.getYearlyQuantitySoldData(year);
+//
+//        // Lấy dữ liệu bán theo danh mục trong năm
+//        List<CategorySalesData> categorySalesRatio = orderService.getCategorySalesDataByYear(year);
+//
+//        return new DashboardData(
+//                totalUsers,
+//                totalOrders,
+//                totalProductTypes,
+//                totalProducts,
+//                timeSeriesRevenueProfitData,
+//                timeSeriesQuantityData,
+//                categorySalesRatio
+//        );
+//    }
 }

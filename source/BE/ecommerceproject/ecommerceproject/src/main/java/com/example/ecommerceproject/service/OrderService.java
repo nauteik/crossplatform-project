@@ -291,176 +291,15 @@ public class OrderService {
                 .sum();
     }
 
-    // Lấy dữ liệu doanh thu và lợi nhuận theo tháng
-    public List<TimeBasedChartData> getMonthlyRevenueAndProfitData(int month, int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-        YearMonth yearMonth = YearMonth.of(year, month);
-        int daysInMonth = yearMonth.lengthOfMonth();
 
-        for (int day = 1; day <= daysInMonth; day++) {
-            LocalDate date = LocalDate.of(year, month, day);
-            String formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-            Double revenue = getRevenueByDate(date);
-            Double profit = getProfitByDate(date);
 
-            result.add(new TimeBasedChartData(formattedDate, revenue, profit, null));
-        }
 
-        return result;
-    }
 
-    // Lấy dữ liệu số lượng bán theo tháng
-    public List<TimeBasedChartData> getMonthlyQuantitySoldData(int month, int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-        YearMonth yearMonth = YearMonth.of(year, month);
-        int daysInMonth = yearMonth.lengthOfMonth();
 
-        for (int day = 1; day <= daysInMonth; day++) {
-            LocalDate date = LocalDate.of(year, month, day);
-            String formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-            Integer quantitySold = getQuantitySoldByDate(date);
 
-            result.add(new TimeBasedChartData(formattedDate, null, null, quantitySold));
-        }
 
-        return result;
-    }
-
-    // Lấy dữ liệu bán theo danh mục trong tháng
-    public List<CategorySalesData> getCategorySalesDataByMonth(int month, int year) {
-        LocalDateTime startOfMonth = LocalDate.of(year, month, 1).atStartOfDay();
-        LocalDateTime endOfMonth = YearMonth.of(year, month).atEndOfMonth().plusDays(1).atStartOfDay().minusNanos(1);
-
-        List<Order> orders = orderRepository.findByCreatedAtBetween(startOfMonth, endOfMonth);
-
-        return calculateCategorySalesData(orders);
-    }
-
-    // Lấy dữ liệu doanh thu và lợi nhuận theo quý
-    public List<TimeBasedChartData> getQuarterlyRevenueAndProfitData(int quarter, int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-
-        // Xác định tháng bắt đầu và kết thúc của quý
-        int startMonth = (quarter - 1) * 3 + 1;
-        int endMonth = startMonth + 2;
-
-        for (int month = startMonth; month <= endMonth; month++) {
-            YearMonth yearMonth = YearMonth.of(year, month);
-            String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-            // Tính tổng doanh thu và lợi nhuận trong tháng
-            Double monthlyRevenue = 0.0;
-            Double monthlyProfit = 0.0;
-
-            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                LocalDate date = LocalDate.of(year, month, day);
-                monthlyRevenue += getRevenueByDate(date);
-                monthlyProfit += getProfitByDate(date);
-            }
-
-            result.add(new TimeBasedChartData(formattedMonth, monthlyRevenue, monthlyProfit, null));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu số lượng bán theo quý
-    public List<TimeBasedChartData> getQuarterlyQuantitySoldData(int quarter, int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-
-        // Xác định tháng bắt đầu và kết thúc của quý
-        int startMonth = (quarter - 1) * 3 + 1;
-        int endMonth = startMonth + 2;
-
-        for (int month = startMonth; month <= endMonth; month++) {
-            YearMonth yearMonth = YearMonth.of(year, month);
-            String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-            // Tính tổng số lượng bán trong tháng
-            Integer monthlyQuantity = 0;
-
-            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                LocalDate date = LocalDate.of(year, month, day);
-                monthlyQuantity += getQuantitySoldByDate(date);
-            }
-
-            result.add(new TimeBasedChartData(formattedMonth, null, null, monthlyQuantity));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu bán theo danh mục trong quý
-    public List<CategorySalesData> getCategorySalesDataByQuarter(int quarter, int year) {
-        // Xác định tháng bắt đầu và kết thúc của quý
-        int startMonth = (quarter - 1) * 3 + 1;
-        int endMonth = startMonth + 2;
-
-        LocalDateTime startOfQuarter = LocalDate.of(year, startMonth, 1).atStartOfDay();
-        LocalDateTime endOfQuarter = YearMonth.of(year, endMonth).atEndOfMonth().plusDays(1).atStartOfDay().minusNanos(1);
-
-        List<Order> orders = orderRepository.findByCreatedAtBetween(startOfQuarter, endOfQuarter);
-
-        return calculateCategorySalesData(orders);
-    }
-
-    // Lấy dữ liệu doanh thu và lợi nhuận theo năm
-    public List<TimeBasedChartData> getYearlyRevenueAndProfitData(int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-
-        for (int month = 1; month <= 12; month++) {
-            YearMonth yearMonth = YearMonth.of(year, month);
-            String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-            // Tính tổng doanh thu và lợi nhuận trong tháng
-            Double monthlyRevenue = 0.0;
-            Double monthlyProfit = 0.0;
-
-            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                LocalDate date = LocalDate.of(year, month, day);
-                monthlyRevenue += getRevenueByDate(date);
-                monthlyProfit += getProfitByDate(date);
-            }
-
-            result.add(new TimeBasedChartData(formattedMonth, monthlyRevenue, monthlyProfit, null));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu số lượng bán theo năm
-    public List<TimeBasedChartData> getYearlyQuantitySoldData(int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-
-        for (int month = 1; month <= 12; month++) {
-            YearMonth yearMonth = YearMonth.of(year, month);
-            String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-            // Tính tổng số lượng bán trong tháng
-            Integer monthlyQuantity = 0;
-
-            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                LocalDate date = LocalDate.of(year, month, day);
-                monthlyQuantity += getQuantitySoldByDate(date);
-            }
-
-            result.add(new TimeBasedChartData(formattedMonth, null, null, monthlyQuantity));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu bán theo danh mục trong năm
-    public List<CategorySalesData> getCategorySalesDataByYear(int year) {
-        LocalDateTime startOfYear = LocalDate.of(year, 1, 1).atStartOfDay();
-        LocalDateTime endOfYear = LocalDate.of(year, 12, 31).plusDays(1).atStartOfDay().minusNanos(1);
-
-        List<Order> orders = orderRepository.findByCreatedAtBetween(startOfYear, endOfYear);
-
-        return calculateCategorySalesData(orders);
-    }
 
     // Phương thức hỗ trợ để tính toán dữ liệu bán theo danh mục
     private List<CategorySalesData> calculateCategorySalesData(List<Order> orders) {
@@ -519,6 +358,10 @@ public class OrderService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
 
+        return orderRepository.findByCreatedAtBetween(startDateTime, endDateTime);
+    }
+
+    public List<Order> getOrdersBetweenDates(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return orderRepository.findByCreatedAtBetween(startDateTime, endDateTime);
     }
 }

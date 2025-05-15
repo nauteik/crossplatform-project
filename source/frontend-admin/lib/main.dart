@@ -5,7 +5,6 @@ import 'package:admin_interface/providers/coupon_provider.dart';
 import 'package:admin_interface/providers/overview_provider.dart';
 import 'package:admin_interface/providers/statistics_provider.dart';
 import 'package:admin_interface/providers/user_provider.dart';
-import 'package:admin_interface/repository/coupon_repository.dart';
 import 'package:admin_interface/repository/user_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:sidebarx/sidebarx.dart';
