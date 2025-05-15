@@ -60,6 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             final loginSuccess = await authProvider.login(
               _emailController.text.trim(),
               _passwordController.text,
+              context,
             );
 
             // Kiểm tra nếu đăng nhập thành công và widget vẫn còn mounted

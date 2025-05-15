@@ -1,0 +1,1197 @@
+[
+  {
+    "_id": {
+      "$oid": "680b87f9471e0354b2e32d25"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc3",
+        "productName": "Intel Core i3-14100",
+        "quantity": 1,
+        "price": 3990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/cpu_intel_core_i3_14100_gearvn_597984849d11402a83924072928a702b.png"
+      }
+    ],
+    "totalAmount": 3990000,
+    "status": "PENDING",
+    "paymentMethod": "COD",
+    "shippingAddress": "aaaa",
+    "createdAt": {
+      "$date": "2025-04-25T13:02:49.416Z"
+    },
+    "updatedAt": {
+      "$date": "2025-04-25T13:02:49.416Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680b87f9471e0354b2e32d26"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc5",
+        "productName": "MSI GeForce RTX 4080 SUPER GAMING X TRIO",
+        "quantity": 1,
+        "price": 31990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/msi_geforce_rtx_4080_super_gaming_x_trio_16g_gddr6x_f173b4b595fb453f8e5c510ebb31ed9a.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd2",
+        "productName": "G.Skill Trident Z5 RGB 32GB (2x16GB) DDR5 6000MHz",
+        "quantity": 2,
+        "price": 4990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/4_2ee3bc2aaa4041eabb1a740e318a66b2.jpg"
+      }
+    ],
+    "totalAmount": 41970000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2025-04-20T10:15:30.123Z"
+    },
+    "updatedAt": {
+      "$date": "2025-04-22T11:00:00.567Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680b87f9471e0354b2e32d27"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dde",
+        "productName": "Seagate Barracuda 4TB",
+        "quantity": 3,
+        "price": 2790000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/0d00befe57a64cf194330647d5d7f34a_e7aaee4c7d2b4a5ea6bf4ea28cb02a15.jpg"
+      }
+    ],
+    "totalAmount": 8370000,
+    "status": "CANCELLED",
+    "paymentMethod": "COD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2025-04-24T09:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-04-24T09:15:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+    {
+    "_id": {
+      "$oid": "680b87f9471e0354b2e32d28"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dce",
+        "productName": "GIGABYTE B760 AORUS ELITE AX",
+        "quantity": 1,
+        "price": 5990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/gigabyte_b760_aorus_elite_ax_ddr4_01_ff1de7c6eebf41daa09a4d69facf1ae4.jpg"
+      }
+    ],
+    "totalAmount": 5990000,
+    "status": "PENDING",
+    "paymentMethod": "COD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2025-04-25T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-04-25T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60001"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc4",
+        "productName": "ASUS ROG Strix GeForce RTX 4090 OC",
+        "quantity": 1,
+        "price": 45990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/gearvn-card-man-hinh-asus-rog-strix-rtx-4090-oc-white-edition-24gb-gddr6x-1_0f953c3c6c094ab693a4c435a7e93145.png"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98de3",
+        "productName": "Corsair RM1000x 1000W 80 Plus Gold",
+        "quantity": 1,
+        "price": 4990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/rm__72c47cb03fb646fdb9d866d7b6f18b4b.png"
+      }
+    ],
+    "totalAmount": 50980000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2024-01-15T10:30:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-01-20T14:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60002"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dbe",
+        "productName": "AMD Ryzen 9 7950X",
+        "quantity": 1,
+        "price": 14990000,
+        "imageUrl": null
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd1",
+        "productName": "GIGABYTE Z790 AORUS MASTER",
+        "quantity": 1,
+        "price": 12990000,
+        "imageUrl": "https://www.gigabyte.com/FileUpload/Global/KeyFeature/2232/innergigabyteimages/mb.png"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd2",
+        "productName": "G.Skill Trident Z5 RGB 32GB (2x16GB) DDR5 6000MHz",
+        "quantity": 1,
+        "price": 4990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/4_2ee3bc2aaa4041eabb1a740e318a66b2.jpg"
+      }
+    ],
+    "totalAmount": 32970000,
+    "status": "DELIVERED",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2024-02-01T09:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-05T16:30:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60003"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98de9",
+        "productName": "Corsair 7000D AIRFLOW",
+        "quantity": 1,
+        "price": 6990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/1-11_6fc204d5d5ce4e5694d6075135f4d0f2.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98de0",
+        "productName": "Seagate IronWolf Pro 8TB",
+        "quantity": 2,
+        "price": 6490000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/10_8ee1e8ee4aff4cf49143e5612f9b4b8a.png"
+      }
+    ],
+    "totalAmount": 19970000,
+    "status": "SHIPPING",
+    "paymentMethod": "COD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2024-03-10T14:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-03-11T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60004"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc0",
+        "productName": "AMD Ryzen 7 7800X3D",
+        "quantity": 1,
+        "price": 9990000,
+        "imageUrl": null
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dc7",
+        "productName": "ASUS TUF Gaming Radeon RX 7800 XT OC",
+        "quantity": 1,
+        "price": 16990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/asus_rx7800xt_e56da2f26e0245fab5ada4c0f66adc53.png"
+      }
+    ],
+    "totalAmount": 26980000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2024-04-05T11:30:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-04-08T09:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60005"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dd4",
+        "productName": "Kingston FURY Beast 16GB (2x8GB) DDR4 3200MHz",
+        "quantity": 3,
+        "price": 1690000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/hx-product-memory-beast-ddr4-rgb-blk-1-zm-lg_b9d2efb77e7249ad9d3a0d2aafdc9abb.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd8",
+        "productName": "Samsung 990 PRO NVMe SSD 2TB",
+        "quantity": 1,
+        "price": 5990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/990pro_heatsink_perspective_front_20221019_33423e52e0bc431990c6deb386a008fb.png"
+      }
+    ],
+    "totalAmount": 11060000,
+    "status": "PAID",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2024-05-20T15:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-05-20T15:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60006"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98ddf",
+        "productName": "Western Digital Blue 2TB",
+        "quantity": 1,
+        "price": 1590000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/wdblue_1_a89d3d1b9b8a4e4eba009f0ac7e2f7cf.png"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98ddc",
+        "productName": "WD Blue SN580 NVMe SSD 1TB",
+        "quantity": 1,
+        "price": 2190000,
+        "imageUrl": "https://m.media-amazon.com/images/I/71JBr1O9vTL.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd3",
+        "productName": "Corsair Vengeance RGB 32GB (2x16GB) DDR5 5600MHz",
+        "quantity": 1,
+        "price": 3990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/corsair_vengeance_rgb_ddr5_3dd51ff5ddf04c0a881e0d81af7c957b.jpg"
+      }
+    ],
+    "totalAmount": 7770000,
+    "status": "DELIVERED",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2024-06-01T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-06-05T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60007"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dbf",
+        "productName": "Intel Core i7-14700K",
+        "quantity": 1,
+        "price": 10990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/hhm1_9c0621ac37894f3d8d273d452c0071a4.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dcd",
+        "productName": "MSI MPG X670E CARBON WIFI",
+        "quantity": 1,
+        "price": 10990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/x670e-carbon-wifi003_c94ce659ed68481994ecee5c67b91da2_50d83a8037334c598de78af20cc266d6.png"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd6",
+        "productName": "Corsair Dominator Platinum RGB 32GB (2x16GB) DDR5 6200MHz",
+        "quantity": 1,
+        "price": 5690000,
+        "imageUrl": "https://m.media-amazon.com/images/I/61H2YhQJJ8L.jpg"
+      }
+    ],
+    "totalAmount": 27670000,
+    "status": "FAILED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2024-07-18T08:30:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-07-18T08:35:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60008"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc9",
+        "productName": "NVIDIA GeForce RTX 4060 Ti Founders Edition",
+        "quantity": 2,
+        "price": 12990000,
+        "imageUrl": "https://www.nvidia.com/content/dam/en-zz/Solutions/geforce/ada/rtx-4060-4060ti/geforce-ada-4060-ti-product-gallery-full-screen-3840-2.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd0",
+        "productName": "MSI MAG B650 TOMAHAWK WIFI",
+        "quantity": 1,
+        "price": 6490000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/gearvn-msi-mag-b650-tomahawk-wifi-1_c3b62a7c39314c9393d7caa7adb2b54f.png"
+      }
+    ],
+    "totalAmount": 32470000,
+    "status": "DELIVERED",
+    "paymentMethod": "COD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2024-08-25T13:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-08-30T11:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60009"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dec",
+        "productName": "Lian Li PC-O11 Dynamic EVO",
+        "quantity": 1,
+        "price": 4990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/617jOVaCQLL.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98de6",
+        "productName": "EVGA SuperNOVA 850 G6 850W 80 Plus Gold",
+        "quantity": 1,
+        "price": 3990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/71PFY+7Y+JL.jpg"
+      }
+    ],
+    "totalAmount": 8980000,
+    "status": "SHIPPING",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2024-09-03T16:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-09-04T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6000a"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dbd",
+        "productName": "Intel Core i9-14900K",
+        "quantity": 1,
+        "price": 15990000,
+        "imageUrl": null
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dc8",
+        "productName": "NVIDIA GeForce RTX 4070 Founders Edition",
+        "quantity": 1,
+        "price": 18990000,
+        "imageUrl": "https://www.nvidia.com/content/dam/en-zz/Solutions/geforce/ada/rtx-4070/geforce-rtx-4070-product-gallery-full-screen-3840-3.jpg"
+      }
+    ],
+    "totalAmount": 34980000,
+    "status": "DELIVERED",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2024-10-11T09:30:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-10-15T15:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6000b"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dca",
+        "productName": "EVGA GeForce RTX 3080 FTW3 ULTRA",
+        "quantity": 1,
+        "price": 22990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/81-d9eH7nXL.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dda",
+        "productName": "Kingston KC3000 NVMe SSD 2TB",
+        "quantity": 1,
+        "price": 4990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/bn_eac52a31a9de4b9c8d9a8fefd2927d55.png"
+      }
+    ],
+    "totalAmount": 27980000,
+    "status": "CANCELLED",
+    "paymentMethod": "COD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2024-11-08T11:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-11-09T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6000c"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc1",
+        "productName": "Intel Core i5-14600K",
+        "quantity": 1,
+        "price": 8990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/intel_core_i5_14600k_0af0d5e87c6c46a5baa8f462c9a57cc7.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dcc",
+        "productName": "ASUS ROG MAXIMUS Z790 HERO",
+        "quantity": 1,
+        "price": 14990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/marus_6a08ef37f9264b4e9b3d8d1451a45d65.png"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd6",
+        "productName": "Corsair Dominator Platinum RGB 32GB (2x16GB) DDR5 6200MHz",
+        "quantity": 2,
+        "price": 5690000,
+        "imageUrl": "https://m.media-amazon.com/images/I/61H2YhQJJ8L.jpg"
+      }
+    ],
+    "totalAmount": 35360000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2024-12-01T14:30:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-12-06T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6000d"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dd9",
+        "productName": "WD Black SN850X NVMe SSD 1TB",
+        "quantity": 1,
+        "price": 3490000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/wd_black_sn850x_nvme_ssd_1tb_5b1caf10f4cb43bc9dff30c0bd0fcf17.png"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98de1",
+        "productName": "Western Digital Black 4TB",
+        "quantity": 1,
+        "price": 3990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/71nMNj+WGGL.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dea",
+        "productName": "NZXT H7 Flow",
+        "quantity": 1,
+        "price": 3990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/nzxt_h7_black_1_9d2a0f3eb77c46c490ce96c5e0d35c93.jpg"
+      }
+    ],
+    "totalAmount": 11470000,
+    "status": "DELIVERED",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2025-01-20T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-01-24T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6000e"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc2",
+        "productName": "AMD Ryzen 5 7600X",
+        "quantity": 1,
+        "price": 6990000,
+        "imageUrl": null
+      },
+      {
+        "productId": "68046a82e3cb22568bb98deb",
+        "productName": "Cooler Master MasterBox TD500 Mesh",
+        "quantity": 1,
+        "price": 2490000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/masterbox-td500-mesh-white-1_c7d2b3b2bb484e8db6a17f2fe0b26f64.jpg"
+      }
+    ],
+    "totalAmount": 9480000,
+    "status": "PENDING",
+    "paymentMethod": "COD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2025-02-14T09:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-02-14T09:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6000f"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dcb",
+        "productName": "MSI Radeon RX 6700 XT GAMING X",
+        "quantity": 1,
+        "price": 11990000,
+        "imageUrl": "https://storage-asset.msi.com/global/picture/image/feature/vga/AMD/RX6700XT/RX6700XT-GAMING-X-12G-1000.png"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98ddd",
+        "productName": "Kingston NV2 NVMe SSD 2TB",
+        "quantity": 1,
+        "price": 3590000,
+        "imageUrl": "https://m.media-amazon.com/images/I/61a86o6cUML.jpg"
+      }
+    ],
+    "totalAmount": 15580000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2025-03-05T12:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-08T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60010"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98de7",
+        "productName": "Thermaltake Toughpower GF3 1000W 80 Plus Gold",
+        "quantity": 1,
+        "price": 4690000,
+        "imageUrl": "https://thermaltake.azureedge.net/pub/media/catalog/product/cache/3a440e7c11fac528bb91024e9e5851e4/t/o/toughpower_gf3_argb_gold_psu_01.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dee",
+        "productName": "Thermaltake View 51 TG ARGB",
+        "quantity": 1,
+        "price": 4290000,
+        "imageUrl": "https://thermaltake.azureedge.net/pub/media/catalog/product/cache/25e62158742be0ef47d2055284094406/v/i/view51tgargb_composition.jpg"
+      }
+    ],
+    "totalAmount": 8980000,
+    "status": "SHIPPING",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2025-04-01T11:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-04-03T14:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60011"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dd5",
+        "productName": "G.Skill Ripjaws S5 64GB (2x32GB) DDR5 5200MHz",
+        "quantity": 1,
+        "price": 7990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/614Z+xsGCDL.jpg"
+      }
+    ],
+    "totalAmount": 7990000,
+    "status": "DELIVERED",
+    "paymentMethod": "COD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2024-02-20T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-02-25T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60012"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc6",
+        "productName": "GIGABYTE Radeon RX 7900 XTX GAMING OC",
+        "quantity": 1,
+        "price": 26990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/1-1_539f72e5eed84a6ba1bcec8e440e8d93.jpg"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98de5",
+        "productName": "Corsair HX1200 1200W 80 Plus Platinum",
+        "quantity": 1,
+        "price": 6990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/71Lrps+5sML.jpg"
+      }
+    ],
+    "totalAmount": 33980000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2024-03-25T14:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-03-30T14:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60013"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98ddb",
+        "productName": "Samsung 870 EVO SATA SSD 1TB",
+        "quantity": 2,
+        "price": 2490000,
+        "imageUrl": "https://images.samsung.com/is/image/samsung/p6pim/vn/mz-77e1t0bw/gallery/vn-870-evo-sata-3-2-5-inch-internal-ssd-mz-77e1t0bw-531866598?$650_519_PNG$"
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd7",
+        "productName": "Kingston FURY Renegade RGB 32GB (2x16GB) DDR4 3600MHz",
+        "quantity": 1,
+        "price": 3290000,
+        "imageUrl": "https://media.kingston.com/kingston/hero/ktc-hero-memory-fury-renegade-rgb-ddr4-1-lg.jpg"
+      }
+    ],
+    "totalAmount": 8270000,
+    "status": "DELIVERED",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2024-05-01T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-05-04T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60014"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98def",
+        "productName": "ASUS ROG Strix Helios",
+        "quantity": 1,
+        "price": 7990000,
+        "imageUrl": "https://dlcdnwebimgs.asus.com/gain/53328FFB-95A4-45DE-A0C0-0F71ED252667/w800"
+      }
+    ],
+    "totalAmount": 7990000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2024-06-15T11:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-06-18T11:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+  {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60015"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98de8",
+        "productName": "MSI MPG A1000G PCIE5 1000W 80 Plus Gold",
+        "quantity": 1,
+        "price": 5290000,
+        "imageUrl": "https://storage-asset.msi.com/global/picture/image/feature/power/MPG-PSU/A1000G-PCIE5/msi-mpg-a1000g-pcie5-psu-1000.png"
+      }
+    ],
+    "totalAmount": 5290000,
+    "status": "SHIPPING",
+    "paymentMethod": "COD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2024-07-01T09:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-07-02T09:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+    {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60016"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dcf",
+        "productName": "ASUS ROG STRIX B650E-F GAMING WIFI",
+        "quantity": 1,
+        "price": 7990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/1_af47f61afd71477fa9f2abe51dedb17e.png"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98dc0",
+        "productName": "AMD Ryzen 7 7800X3D",
+        "quantity": 1,
+        "price": 9990000,
+        "imageUrl": null
+      },
+      {
+        "productId": "68046a82e3cb22568bb98dd3",
+        "productName": "Corsair Vengeance RGB 32GB (2x16GB) DDR5 5600MHz",
+        "quantity": 2,
+        "price": 3990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/corsair_vengeance_rgb_ddr5_3dd51ff5ddf04c0a881e0d81af7c957b.jpg"
+      }
+    ],
+    "totalAmount": 25960000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2024-08-01T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-08-05T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+   {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60017"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98de4",
+        "productName": "ASUS ROG Thor 850W 80 Plus Platinum",
+        "quantity": 1,
+        "price": 5990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/gearvn-asus-rog-thor-850p-3_c2a59c3d7a454d9988a272445db3c85c.jpg"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98de2",
+        "productName": "Seagate Exos 16TB",
+        "quantity": 1,
+        "price": 9990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/71Y88RnMjoL.jpg"
+      }
+    ],
+    "totalAmount": 15980000,
+    "status": "PAID",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2024-09-20T14:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-09-20T14:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+   {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60018"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98ded",
+        "productName": "Corsair iCUE 5000X RGB",
+        "quantity": 1,
+        "price": 5490000,
+        "imageUrl": "https://www.corsair.com/medias/sys_master/images/images/h80/hba/9676388261918/base-5000x-rgb-config/Gallery/5000X_RGB_BLACK_01/-base-5000x-rgb-config-Gallery-5000X-RGB-BLACK-01.png_1200Wx1200H"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98dd8",
+        "productName": "Samsung 990 PRO NVMe SSD 2TB",
+        "quantity": 1,
+        "price": 5990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/990pro_heatsink_perspective_front_20221019_33423e52e0bc431990c6deb386a008fb.png"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98dd2",
+        "productName": "G.Skill Trident Z5 RGB 32GB (2x16GB) DDR5 6000MHz",
+        "quantity": 2,
+        "price": 4990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/4_2ee3bc2aaa4041eabb1a740e318a66b2.jpg"
+      }
+    ],
+    "totalAmount": 21460000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2024-10-28T09:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-11-02T09:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+    {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60019"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc2",
+        "productName": "AMD Ryzen 5 7600X",
+        "quantity": 1,
+        "price": 6990000,
+        "imageUrl": null
+      },
+       {
+        "productId": "68046a82e3cb22568bb98dd0",
+        "productName": "MSI MAG B650 TOMAHAWK WIFI",
+        "quantity": 1,
+        "price": 6490000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/gearvn-msi-mag-b650-tomahawk-wifi-1_c3b62a7c39314c9393d7caa7adb2b54f.png"
+      }
+    ],
+    "totalAmount": 13480000,
+    "status": "SHIPPING",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2024-12-10T11:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-12-12T11:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+    {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6001a"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dbf",
+        "productName": "Intel Core i7-14700K",
+        "quantity": 1,
+        "price": 10990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/hhm1_9c0621ac37894f3d8d273d452c0071a4.jpg"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98dd6",
+        "productName": "Corsair Dominator Platinum RGB 32GB (2x16GB) DDR5 6200MHz",
+        "quantity": 1,
+        "price": 5690000,
+        "imageUrl": "https://m.media-amazon.com/images/I/61H2YhQJJ8L.jpg"
+      }
+    ],
+    "totalAmount": 16680000,
+    "status": "DELIVERED",
+    "paymentMethod": "COD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2025-01-05T09:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-01-08T09:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+    {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6001b"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dc7",
+        "productName": "ASUS TUF Gaming Radeon RX 7800 XT OC",
+        "quantity": 1,
+        "price": 16990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/asus_rx7800xt_e56da2f26e0245fab5ada4c0f66adc53.png"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98de3",
+        "productName": "Corsair RM1000x 1000W 80 Plus Gold",
+        "quantity": 1,
+        "price": 4990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/rm__72c47cb03fb646fdb9d866d7b6f18b4b.png"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98dd4",
+        "productName": "Kingston FURY Beast 16GB (2x8GB) DDR4 3200MHz",
+        "quantity": 2,
+        "price": 1690000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/hx-product-memory-beast-ddr4-rgb-blk-1-zm-lg_b9d2efb77e7249ad9d3a0d2aafdc9abb.jpg"
+      }
+    ],
+    "totalAmount": 25360000,
+    "status": "DELIVERED",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2025-02-01T14:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-02-05T14:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+   {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6001c"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98de9",
+        "productName": "Corsair 7000D AIRFLOW",
+        "quantity": 1,
+        "price": 6990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/1-11_6fc204d5d5ce4e5694d6075135f4d0f2.jpg"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98de1",
+        "productName": "Western Digital Black 4TB",
+        "quantity": 2,
+        "price": 3990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/71nMNj+WGGL.jpg"
+      }
+    ],
+    "totalAmount": 14970000,
+    "status": "DELIVERED",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2025-03-15T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-03-19T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+   {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6001d"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dbd",
+        "productName": "Intel Core i9-14900K",
+        "quantity": 1,
+        "price": 15990000,
+        "imageUrl": null
+      },
+       {
+        "productId": "68046a82e3cb22568bb98dc4",
+        "productName": "ASUS ROG Strix GeForce RTX 4090 OC",
+        "quantity": 1,
+        "price": 45990000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/gearvn-card-man-hinh-asus-rog-strix-rtx-4090-oc-white-edition-24gb-gddr6x-1_0f953c3c6c094ab693a4c435a7e93145.png"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98de5",
+        "productName": "Corsair HX1200 1200W 80 Plus Platinum",
+        "quantity": 1,
+        "price": 6990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/71Lrps+5sML.jpg"
+      }
+    ],
+    "totalAmount": 68970000,
+    "status": "SHIPPING",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2025-04-10T15:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2025-04-11T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+   {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6001e"
+    },
+    "userId": "6803b8af4e9cbc3f0adc7f44",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98ddf",
+        "productName": "Western Digital Blue 2TB",
+        "quantity": 5,
+        "price": 1590000,
+        "imageUrl": "https://product.hstatic.net/1000026716/product/wdblue_1_a89d3d1b9b8a4e4eba009f0ac7e2f7cf.png"
+      }
+    ],
+    "totalAmount": 7950000,
+    "status": "DELIVERED",
+    "paymentMethod": "COD",
+    "shippingAddress": "789 Oak Ave, Villagetown, NY 56789",
+    "createdAt": {
+      "$date": "2024-04-18T10:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-04-22T10:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+   {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f6001f"
+    },
+    "userId": "68047c9756d626608f53d5ab",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98ddc",
+        "productName": "WD Blue SN580 NVMe SSD 1TB",
+        "quantity": 1,
+        "price": 2190000,
+        "imageUrl": "https://m.media-amazon.com/images/I/71JBr1O9vTL.jpg"
+      },
+       {
+        "productId": "68046a82e3cb22568bb98ddd",
+        "productName": "Kingston NV2 NVMe SSD 2TB",
+        "quantity": 1,
+        "price": 3590000,
+        "imageUrl": "https://m.media-amazon.com/images/I/61a86o6cUML.jpg"
+      }
+    ],
+    "totalAmount": 5780000,
+    "status": "DELIVERED",
+    "paymentMethod": "PAYPAL",
+    "shippingAddress": "123 Main St, Anytown, CA 91234",
+    "createdAt": {
+      "$date": "2024-07-07T11:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-07-10T11:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  },
+   {
+    "_id": {
+      "$oid": "680c00c7a1b2c3d4e5f60020"
+    },
+    "userId": "680b6426677e9628d9947e6c",
+    "items": [
+      {
+        "productId": "68046a82e3cb22568bb98dca",
+        "productName": "EVGA GeForce RTX 3080 FTW3 ULTRA",
+        "quantity": 1,
+        "price": 22990000,
+        "imageUrl": "https://m.media-amazon.com/images/I/81-d9eH7nXL.jpg"
+      }
+    ],
+    "totalAmount": 22990000,
+    "status": "PAID",
+    "paymentMethod": "CREDIT_CARD",
+    "shippingAddress": "456 Pine Rd, Cityville, TX 78901",
+    "createdAt": {
+      "$date": "2024-11-11T14:00:00.000Z"
+    },
+    "updatedAt": {
+      "$date": "2024-11-11T14:00:00.000Z"
+    },
+    "_class": "com.example.ecommerceproject.model.Order"
+  }
+]

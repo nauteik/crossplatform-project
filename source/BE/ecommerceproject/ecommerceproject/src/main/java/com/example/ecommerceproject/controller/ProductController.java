@@ -2,6 +2,7 @@ package com.example.ecommerceproject.controller;
 
 import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.Product;
+import com.example.ecommerceproject.model.Tag;
 import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.service.FileStorageService;
 import com.example.ecommerceproject.service.ProductService;
@@ -47,6 +48,19 @@ public class ProductController {
                 ApiStatus.SUCCESS.getCode(),
                 ApiStatus.SUCCESS.getMessage(),
                 products
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/products/paged")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getPagedProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> pageResult = productService.getPagedProducts(page, size);
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                ApiStatus.SUCCESS.getMessage(),
+                pageResult
         );
         return ResponseEntity.ok(response);
     }
@@ -356,5 +370,77 @@ public class ProductController {
                 ApiStatus.SUCCESS.getMessage()
         );
         return ResponseEntity.ok(response);
+    }
+
+    // Tag management for products
+    @GetMapping("/{productId}/tags")
+    public ResponseEntity<ApiResponse<List<Tag>>> getProductTags(@PathVariable String productId) {
+        Product product = productService.getProductById(productId);
+        if (product == null) {
+            ApiResponse<List<Tag>> response = new ApiResponse<>(
+                    ApiStatus.NOT_FOUND.getCode(),
+                    ApiStatus.NOT_FOUND.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        
+        List<Tag> tags = product.getTags();
+        ApiResponse<List<Tag>> response = new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                ApiStatus.SUCCESS.getMessage(),
+                tags
+        );
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{productId}/tags")
+    public ResponseEntity<ApiResponse<Product>> addTagToProduct(
+            @PathVariable String productId,
+            @RequestBody Map<String, String> request) {
+        String tagId = request.get("tagId");
+        if (tagId == null) {
+            ApiResponse<Product> response = new ApiResponse<>(
+                    ApiStatus.BAD_REQUEST.getCode(),
+                    "Tag ID is required"
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        try {
+            Product updatedProduct = productService.addTagToProduct(productId, tagId);
+            ApiResponse<Product> response = new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    ApiStatus.SUCCESS.getMessage(),
+                    updatedProduct
+            );
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            ApiResponse<Product> response = new ApiResponse<>(
+                    ApiStatus.NOT_FOUND.getCode(),
+                    e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
+
+    @DeleteMapping("/{productId}/tags/{tagId}")
+    public ResponseEntity<ApiResponse<Product>> removeTagFromProduct(
+            @PathVariable String productId,
+            @PathVariable String tagId) {
+        try {
+            Product updatedProduct = productService.removeTagFromProduct(productId, tagId);
+            ApiResponse<Product> response = new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    ApiStatus.SUCCESS.getMessage(),
+                    updatedProduct
+            );
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            ApiResponse<Product> response = new ApiResponse<>(
+                    ApiStatus.NOT_FOUND.getCode(),
+                    e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
     }
 }

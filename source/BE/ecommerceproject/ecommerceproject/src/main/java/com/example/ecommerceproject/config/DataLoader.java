@@ -2,6 +2,18 @@ package com.example.ecommerceproject.config;
 
 import com.example.ecommerceproject.model.*;
 import com.example.ecommerceproject.repository.*;
+import com.example.ecommerceproject.model.Brand;
+import com.example.ecommerceproject.model.Cart;
+import com.example.ecommerceproject.model.Product;
+import com.example.ecommerceproject.model.ProductType;
+import com.example.ecommerceproject.model.Tag;
+import com.example.ecommerceproject.model.User;
+import com.example.ecommerceproject.repository.BrandRepository;
+import com.example.ecommerceproject.repository.CartRepository;
+import com.example.ecommerceproject.repository.ProductRepository;
+import com.example.ecommerceproject.repository.ProductTypeRepository;
+import com.example.ecommerceproject.repository.UserRepository;
+import com.example.ecommerceproject.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,6 +23,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+import java.time.LocalDateTime;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -20,16 +34,21 @@ public class DataLoader implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
+    private final TagRepository tagRepository;
     private final PasswordEncoder passwordEncoder;
     private final CouponRepository couponRepository;
 
     @Autowired
-    public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository, PasswordEncoder passwordEncoder, CouponRepository couponRepository) {
+    public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, 
+                      ProductRepository productRepository, UserRepository userRepository, 
+                      CartRepository cartRepository, TagRepository tagRepository, 
+                      PasswordEncoder passwordEncoder, CouponRepository couponRepository) {
         this.brandRepository = brandRepository;
         this.productTypeRepository = productTypeRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.cartRepository = cartRepository;
+        this.tagRepository = tagRepository;
         this.passwordEncoder = passwordEncoder;
         this.couponRepository = couponRepository;
     }
@@ -48,9 +67,15 @@ public class DataLoader implements CommandLineRunner {
         // Tạo Product Types (Loại sản phẩm)
         List<ProductType> productTypes = createProductTypes();
         
+        // Tạo Tags
+        List<Tag> tags = createTags();
+        
         // Tạo Products (Sản phẩm)
-        createProducts(brands, productTypes);
+        List<Product> products = createProducts(brands, productTypes);
 
+        // Gắn tags cho sản phẩm
+        assignTagsToProducts(products, tags);
+        
         // Tạo Users và Carts
         createUsersAndCarts();
 
@@ -89,13 +114,36 @@ public class DataLoader implements CommandLineRunner {
         for (String name : typeNames) {
             ProductType type = new ProductType();
             type.setName(name);
+            type.setImage(name.toLowerCase() + ".png");
             productTypes.add(productTypeRepository.save(type));
         }
         
         return productTypes;
     }
 
-    private void createProducts(List<Brand> brands, List<ProductType> productTypes) {
+    private List<Tag> createTags() {
+        List<String[]> tagData = Arrays.asList(
+            new String[]{"Khuyến mãi", "#FF0000", "Sản phẩm đang trong chương trình khuyến mãi"}, 
+            new String[]{"Mới", "#00FF00", "Sản phẩm mới ra mắt"},
+            new String[]{"Bán chạy", "#0000FF", "Sản phẩm bán chạy nhất"}
+        );
+        
+        List<Tag> tags = new ArrayList<>();
+        
+        for (String[] data : tagData) {
+            Tag tag = new Tag();
+            tag.setName(data[0]);
+            tag.setColor(data[1]);
+            tag.setDescription(data[2]);
+            tag.setActive(true);
+            tag.setCreatedAt(LocalDateTime.now());
+            tags.add(tagRepository.save(tag));
+        }
+        
+        return tags;
+    }
+
+    private List<Product> createProducts(List<Brand> brands, List<ProductType> productTypes) {
         // Lấy các ProductType theo tên để dễ sử dụng
         ProductType cpuType = productTypeRepository.findByName("CPU");
         ProductType gpuType = productTypeRepository.findByName("GPU");
@@ -363,6 +411,40 @@ public class DataLoader implements CommandLineRunner {
         allProducts.addAll(caseProducts);
         
         productRepository.saveAll(allProducts);
+        
+        return allProducts;
+    }
+    
+    private void assignTagsToProducts(List<Product> products, List<Tag> tags) {
+        // Lấy các tags theo tên
+        Tag promotional = tagRepository.findByName("Khuyến mãi");
+        Tag newTag = tagRepository.findByName("Mới");
+        Tag bestSeller = tagRepository.findByName("Bán chạy");
+     
+        for (Product product : products) {
+            List<Tag> productTags = new ArrayList<>();
+            
+            // Sản phẩm có giảm giá sẽ được gắn tag Khuyến mãi
+            if (product.getDiscountPercent() > 0) {
+                productTags.add(promotional);
+            }
+            
+            // Sản phẩm có soldCount cao (> 150) sẽ được gắn tag Bán chạy
+            if (product.getSoldCount() > 150) {
+                productTags.add(bestSeller);
+            }
+            
+            // Một số sản phẩm ngẫu nhiên sẽ được gắn tag Mới
+            if (product.getCreatedAt().isAfter(LocalDateTime.now().minusDays(30))) {
+                productTags.add(newTag);
+            }
+            
+            // Cập nhật danh sách tags cho sản phẩm
+            if (!productTags.isEmpty()) {
+                product.setTags(productTags);
+                productRepository.save(product);
+            }
+        }
     }
     
     private Product createProduct(String name, double price, int quantity, String description, 
@@ -379,6 +461,7 @@ public class DataLoader implements CommandLineRunner {
         product.setDiscountPercent(discountPercent);
         product.setBrand(brand);
         product.setProductType(productType);
+        product.setTags(new ArrayList<>());
         return product;
     }
 

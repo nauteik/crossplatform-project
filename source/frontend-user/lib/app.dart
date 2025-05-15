@@ -4,13 +4,18 @@ import 'package:provider/provider.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/cart/providers/cart_provider.dart';
 import 'features/product/providers/product_provider.dart';
+import 'features/product/providers/product_type_provider.dart';
 import 'features/navigation/providers/navigation_provider.dart';
 import 'features/payment/payment_feature.dart'; // Import PaymentFeature
+import 'features/support/presentation/providers/message_provider.dart'; // Thêm import MessageProvider
 import 'widgets/main_layout.dart';
 import 'core/routes/app_router.dart';
 import 'package:frontend_user/features/build_pc/providers/pc_provider.dart';
 import 'package:frontend_user/features/build_pc/presentation/screens/build_configuration_screen.dart';
 import 'package:frontend_user/features/build_pc/presentation/screens/saved_builds_screen.dart';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -21,10 +26,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()), // Keep one CartProvider
         ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => ProductTypeProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
         // Add PaymentProvider using the static method from PaymentFeature
         ...PaymentFeature.getProviders(),
         ChangeNotifierProvider(create: (context) => PCProvider()),
+        ChangeNotifierProvider(create: (context) => MessageProvider()), // Thêm MessageProvider
       ],
       child: MaterialApp(
         title: 'Personal Computer Shop',
@@ -33,6 +40,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
           useMaterial3: false,
+          scaffoldBackgroundColor: kIsWeb ? const Color(0xFFF5F5F5) : null,
           pageTransitionsTheme: const PageTransitionsTheme(
             builders: {
               TargetPlatform.android: CupertinoPageTransitionsBuilder(),

@@ -1,3 +1,14 @@
 {
-    "cmake.ignoreCMakeListsMissing": true
+    "cmake.ignoreCMakeListsMissing": true,
+    "[java]": {
+        "java.configuration.checkProjectSettingsExclusions": false,
+        "java.import.gradle.enabled": false
+    },
+    "files.exclude": {
+        "**/.gradle": true
+    },
+    "search.exclude": {
+        "**/.gradle": true
+    }
+
 }

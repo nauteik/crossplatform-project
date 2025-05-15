@@ -8,7 +8,9 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.time.LocalDateTime;
 
 @Document(collection = "products")
 @Data
@@ -26,6 +28,7 @@ public class Product {
     private List<String> imageUrls; // Danh sách các ảnh khác
     private int soldCount;
     private double discountPercent;
+    private LocalDateTime createdAt = LocalDateTime.now(); // Thời gian tạo sản phẩm
     
     // Technical specifications for components
     private Map<String, String> specifications = new HashMap<>();
@@ -35,6 +38,9 @@ public class Product {
     
     @DBRef
     private ProductType productType;
+    
+    @DBRef
+    private List<Tag> tags = new ArrayList<>();
     
     // Helper methods for component compatibility
     public String getSocketType() {

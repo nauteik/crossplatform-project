@@ -259,5 +259,23 @@ public class UserController {
                     ));
         }
     }
+
+    @GetMapping("/default-admin")
+    public ResponseEntity<ApiResponse<User>> getDefaultAdmin() {
+        User admin = userService.getDefaultAdmin();
+        if (admin != null) {
+            ApiResponse<User> response = new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    ApiStatus.SUCCESS.getMessage(),
+                    admin
+            );
+            return ResponseEntity.ok(response);
+        }
+        ApiResponse<User> response = new ApiResponse<>(
+                ApiStatus.NOT_FOUND.getCode(),
+                ApiStatus.NOT_FOUND.getMessage()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
 }
 

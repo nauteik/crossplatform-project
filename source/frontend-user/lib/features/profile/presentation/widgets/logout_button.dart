@@ -33,17 +33,10 @@ class LogoutButton extends StatelessWidget {
                     Navigator.pop(context);
                     
                     // Thực hiện đăng xuất
-                    authProvider.logout();
+                    authProvider.logout(context);
                     
-                    // Đặt lại chỉ mục và cập nhật màn hình hiển thị về trang chủ
-                    navigationProvider.setBottomNavIndex(0);
-                    
-                    // Kiểm tra xem người dùng có đang ở màn hình Profile không
-                    // Nếu đúng vậy, thì cập nhật UI để hiển thị trang chủ
-                    if (navigationProvider.currentIndex == 2) {
-                      // Cập nhật màn hình hiển thị về trang chủ
-                      navigationProvider.setCurrentScreen(const HomeScreen());
-                    }
+                    // Sử dụng phương thức resetToHome để quay về trang chủ
+                    navigationProvider.resetToHome();
                   },
                   child: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
                 ),
