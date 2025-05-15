@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/utils/navigation_helper.dart';
 import '../../../../core/constants/api_constants.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ProductCard extends StatelessWidget {
   final String id;
@@ -26,207 +27,224 @@ class ProductCard extends StatelessWidget {
     final discountedPrice = price * (1 - discountPercent / 100);
     final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
     
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(0.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+    // Sử dụng LayoutBuilder để lấy kích thước thực của card
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        // Tính toán kích thước dựa trên không gian có sẵn
+        final width = constraints.maxWidth;
+        final isNarrow = width < 150;
+        
+        // Điều chỉnh kích thước dựa trên không gian có sẵn
+        final imageHeight = isNarrow ? 100.0 : 120.0;
+        final fontSize = isNarrow ? 10.0 : 12.0;
+        final priceSize = isNarrow ? 11.0 : 13.0;
+        final textPadding = isNarrow ? 4.0 : 6.0;
+        final iconSize = 12.0;
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.15),
+                spreadRadius: 1,
+                blurRadius: 3,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Material(
-        borderRadius: BorderRadius.circular(0.5),
-        color: Colors.white,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(0.5),
-          onTap: () {
-            NavigationHelper.navigateToProductDetail(context, id);
-          },
-          // Use LayoutBuilder to constrain child sizes
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => NavigationHelper.navigateToProductDetail(context, id),
+              child: Stack(
                 children: [
-                  // Image Section - Fixed height based on constraints
-                  SizedBox(
-                    height: constraints.maxWidth, // Square image
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Product Image
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(0.5)),
-                          child: Image.network(
-                            '${ApiConstants.baseApiUrl}/api/images/$primaryImageUrl',
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                color: Colors.grey[200],
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded /
-                                            (loadingProgress.expectedTotalBytes ?? 1)
-                                        : null,
-                                    strokeWidth: 2,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Phần ảnh sản phẩm với tỷ lệ hình vuông
+                      AspectRatio(
+                        aspectRatio: 1.0, // Tỷ lệ hình vuông cho ảnh
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // Ảnh sản phẩm
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(4),
+                                topRight: Radius.circular(4),
+                              ),
+                              child: Image.network(
+                                '${ApiConstants.baseApiUrl}/api/images/$primaryImageUrl',
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.broken_image, 
+                                    size: 30, 
+                                    color: Colors.grey,
                                   ),
                                 ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey[300],
-                                child: const Center(child: Icon(Icons.image_not_supported_outlined, size: 32)),
-                              );
-                            },
-                          ),
-                        ),
-                        
-                        // Discount badge
-                        if (discountPercent > 0)
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(4),
                               ),
-                              child: Text(
-                                '-${discountPercent.toInt()}%',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
+                            ),
+                            
+                            // Tag giảm giá
+                            if (discountPercent > 0)
+                              Positioned(
+                                left: 0,
+                                top: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  color: Colors.red,
+                                  child: Text(
+                                    '-${discountPercent.toInt()}%',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: fontSize - 1,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              
+                            // Nút yêu thích
+                            Positioned(
+                              right: 4,
+                              top: 4,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {},
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.7),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.favorite_outline,
+                                      size: iconSize,
+                                      color: Colors.red,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          
-                        // Quick action button
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
-                            child: IconButton(
-                              iconSize: 20,
-                              constraints: const BoxConstraints(
-                                minWidth: 32,
-                                minHeight: 32,
-                              ),
-                              padding: EdgeInsets.zero,
-                              icon: const Icon(Icons.favorite_border),
-                              color: Colors.black54,
-                              onPressed: () {
-                                // Handle favorite button tap
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Product Info
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Product name
-                          const SizedBox(height: 1), // Reduced spacing
-                          Text(
-                          name,
-                          maxLines: 1,  // Reduced to 1 line
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                          ),
-                          Row(
-                          children: [
-                            // Discounted price
-                            Expanded(
-                            child: Text(
-                              currencyFormatter.format(discountedPrice),
-                              style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                              fontSize: 14,  // Slightly smaller
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            ),
-                            // Original price if discounted
-                            if (discountPercent > 0)
-                            Text(
-                              currencyFormatter.format(price),
-                              style: const TextStyle(
-                              decoration: TextDecoration.lineThrough,
-                              fontSize: 11,  // Smaller
-                              color: Colors.grey,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
                           ],
-                          ),
-                          
-                          const SizedBox(height: 3), // Reduced spacing
-                          
-                          // Rating on the left, sold count on the right
-                          Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Rating on left
-                            Row(
+                        ),
+                      ),
+                      
+                      // Phần thông tin sản phẩm
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.all(textPadding),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 15),
-                              const SizedBox(width: 2),
-                              const Text(
-                              '4.8',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.black54,
+                              // Tên sản phẩm
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: fontSize),
+                                ),
                               ),
+                              
+                              const Spacer(),
+                              
+                              // Giá sản phẩm
+                              Text(
+                                currencyFormatter.format(discountedPrice),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: priceSize,
+                                  color: Colors.red,
+                                ),
+                              ),
+                              
+                              // Giá gốc nếu có giảm giá
+                              if (discountPercent > 0)
+                                Text(
+                                  currencyFormatter.format(price),
+                                  style: TextStyle(
+                                    decoration: TextDecoration.lineThrough,
+                                    fontSize: fontSize - 1,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              
+                              // Số lượng đã bán và đánh giá
+                              SizedBox(height: textPadding / 2),
+                              Row(
+                                children: [
+                                  Icon(Icons.star, color: Colors.amber, size: iconSize),
+                                  const SizedBox(width: 2),
+                                  Text('4.8', 
+                                    style: TextStyle(fontSize: fontSize - 1),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    'Đã bán $soldCount',
+                                    style: TextStyle(fontSize: fontSize - 1),
+                                  ),
+                                ],
                               ),
                             ],
-                            ),
-                            
-                            // Sold count on right
-                            Text(
-                            'Đã bán: $soldCount',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
                           ),
-                        ],
+                        ),
                       ),
+                    ],
+                  ),
+                  
+                  // Debug Overlay: Hiển thị cảnh báo overflow (chỉ hiển thị trong chế độ debug)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: LayoutBuilder(
+                      builder: (context, innerConstraints) {
+                        return OverflowBox(
+                          alignment: Alignment.bottomCenter,
+                          maxHeight: double.infinity,
+                          child: Builder(
+                            builder: (context) {
+                              final RenderBox? box = context.findRenderObject() as RenderBox?;
+                              if (box != null && box.hasSize) {
+                                final overflowAmount = box.size.height - constraints.maxHeight;
+                                if (overflowAmount > 0) {
+                                  return Container(
+                                    color: Colors.yellow.withOpacity(0.7),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.warning, size: 10, color: Colors.red),
+                                        Text(
+                                          ' BOTTOM OVERFLOWED BY ${overflowAmount.toStringAsFixed(1)} PIXELS',
+                                          style: TextStyle(fontSize: 9, color: Colors.red, fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              }
+                              return const SizedBox();
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
-              );
-            }
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

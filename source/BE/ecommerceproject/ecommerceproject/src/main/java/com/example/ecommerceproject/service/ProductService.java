@@ -4,16 +4,24 @@ import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.Brand;
 import com.example.ecommerceproject.model.Product;
 import com.example.ecommerceproject.model.ProductType;
+import com.example.ecommerceproject.model.Tag;
 import com.example.ecommerceproject.repository.BrandRepository;
 import com.example.ecommerceproject.repository.ProductRepository;
 import com.example.ecommerceproject.repository.ProductTypeRepository;
+import com.example.ecommerceproject.repository.TagRepository;
 import com.example.ecommerceproject.response.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -21,23 +29,38 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final BrandRepository brandRepository;
     private final ProductTypeRepository productTypeRepository;
+    private final TagRepository tagRepository;
 
     @Autowired
     public ProductService(ProductRepository productRepository, 
                          BrandRepository brandRepository, 
-                         ProductTypeRepository productTypeRepository) {
+                         ProductTypeRepository productTypeRepository,
+                         TagRepository tagRepository) {
         this.productRepository = productRepository;
         this.brandRepository = brandRepository;
         this.productTypeRepository = productTypeRepository;
+        this.tagRepository = tagRepository;
     }
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
+    public Map<String, Object> getPagedProducts(int page, int size) {
+        Pageable paging = PageRequest.of(page, size);
+        Page<Product> pageProducts = productRepository.findAll(paging);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("products", pageProducts.getContent());
+        result.put("currentPage", pageProducts.getNumber());
+        result.put("totalItems", pageProducts.getTotalElements());
+        result.put("totalPages", pageProducts.getTotalPages());
+        
+        return result;
+    }
+
     public Product getProductById(String id) {
-        Optional<Product> product = productRepository.findById(id);
-        return product.orElse(null);
+        return productRepository.findById(id).orElse(null);
     }
 
     public List<Product> getProductsByBrand(String brandId) {
@@ -101,12 +124,14 @@ public class ProductService {
     }
 
     public void applyDiscountToProductType(String productTypeId, double discountPercent) {
-        Optional<ProductType> optionalProductType = productTypeRepository.findById(productTypeId);
-        if (optionalProductType.isPresent()) {
-            List<Product> products = productRepository.findByProductType(optionalProductType.get());
-            products.forEach(product -> product.setDiscountPercent(discountPercent));
-            productRepository.saveAll(products);
-        }
+        Optional<ProductType> productTypeOptional = productTypeRepository.findById(productTypeId);
+        productTypeOptional.ifPresent(productType -> {
+            List<Product> products = productRepository.findByProductType(productType);
+            for (Product product : products) {
+                product.setDiscountPercent(discountPercent);
+                productRepository.save(product);
+            }
+        });
     }
 
     public void increaseQuantity(String productId, int quantity) {
@@ -127,5 +152,45 @@ public class ProductService {
             product.setQuantity(newQuantity);
             productRepository.save(product);
         }
+    }
+
+    // Tag management methods
+    public Product addTagToProduct(String productId, String tagId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+        
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new RuntimeException("Tag not found with id: " + tagId));
+        
+        // Kiểm tra xem tag đã tồn tại trong danh sách của sản phẩm chưa
+        if (product.getTags() == null) {
+            product.setTags(new ArrayList<>());
+        }
+        
+        // Kiểm tra xem tag đã tồn tại chưa để tránh trùng lặp
+        boolean tagExists = product.getTags().stream()
+                .anyMatch(t -> t.getId().equals(tagId));
+        
+        if (!tagExists) {
+            product.getTags().add(tag);
+            return productRepository.save(product);
+        }
+        
+        return product;
+    }
+
+    public Product removeTagFromProduct(String productId, String tagId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+        
+        if (product.getTags() == null) {
+            return product;
+        }
+        
+        product.setTags(product.getTags().stream()
+                .filter(tag -> !tag.getId().equals(tagId))
+                .collect(Collectors.toList()));
+        
+        return productRepository.save(product);
     }
 } 

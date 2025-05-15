@@ -11,6 +11,8 @@ class ProductModel {
   final Map<String, dynamic> brand;
   final Map<String, dynamic> productType;
   final Map<String, dynamic>? specifications; // Add this field for product specifications
+  final int? createdAt; // Thêm trường createdAt
+  final List<dynamic> tags; // Thêm trường tags
 
   ProductModel({
     required this.id,
@@ -25,22 +27,84 @@ class ProductModel {
     required this.brand,
     required this.productType,
     this.specifications, // Make it optional for backward compatibility
+    this.createdAt, // Thêm vào constructor
+    this.tags = const [], // Mặc định là mảng rỗng
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    // Xử lý brand để đảm bảo luôn là Map<String, dynamic>
+    Map<String, dynamic> brandMap = {};
+    if (json['brand'] != null) {
+      if (json['brand'] is Map) {
+        brandMap = Map<String, dynamic>.from(json['brand']);
+      }
+    }
+
+    // Xử lý productType để đảm bảo luôn là Map<String, dynamic>
+    Map<String, dynamic> typeMap = {};
+    if (json['productType'] != null) {
+      if (json['productType'] is Map) {
+        try {
+          typeMap = Map<String, dynamic>.from(json['productType']);
+        } catch (e) {
+          print('Lỗi khi xử lý productType: $e');
+        }
+      }
+    }
+
+    // Xử lý tags để đảm bảo luôn là List và xử lý an toàn
+    List<dynamic> tagsList = [];
+    if (json['tags'] != null) {
+      if (json['tags'] is List) {
+        try {
+          tagsList = List<dynamic>.from(json['tags'].map((tag) {
+            if (tag is Map) {
+              return Map<String, dynamic>.from(tag);
+            }
+            return tag;
+          }));
+        } catch (e) {
+          print('Lỗi khi xử lý tags: $e');
+        }
+      }
+    }
+
+    // Xử lý imageUrls để đảm bảo luôn là List<String>
+    List<String> imageUrlsList = [];
+    if (json['imageUrls'] != null) {
+      if (json['imageUrls'] is List) {
+        imageUrlsList = (json['imageUrls'] as List)
+            .map((item) => item?.toString() ?? '')
+            .where((item) => item.isNotEmpty)
+            .toList();
+      }
+    }
+
     return ProductModel(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      price: (json['price'] ?? 0).toDouble(),
-      quantity: json['quantity'] ?? 0,
-      description: json['description'] ?? '',
-      primaryImageUrl: json['primaryImageUrl'] ?? '',
-      imageUrls: List<String>.from(json['imageUrls'] ?? []),
-      soldCount: json['soldCount'] ?? 0,
-      discountPercent: (json['discountPercent'] ?? 0).toDouble(),
-      brand: json['brand'] ?? {},
-      productType: json['productType'] ?? {},
-      specifications: json['specifications'] as Map<String, dynamic>?, // Parse specifications from JSON
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      price: (json['price'] != null) 
+          ? double.tryParse(json['price'].toString()) ?? 0.0 
+          : 0.0,
+      quantity: (json['quantity'] != null) 
+          ? int.tryParse(json['quantity'].toString()) ?? 0 
+          : 0,
+      description: json['description']?.toString() ?? '',
+      primaryImageUrl: json['primaryImageUrl']?.toString() ?? '',
+      imageUrls: imageUrlsList,
+      soldCount: (json['soldCount'] != null) 
+          ? int.tryParse(json['soldCount'].toString()) ?? 0 
+          : 0,
+      discountPercent: (json['discountPercent'] != null) 
+          ? double.tryParse(json['discountPercent'].toString()) ?? 0.0 
+          : 0.0,
+      brand: brandMap,
+      productType: typeMap,
+      specifications: json['specifications'] is Map ? Map<String, dynamic>.from(json['specifications']) : null,
+      createdAt: json['createdAt'] != null 
+          ? int.tryParse(json['createdAt'].toString()) ?? DateTime.now().millisecondsSinceEpoch 
+          : DateTime.now().millisecondsSinceEpoch,
+      tags: tagsList,
     );
   }
 
@@ -58,6 +122,8 @@ class ProductModel {
       'brand': brand,
       'productType': productType,
       'specifications': specifications,
+      'createdAt': createdAt,
+      'tags': tags,
     };
   }
 }

@@ -19,7 +19,7 @@ class BottomNavigation extends StatelessWidget {
         onTap: (index) {
           navigationProvider.setBottomNavIndex(index);
         },
-        selectedItemColor: Colors.blue,
+        selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         showSelectedLabels: true,
@@ -29,6 +29,10 @@ class BottomNavigation extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Trang chủ',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category),
+            label: 'Danh mục',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.computer),

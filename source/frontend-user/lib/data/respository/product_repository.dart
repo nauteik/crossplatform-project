@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import '../../../../data/model/product_model.dart';
 import '../../../../data/model/api_response_model.dart';
@@ -6,12 +8,14 @@ import '../../../../core/constants/api_constants.dart';
 
 class ProductRepository {
   final String baseUrl = ApiConstants.baseApiUrl;
+  final Duration timeout = const Duration(seconds: 15);
 
   // Lấy tất cả sản phẩm
   Future<ApiResponse<List<ProductModel>>> getProducts() async {
     try {
-      final response =
-          await http.get(Uri.parse('$baseUrl/api/product/products'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/product/products')
+      ).timeout(timeout);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
@@ -23,8 +27,38 @@ class ProductRepository {
               .toList(),
         );
       } else {
-        throw Exception('Failed to load products');
+        throw Exception('Failed to load products: Status code ${response.statusCode}');
       }
+    } on SocketException {
+      throw Exception('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+    } on TimeoutException {
+      throw Exception('Kết nối đến server quá thời gian chờ. Vui lòng thử lại sau.');
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
+  // Lấy sản phẩm theo phân trang
+  Future<ApiResponse<Map<String, dynamic>>> getPagedProducts(int page, int size) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/product/products/paged?page=$page&size=$size'),
+      ).timeout(timeout);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        return ApiResponse.fromJson(
+          responseData,
+          (data) => data as Map<String, dynamic>,
+        );
+      } else {
+        throw Exception('Failed to load paged products: Status code ${response.statusCode}');
+      }
+    } on SocketException {
+      throw Exception('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.');
+    } on TimeoutException {
+      throw Exception('Kết nối đến server quá thời gian chờ. Vui lòng thử lại sau.');
     } catch (e) {
       throw Exception('Error: $e');
     }
