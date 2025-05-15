@@ -310,8 +310,12 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
           builder: (context, constraints) {
             final width = constraints.maxWidth;
             
+            // Điều chỉnh số cột dựa trên chiều rộng màn hình
             int productColumns;
             int typeColumns;
+            
+            // Khai báo biến containerWidth để điều chỉnh độ rộng của container
+            double containerWidth = width;
             
             if (width >= 1400) {
               productColumns = 6;
@@ -325,12 +329,17 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
             } else if (width >= 700) {
               productColumns = 3;
               typeColumns = 5;
+              // Điều chỉnh độ rộng container cho 3 cột
+              containerWidth = width * 0.9;
             } else if (width >= 500) {
               productColumns = 3;
               typeColumns = 4;
+              // Điều chỉnh độ rộng container cho 3 cột
+              containerWidth = width * 0.95;
             } else {
               productColumns = 2;
               typeColumns = 2;
+              // Không cần điều chỉnh độ rộng container cho 2 cột
             }
             
             final isDesktop = width >= 1200;
@@ -340,7 +349,7 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
             Widget contentWithConstraints(Widget child) {
              return Center(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 1200),
+                  constraints: BoxConstraints(maxWidth: isDesktop ? 1200 : containerWidth),
                   width: double.infinity,
                   child: child,
                 ),
@@ -613,6 +622,25 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     final isSmallScreen = width < 360;
     final isDesktop = width >= 1200;
     
+    // Điều chỉnh mainAxisSpacing và crossAxisSpacing theo số cột
+    double mainAxisSpacing = isSmallScreen ? 4.0 : 8.0;
+    double crossAxisSpacing = isSmallScreen ? 4.0 : 8.0;
+    
+    // Điều chỉnh khoảng cách cho trường hợp ít cột
+    if (crossAxisCount <= 3 && width >= 500) {
+      crossAxisSpacing = 12.0;
+    }
+    
+    // Điều chỉnh childAspectRatio dựa trên số cột
+    double childAspectRatio;
+    if (crossAxisCount <= 2) {
+      childAspectRatio = 0.65; // Cho phép nhiều không gian hơn khi hiển thị 2 cột
+    } else if (crossAxisCount == 3) {
+      childAspectRatio = 0.68; // Cho trường hợp 3 cột
+    } else {
+      childAspectRatio = 0.7; // Giữ nguyên tỷ lệ cho 4+ cột
+    }
+    
     Widget buildGridContent() {
       return Column(
         children: [
@@ -622,9 +650,9 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
               padding: EdgeInsets.all(isSmallScreen ? 4.0 : 8.0),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: isSmallScreen ? 4.0 : 8.0,
-                mainAxisSpacing: isSmallScreen ? 4.0 : 8.0,
+                childAspectRatio: childAspectRatio,
+                crossAxisSpacing: crossAxisSpacing,
+                mainAxisSpacing: mainAxisSpacing,
               ),
               itemCount: products.length,
               itemBuilder: (context, index) {
@@ -654,9 +682,15 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     }
     
     if (isDesktop) {
+      // Tạo container với chiều rộng thích hợp dựa trên số cột
+      double containerMaxWidth = 1200.0;
+      if (crossAxisCount <= 3) {
+        containerMaxWidth = crossAxisCount * 280.0; // Điều chỉnh chiều rộng dựa trên số cột
+      }
+      
       return Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: BoxConstraints(maxWidth: containerMaxWidth),
           width: double.infinity,
           child: buildGridContent(),
         ),

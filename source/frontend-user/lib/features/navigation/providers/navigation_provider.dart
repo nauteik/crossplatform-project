@@ -3,6 +3,7 @@ import '../../home/presentation/screens/home_screen.dart';
 import '../../build_pc/presentation/screens/build_configuration_screen.dart';
 import '../../product/presentation/screens/product_category_screen.dart';
 import '../../profile/presentation/screens/profile_screen.dart';
+import '../../support/presentation/screens/chat_support_screen.dart';
 
 class NavigationProvider extends ChangeNotifier {
   Widget _currentScreen;
@@ -21,9 +22,18 @@ class NavigationProvider extends ChangeNotifier {
       const HomeScreen(),
       const ProductCategoryScreen(),
       const BuildConfigurationScreen(),
+      const ChatSupportScreen(),
       const ProfileScreen(),
     ];
     _currentScreen = _screens[0];
+  }
+  
+  void updateChatUserId(String userId) {
+    // Không cần cập nhật màn hình nữa vì ChatSupportScreen lấy userId từ AuthProvider
+    
+    if (_currentIndex == 4) {
+      notifyListeners();
+    }
   }
   
   Widget get currentScreen => _currentScreen;

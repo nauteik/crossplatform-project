@@ -72,7 +72,7 @@ class ProfileHeader extends StatelessWidget {
               // Nếu có sự thay đổi (result == true), có thể refresh lại thông tin
               if (result == true) {
                 // Refresh thông tin người dùng
-                authProvider.refreshUserData();
+                authProvider.refreshUserData(context);
               }
             },
             icon: const Icon(Icons.edit, color: Colors.white),

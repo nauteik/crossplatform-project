@@ -32,19 +32,47 @@ class ProductCard extends StatelessWidget {
       builder: (BuildContext context, BoxConstraints constraints) {
         // Tính toán kích thước dựa trên không gian có sẵn
         final width = constraints.maxWidth;
-        final isNarrow = width < 150;
+        final deviceWidth = MediaQuery.of(context).size.width;
         
-        // Điều chỉnh kích thước dựa trên không gian có sẵn
-        final imageHeight = isNarrow ? 100.0 : 120.0;
-        final fontSize = isNarrow ? 10.0 : 12.0;
-        final priceSize = isNarrow ? 11.0 : 13.0;
-        final textPadding = isNarrow ? 4.0 : 6.0;
-        final iconSize = 12.0;
+        // Điều chỉnh kích thước dựa trên chiều rộng thiết bị và số cột
+        bool isNarrow = width < 150;
+        double imageHeight;
+        double fontSize;
+        double priceSize;
+        double textPadding;
+        double iconSize;
+        
+        // Phát hiện số cột từ kích thước thiết bị
+        int estimatedColumns = (deviceWidth / width).floor();
+        
+        if (estimatedColumns <= 2) {
+          // Thiết lập cho 2 cột
+          isNarrow = false;
+          imageHeight = 120.0;
+          fontSize = 12.0;
+          priceSize = 13.0;
+          textPadding = 8.0;
+          iconSize = 14.0;
+        } else if (estimatedColumns == 3) {
+          // Thiết lập cho 3 cột
+          imageHeight = 120.0;
+          fontSize = 11.0;
+          priceSize = 12.0;
+          textPadding = 6.0;
+          iconSize = 12.0;
+        } else {
+          // Thiết lập cho 4+ cột
+          imageHeight = isNarrow ? 100.0 : 120.0;
+          fontSize = isNarrow ? 10.0 : 12.0;
+          priceSize = isNarrow ? 11.0 : 13.0;
+          textPadding = isNarrow ? 4.0 : 6.0;
+          iconSize = 12.0;
+        }
         
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.15),
@@ -56,7 +84,9 @@ class ProductCard extends StatelessWidget {
           ),
           child: Material(
             color: Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
             child: InkWell(
+              borderRadius: BorderRadius.circular(8),
               onTap: () => NavigationHelper.navigateToProductDetail(context, id),
               child: Stack(
                 children: [
@@ -72,17 +102,17 @@ class ProductCard extends StatelessWidget {
                             // Ảnh sản phẩm
                             ClipRRect(
                               borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(4),
-                                topRight: Radius.circular(4),
+                                topLeft: Radius.circular(8),
+                                topRight: Radius.circular(8),
                               ),
                               child: Image.network(
                                 '${ApiConstants.baseApiUrl}/api/images/$primaryImageUrl',
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Container(
                                   color: Colors.grey[200],
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.broken_image, 
-                                    size: 30, 
+                                    size: width / 5, 
                                     color: Colors.grey,
                                   ),
                                 ),
@@ -96,7 +126,13 @@ class ProductCard extends StatelessWidget {
                                 top: 0,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                  color: Colors.red,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(8),
+                                      bottomRight: Radius.circular(4),
+                                    ),
+                                  ),
                                   child: Text(
                                     '-${discountPercent.toInt()}%',
                                     style: TextStyle(
@@ -108,30 +144,30 @@ class ProductCard extends StatelessWidget {
                                 ),
                               ),
                               
-                            // Nút yêu thích
-                            Positioned(
-                              right: 4,
-                              top: 4,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {},
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.7),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.favorite_outline,
-                                      size: iconSize,
-                                      color: Colors.red,
+                              // Nút yêu thích
+                              Positioned(
+                                right: 4,
+                                top: 4,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {},
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.7),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.favorite_outline,
+                                        size: iconSize,
+                                        color: Colors.red,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -146,15 +182,21 @@ class ProductCard extends StatelessWidget {
                             children: [
                               // Tên sản phẩm
                               Flexible(
+                                flex: 3,
                                 child: Text(
                                   name,
-                                  maxLines: 2,
+                                  maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: fontSize),
+                                  style: TextStyle(
+                                    fontSize: fontSize,
+                                    height: 1.2,
+                                  ),
                                 ),
                               ),
                               
-                              const Spacer(),
+                              SizedBox(height: textPadding / 2),
+                              
+                              const Spacer(flex: 1),
                               
                               // Giá sản phẩm
                               Text(
@@ -198,46 +240,6 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ),
-                  
-                  // Debug Overlay: Hiển thị cảnh báo overflow (chỉ hiển thị trong chế độ debug)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: LayoutBuilder(
-                      builder: (context, innerConstraints) {
-                        return OverflowBox(
-                          alignment: Alignment.bottomCenter,
-                          maxHeight: double.infinity,
-                          child: Builder(
-                            builder: (context) {
-                              final RenderBox? box = context.findRenderObject() as RenderBox?;
-                              if (box != null && box.hasSize) {
-                                final overflowAmount = box.size.height - constraints.maxHeight;
-                                if (overflowAmount > 0) {
-                                  return Container(
-                                    color: Colors.yellow.withOpacity(0.7),
-                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.warning, size: 10, color: Colors.red),
-                                        Text(
-                                          ' BOTTOM OVERFLOWED BY ${overflowAmount.toStringAsFixed(1)} PIXELS',
-                                          style: TextStyle(fontSize: 9, color: Colors.red, fontWeight: FontWeight.bold),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                              }
-                              return const SizedBox();
-                            },
-                          ),
-                        );
-                      },
-                    ),
                   ),
                 ],
               ),

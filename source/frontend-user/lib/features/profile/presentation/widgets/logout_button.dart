@@ -33,7 +33,7 @@ class LogoutButton extends StatelessWidget {
                     Navigator.pop(context);
                     
                     // Thực hiện đăng xuất
-                    authProvider.logout();
+                    authProvider.logout(context);
                     
                     // Sử dụng phương thức resetToHome để quay về trang chủ
                     navigationProvider.resetToHome();

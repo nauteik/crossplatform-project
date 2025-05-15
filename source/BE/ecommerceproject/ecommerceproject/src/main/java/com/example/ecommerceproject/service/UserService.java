@@ -150,5 +150,13 @@ public class UserService implements UserDetailsService {
     public int getUserCount() {
         return (int) userRepository.count();
     }
+
+    // Lấy admin mặc định (đầu tiên có role = 1)
+    public User getDefaultAdmin() {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getRole() == 1)
+                .findFirst()
+                .orElse(null);
+    }
 }
 

@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _isLoading = true;
+        _errorMessage = null;
       });
 
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -48,42 +50,23 @@ class _LoginScreenState extends State<LoginScreen> {
         final success = await authProvider.login(
           _usernameController.text.trim(),
           _passwordController.text,
+          context, // Truyền context để cập nhật ChatSupportScreen
         );
 
         if (success && mounted) {
           // Đăng nhập thành công
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đăng nhập thành công')),
-          );
-
-          // Quay lại màn hình trước đó
-          Navigator.pop(context);
+          Navigator.pop(context); // Quay lại màn hình trước đó
         } else if (mounted) {
-          // Hiển thị lỗi đăng nhập
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Row(
-                  children: const [
-                    Icon(Icons.error_outline, color: Colors.red),
-                    SizedBox(width: 10),
-                    Text('Đăng nhập thất bại'),
-                  ],
-                ),
-                content:
-                    Text(authProvider.errorMessage ?? 'Đăng nhập thất bại'),
-                actions: [
-                  TextButton(
-                    child: const Text('OK'),
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close dialog
-                    },
-                  ),
-                ],
-              );
-            },
-          );
+          // Lưu lỗi để hiển thị
+          setState(() {
+            _errorMessage = authProvider.errorMessage ?? 'Đăng nhập thất bại';
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Lỗi: $e';
+          });
         }
       } finally {
         if (mounted) {
@@ -115,6 +98,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.blue,
               ),
               const SizedBox(height: 40),
+
+              // Hiển thị thông báo lỗi nếu có
+              if (_errorMessage != null)
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    border: Border.all(color: Colors.red),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               // Các field đăng nhập hiện tại
               TextFormField(

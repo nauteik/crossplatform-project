@@ -5,6 +5,8 @@ import '../../../core/services/auth_service.dart';
 // import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/constants/api_constants.dart';
+import '../../navigation/providers/navigation_provider.dart';
+import 'package:provider/provider.dart';
 
 class AuthProvider extends ChangeNotifier {
   bool _isAuthenticated = false;
@@ -45,15 +47,31 @@ class AuthProvider extends ChangeNotifier {
           }
         } catch (e) {
           print('Lỗi khi parse userData: $e');
-          await logout();
+          await _clearAuthData();
           return;
         }
         notifyListeners();
       }
     } catch (e) {
       print('Lỗi khi load trạng thái đăng nhập: $e');
-      await logout();
+      await _clearAuthData();
     }
+  }
+  
+  // Phương thức riêng để xóa dữ liệu xác thực, không cần context
+  Future<void> _clearAuthData() async {
+    _token = null;
+    _userData = null;
+    _isAuthenticated = false;
+    _username = '';
+
+    // Xóa dữ liệu từ SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt_token');
+    await prefs.remove('user_data');
+    await prefs.remove('userId');
+    
+    notifyListeners();
   }
 
   // Thêm phương thức để kiểm tra và làm mới token nếu cần
@@ -69,7 +87,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(String username, String password, BuildContext context) async {
     try {
       _errorMessage = null;
       final authService = AuthService();
@@ -87,7 +105,11 @@ class AuthProvider extends ChangeNotifier {
 
         // Lưu userId vào SharedPreferences
         if (_userData != null && _userData!['id'] != null) {
-          await prefs.setString('userId', _userData!['id']);
+          final userId = _userData!['id'];
+          await prefs.setString('userId', userId);
+          
+          // Cập nhật userId cho ChatSupportScreen
+          Provider.of<NavigationProvider>(context, listen: false).updateChatUserId(userId);
         }
 
         if (_userData != null) {
@@ -203,28 +225,28 @@ class AuthProvider extends ChangeNotifier {
   //   }
   // }
 
-  Future<void> logout() async {
-    _token = null;
-    _userData = null;
-    _isAuthenticated = false;
-    _username = '';
-
-    // Xóa dữ liệu từ SharedPreferences
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
-    await prefs.remove('user_data');
-    await prefs.remove('userId'); // Thêm dòng này
-
-    notifyListeners();
+  Future<void> logout(BuildContext context) async {
+    await _clearAuthData();
+    
+    // Đặt lại userId rỗng cho ChatSupportScreen
+    if (context != null) {
+      Provider.of<NavigationProvider>(context, listen: false).updateChatUserId('');
+    }
   }
 
-  Future<void> refreshUserData() async {
+  Future<void> refreshUserData([BuildContext? context]) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       String? userDataStr = prefs.getString('user_data');
 
       if (userDataStr != null) {
         _userData = jsonDecode(userDataStr);
+        
+        // Cập nhật userId cho ChatSupportScreen
+        if (_userData != null && _userData!['id'] != null && context != null) {
+          Provider.of<NavigationProvider>(context, listen: false).updateChatUserId(_userData!['id']);
+        }
+        
         notifyListeners();
       }
     } catch (e) {
@@ -268,7 +290,7 @@ class AuthProvider extends ChangeNotifier {
           });
 
           await prefs.setString('user_data', jsonEncode(userData));
-          _userData = userData; // Sửa từ this.userData thành _userData
+          _userData = userData;
           notifyListeners();
         }
       }

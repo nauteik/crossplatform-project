@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/user/getAll").permitAll()
                 .requestMatchers("/api/user/get/**").permitAll()
-                .requestMatchers("/user/**").permitAll()
+                .requestMatchers("/api/user/**").permitAll()
                 .requestMatchers("/login/oauth2/**").permitAll()
                 // Image API paths
                 .requestMatchers("/api/images/**").permitAll()
@@ -76,8 +76,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/producttype/create").permitAll()
                 .requestMatchers("/api/producttype/update/{id}").permitAll()
                 .requestMatchers("/api/producttype/delete/{id}").permitAll()
+                // Message API paths
+                .requestMatchers("/api/messages/**").permitAll()
                 // Product API paths
-                .requestMatchers("api/tags/**").permitAll()
+                .requestMatchers("/api/tags/**").permitAll()
                 // Product API paths
                 .requestMatchers("/api/product/products").permitAll()
                 .requestMatchers("/api/product/products/paged").permitAll()

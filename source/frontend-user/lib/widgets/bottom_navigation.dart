@@ -39,6 +39,10 @@ class BottomNavigation extends StatelessWidget {
             label: 'Build PC',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Hỗ trợ',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
             label: 'Tôi',
           ),
