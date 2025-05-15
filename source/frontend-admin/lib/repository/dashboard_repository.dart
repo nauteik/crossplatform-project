@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:admin_interface/constants/api_constants.dart';
-import 'package:admin_interface/models/dashboard/category_sales_data.dart';
 import 'package:admin_interface/models/dashboard/dashboard_data.dart';
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
 import 'package:http/http.dart' as http;
 
 class DashboardRepository {

@@ -1,12 +1,12 @@
-import 'package:admin_interface/core/utils/chart_filter_type.dart';
+import 'package:admin_interface/providers/overview_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
 import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
 import 'package:admin_interface/models/dashboard/category_sales_data.dart';
-import 'package:admin_interface/providers/dashboard_provider.dart';
 
 class OverviewScreen extends StatelessWidget {
   const OverviewScreen({Key? key}) : super(key: key);
@@ -17,10 +17,10 @@ class OverviewScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Tổng quan'),
       ),
-      body: Consumer<DashboardProvider>(
+      body: Consumer<OverviewProvider>(
         builder: (context, provider, child) {
           // Kiểm tra trạng thái loading dựa trên provider.isLoading
-          if (provider.isLoading && provider.dashboardData == null) {
+          if (provider.isLoading && provider.overviewData == null) {
             return const Center(child: CircularProgressIndicator());
           } else if (provider.errorMessage != null) {
             return Center(
@@ -43,10 +43,10 @@ class OverviewScreen extends StatelessWidget {
                 ),
               ),
             );
-          } else if (provider.dashboardData == null) {
+          } else if (provider.overviewData == null) {
             return const Center(child: Text('No dashboard data available.'));
           } else {
-            final data = provider.dashboardData!; // Lấy DTO từ provider
+            final data = provider.overviewData!; // Lấy DTO từ provider
 
             // Kiểm tra xem có bất kỳ dữ liệu biểu đồ nào được load không trong DTO
             bool hasChartData =
@@ -64,7 +64,7 @@ class OverviewScreen extends StatelessWidget {
                   // --- Top Row: Key Metrics Grid ---
 
                   Text(
-                    'Overall Metrics', // Thêm tiêu đề cho phần metrics
+                    'Daily Metrics', // Thêm tiêu đề cho phần metrics
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 10),
@@ -84,6 +84,14 @@ class OverviewScreen extends StatelessWidget {
                           data.totalProductTypes.toString(), Icons.category),
                       _buildMetricCard(context, 'Total Products',
                           data.totalProducts.toString(), Icons.inventory),
+                      _buildMetricCard(context, 'New Users',
+                          data.newUsers.toString(), FontAwesomeIcons.userPlus),
+                      _buildMetricCard(context, 'New Orders',
+                          data.newOrders.toString(), FontAwesomeIcons.cartPlus),
+                      _buildMetricCard(context, 'Total Revenue',
+                          _formatCurrency(data.totalRevenue), FontAwesomeIcons.moneyBill),
+                      _buildMetricCard(context, 'Total Profit',
+                          _formatCurrency(data.totalProfit), FontAwesomeIcons.moneyBillTrendUp),
                     ],
                   ),
                   const SizedBox(height: 30), // Khoảng cách sau metrics
@@ -110,7 +118,8 @@ class OverviewScreen extends StatelessWidget {
                   GridView(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       childAspectRatio: 1.3,
                       crossAxisSpacing: 16,
@@ -145,7 +154,8 @@ class OverviewScreen extends StatelessWidget {
                         _buildChartCard(
                           context,
                           'Sales Ratio',
-                          PieChart(_buildPieChartData(data.categorySalesRatio!)),
+                          PieChart(
+                              _buildPieChartData(data.categorySalesRatio!)),
                           height: 300,
                         ),
                     ],
@@ -223,8 +233,8 @@ class OverviewScreen extends StatelessWidget {
     );
   }
 
-  // Helper method to format currency (assuming VND) (giữ nguyên như file bạn gửi)
-  String _formatCurrency(double amount) {
+  // Helper method to format currency (assuming VND)
+  String _formatCurrency(int amount) {
     final formatter =
         NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
     return formatter.format(amount);

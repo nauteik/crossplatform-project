@@ -280,6 +280,10 @@ public class OrderService {
     public int getQuantitySoldByCategory(String category) {
         List<Order> allOrders = orderRepository.findAll();
 
+        for (Order order : allOrders) {
+            System.out.println(order);
+        }
+
         return allOrders.stream()
                 .flatMap(order -> order.getItems().stream())
                 .filter(item -> category.equals(productService.getProductTypeNameById(item.getProductId())))
@@ -499,5 +503,22 @@ public class OrderService {
         return categorySales.entrySet().stream()
                 .map(entry -> new CategorySalesData(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
+    }
+
+    public List<Order> getOrdersCreatedOnDate(LocalDate date) {
+        // Get start and end of the specified date
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+
+        // Filter orders from the repository by creation date
+        return orderRepository.findByCreatedAtBetween(startOfDay, endOfDay);
+    }
+
+    public List<Order> getOrdersCreatedBetweenDates(LocalDate startDate, LocalDate endDate) {
+        // Convert to LocalDateTime to include the full time range
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+
+        return orderRepository.findByCreatedAtBetween(startDateTime, endDateTime);
     }
 }

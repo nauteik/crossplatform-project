@@ -2,7 +2,8 @@ import 'package:admin_interface/admin_sidebar.dart';
 import 'package:admin_interface/providers/auth_provider.dart';
 import 'package:admin_interface/features/login/screens/login_screen.dart';
 import 'package:admin_interface/providers/coupon_provider.dart';
-import 'package:admin_interface/providers/dashboard_provider.dart';
+import 'package:admin_interface/providers/overview_provider.dart';
+import 'package:admin_interface/providers/statistics_provider.dart';
 import 'package:admin_interface/providers/user_provider.dart';
 import 'package:admin_interface/repository/coupon_repository.dart';
 import 'package:admin_interface/repository/user_repository.dart';
@@ -45,10 +46,10 @@ class MyApp extends StatelessWidget {
           create: (context) => CouponProvider(),
         ),
         ChangeNotifierProvider(
-          create: (context) => DashboardProvider(),
+          create: (context) => StatisticsProvider(),
         ),
         ChangeNotifierProvider(
-          create: (context) => DashboardProvider(),
+          create: (context) => OverviewProvider(),
         ),
       ],
       child: MaterialApp(

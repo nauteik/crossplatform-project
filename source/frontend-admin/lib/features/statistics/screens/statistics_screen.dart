@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'dart:math' as math;
 import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
 import 'package:admin_interface/models/dashboard/category_sales_data.dart';
-import 'package:admin_interface/providers/dashboard_provider.dart';
+import 'package:admin_interface/providers/statistics_provider.dart';
 
 class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({Key? key}) : super(key: key);
@@ -17,7 +17,7 @@ class StatisticsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Thống kê'),
       ),
-      body: Consumer<DashboardProvider>(
+      body: Consumer<StatisticsProvider>(
         builder: (context, provider, child) {
           // Kiểm tra trạng thái loading dựa trên provider.isLoading
           if (provider.isLoading && provider.dashboardData == null) {
@@ -222,7 +222,7 @@ class StatisticsScreen extends StatelessWidget {
 
   // --- Helper Methods cho UI Chọn Bộ Lọc (Thêm vào) ---
   Widget _buildFilterSelectionUI(
-      BuildContext context, DashboardProvider provider) {
+      BuildContext context, StatisticsProvider provider) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -260,7 +260,7 @@ class StatisticsScreen extends StatelessWidget {
 
   // Helper hiển thị UI nhập giá trị lọc tùy theo loại
   Widget _buildFilterValueInput(
-      BuildContext context, DashboardProvider provider) {
+      BuildContext context, StatisticsProvider provider) {
     switch (provider.currentFilterType) {
       case ChartFilterType.weekly:
         return Container(
@@ -405,7 +405,7 @@ class StatisticsScreen extends StatelessWidget {
   }
 
   // Helper hiển thị Date Picker
-  Future<void> _selectDate(BuildContext context, DashboardProvider provider,
+  Future<void> _selectDate(BuildContext context, StatisticsProvider provider,
       {required bool isStartDate}) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -443,7 +443,7 @@ class StatisticsScreen extends StatelessWidget {
   }
 
   // Helper lấy tiêu đề động cho biểu đồ Doanh thu/Lợi nhuận
-  String _getSalesChartTitle(DashboardProvider provider) {
+  String _getSalesChartTitle(StatisticsProvider provider) {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {
@@ -480,7 +480,7 @@ class StatisticsScreen extends StatelessWidget {
   }
 
   // Helper lấy tiêu đề động cho biểu đồ Sản phẩm bán ra
-  String _getTotalSalesChartTitle(DashboardProvider provider) {
+  String _getTotalSalesChartTitle(StatisticsProvider provider) {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {
@@ -517,7 +517,7 @@ class StatisticsScreen extends StatelessWidget {
   }
 
   // Helper lấy tiêu đề động cho biểu đồ Tỷ lệ danh mục
-  String _getCategoryRatioChartTitle(DashboardProvider provider) {
+  String _getCategoryRatioChartTitle(StatisticsProvider provider) {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {

@@ -10,8 +10,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -157,6 +160,15 @@ public class UserService implements UserDetailsService {
                 .filter(user -> user.getRole() == 1)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public List<User> getUsersCreatedOnDate(LocalDate date) {
+        // Get start and end of the specified date
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(23, 59, 59);
+
+        // Filter users from the repository by creation date
+        return userRepository.findByCreatedAtBetween(startOfDay, endOfDay);
     }
 }
 

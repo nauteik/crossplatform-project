@@ -5,7 +5,7 @@ import 'package:admin_interface/repository/dashboard_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:admin_interface/models/dashboard/dashboard_data.dart';
 
-class DashboardProvider with ChangeNotifier {
+class StatisticsProvider with ChangeNotifier {
   final DashboardRepository _repository = DashboardRepository();
 
   // Các trường dữ liệu cho biểu đồ theo thời gian, sử dụng model chung
@@ -44,7 +44,7 @@ class DashboardProvider with ChangeNotifier {
   int? _selectedYear;
   int? get selectedYear => _selectedYear;
 
-  DashboardProvider() {
+  StatisticsProvider() {
     _currentFilterType = ChartFilterType.weekly;
 
     fetchData();

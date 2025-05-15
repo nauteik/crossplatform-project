@@ -97,8 +97,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/reviews/**").permitAll()
                 // Coupon API paths
                 .requestMatchers("/api/coupon/**").permitAll()
-                // Coupon API paths
+                // Dashboard API paths
                 .requestMatchers("/api/dashboard/**").permitAll()
+                // Overview API paths
+                .requestMatchers("/api/overview/**").permitAll()
+                // Statistics API paths
+                .requestMatchers("/api/statistics/**").permitAll()
                 // PC API paths
                 .requestMatchers("/api/pc/**").permitAll()
                 .anyRequest().authenticated()
