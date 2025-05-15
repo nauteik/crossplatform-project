@@ -1,7 +1,10 @@
 import 'package:admin_interface/admin_sidebar.dart';
 import 'package:admin_interface/providers/auth_provider.dart';
 import 'package:admin_interface/features/login/screens/login_screen.dart';
+import 'package:admin_interface/providers/coupon_provider.dart';
+import 'package:admin_interface/providers/dashboard_provider.dart';
 import 'package:admin_interface/providers/user_provider.dart';
+import 'package:admin_interface/repository/coupon_repository.dart';
 import 'package:admin_interface/repository/user_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:sidebarx/sidebarx.dart';
@@ -37,6 +40,15 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => ProductTypeProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CouponProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => DashboardProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => DashboardProvider(),
         ),
       ],
       child: MaterialApp(

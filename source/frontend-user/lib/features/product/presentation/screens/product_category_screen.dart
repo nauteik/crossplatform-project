@@ -75,7 +75,7 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
       }
     } catch (e) {
       // Hiển thị thông báo lỗi
-     
+      
     }
   }
   
@@ -229,7 +229,28 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     
     return brandMap.values.toList();
   }
-
+  Widget _buildErrorView(String title) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context);
@@ -372,7 +393,9 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                           : productProvider.status == ProductStatus.loading
                               ? const Center(child: CircularProgressIndicator())
                               : productProvider.status == ProductStatus.error
-                                  ? Center(child: Text('Lỗi: ${productProvider.errorMessage}'))
+                                  ? _buildErrorView(
+                                      'Không thể tải sản phẩm'
+                                      )
                                   : _buildProductGrid(productProvider.getFilteredProducts(), crossAxisCount: 2),
                     ),
                   ],
@@ -425,7 +448,9 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                           : productProvider.status == ProductStatus.loading
                               ? const Center(child: CircularProgressIndicator())
                               : productProvider.status == ProductStatus.error
-                                  ? Center(child: Text('Lỗi: ${productProvider.errorMessage}'))
+                                  ? _buildErrorView(
+                                      'Không thể tải sản phẩm'
+                                      )
                                   : _buildProductGrid(productProvider.getFilteredProducts(), crossAxisCount: 3),
                     ),
                   ],
@@ -525,7 +550,9 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                                 : productProvider.status == ProductStatus.loading
                                     ? const Center(child: CircularProgressIndicator())
                                     : productProvider.status == ProductStatus.error
-                                        ? Center(child: Text('Lỗi: ${productProvider.errorMessage}'))
+                                        ? _buildErrorView(
+                                            'Không thể tải sản phẩm'
+                                            )
                                         : _buildProductGrid(productProvider.getFilteredProducts(), crossAxisCount: productColumns),
                           ),
                         ],
@@ -546,13 +573,19 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
       // Kiểm tra nếu đang trong trạng thái lỗi
       final productProvider = Provider.of<ProductProvider>(context);
       if (productProvider.status == ProductStatus.error) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 60, color: Colors.red),
-              const SizedBox(height: 16),
-              Text('Lỗi: ${productProvider.errorMessage}'),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  'Không thể tải sản phẩm',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {

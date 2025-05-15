@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:admin_interface/proxy/screen_access_interface.dart';
 import 'package:admin_interface/features/coupons_management/screens/coupons_management_screen.dart';
-import 'package:admin_interface/features/customers_support/screens/customers_support_screen.dart';
 import 'package:admin_interface/features/home/screens/home_screen.dart';
-import 'package:admin_interface/features/login/screens/login_screen.dart';
 import 'package:admin_interface/features/orders_management/screens/orders_management_screen.dart';
 import 'package:admin_interface/features/products_management/screens/products_management_screen.dart';
-import 'package:admin_interface/features/products_promotion/screens/products_promotion_screen.dart';
 import 'package:admin_interface/features/statistics/screens/statistics_screen.dart';
 import 'package:admin_interface/features/users_management/screens/user_management_screen.dart';
 
@@ -16,13 +13,19 @@ class RealScreenAccess implements ScreenAccessInterface {
   Widget getScreen(int index, BuildContext context) {
     switch (index) {
       case 0:
-        return const ProductsManagementScreen();
+        return const HomeScreen();
       case 1:
-        return const UsersManagementScreen();
+        return const StatisticsScreen();
       case 2:
-        return const OrdersManagementScreen();
-      default:
         return const ProductsManagementScreen();
+      case 3:
+        return const UsersManagementScreen();
+      case 4:
+        return const OrdersManagementScreen();
+      case 5:
+        return const CouponsManagementScreen();
+      default:
+        return const HomeScreen();
     }
   }
 }

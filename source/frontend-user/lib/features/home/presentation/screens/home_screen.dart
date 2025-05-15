@@ -110,12 +110,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: const TextStyle(color: Colors.red),
-              textAlign: TextAlign.center,
-            ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isRetrying ? null : onRetry,

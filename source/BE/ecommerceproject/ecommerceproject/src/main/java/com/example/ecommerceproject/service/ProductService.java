@@ -193,4 +193,16 @@ public class ProductService {
         
         return productRepository.save(product);
     }
+
+    public int getProductCount() {
+        return (int) productRepository.count();
+    }
+
+    public String getProductTypeNameById(String id) {
+        Optional<ProductType> optionalProductType = productTypeRepository.findById(id);
+        if (optionalProductType.isPresent()) {
+            return optionalProductType.get().getName();
+        }
+        return null;
+    }
 } 

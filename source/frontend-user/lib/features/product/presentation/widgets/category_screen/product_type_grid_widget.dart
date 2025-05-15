@@ -18,13 +18,43 @@ class ProductTypeGridWidget extends StatelessWidget {
     required this.onProductTypeSelected,
   });
 
+  Widget _buildErrorView(String title) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                typeProvider.fetchProductTypes();
+              },
+              child: const Text('Thử lại'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (typeProvider.productTypes.isEmpty) {
       if (typeProvider.status == ProductTypeStatus.loading) {
         return const Center(child: CircularProgressIndicator());
       } else if (typeProvider.status == ProductTypeStatus.error) {
-        return Center(child: Text('Lỗi: ${typeProvider.errorMessage}'));
+        return _buildErrorView('Không thể tải loại sản phẩm');
       } else {
         return const Center(child: Text('Không có loại sản phẩm nào.'));
       }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductTypeService {
@@ -46,5 +47,17 @@ public class ProductTypeService {
         }
         productTypeRepository.deleteById(id);
         return true;
+    }
+
+    public int getProductTypeCount() {
+        return (int) productTypeRepository.count();
+    }
+
+    // Lấy danh sách tên của tất cả các loại sản phẩm
+    public List<String> getAllProductTypeNames() {
+        List<ProductType> productTypes = productTypeRepository.findAll();
+        return productTypes.stream()
+                .map(ProductType::getName)
+                .collect(Collectors.toList());
     }
 } 
