@@ -1,4 +1,4 @@
-import 'package:admin_interface/features/home/screens/home_screen.dart';
+import 'package:admin_interface/features/overview/screens/overview_screen.dart';
 import 'package:admin_interface/features/statistics/screens/statistics_screen.dart';
 import 'package:admin_interface/mock_dashboard_provider.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Admin Dashboard Preview (Mock Data)'),
           ),
-          body: const HomeScreen(), // Sử dụng widget dashboard của bạn
+          body: const OverviewScreen(), // Sử dụng widget dashboard của bạn
         ),
       ),
     );

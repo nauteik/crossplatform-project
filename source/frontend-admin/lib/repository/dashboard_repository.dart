@@ -37,8 +37,9 @@ class DashboardRepository {
 
   Future<Map<String, dynamic>> fetchFilteredDashboardData(
       Map<String, String> filterParams) async {
-    final uri =
-        Uri.parse('$_baseUrl/overview').replace(queryParameters: filterParams);
+    final uri = Uri.parse('$_baseUrl/statistics')
+        .replace(queryParameters: filterParams);
+    print(uri);
 
     try {
       final response = await httpClient.get(uri);
@@ -46,7 +47,7 @@ class DashboardRepository {
       if (response.statusCode == 200) {
         // Parse JSON response
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
-        
+
         // Trả về trực tiếp response JSON từ server
         return jsonResponse;
       } else {

@@ -8,14 +8,14 @@ import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
 import 'package:admin_interface/models/dashboard/category_sales_data.dart';
 import 'package:admin_interface/providers/dashboard_provider.dart';
 
-class StatisticsScreen extends StatelessWidget {
-  const StatisticsScreen({Key? key}) : super(key: key);
+class OverviewScreen extends StatelessWidget {
+  const OverviewScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thống kê'),
+        title: const Text('Tổng quan'),
       ),
       body: Consumer<DashboardProvider>(
         builder: (context, provider, child) {
@@ -100,46 +100,56 @@ class StatisticsScreen extends StatelessWidget {
 
                   // --- Lower Section: Charts ---
                   Text(
-                    'Sales Analytics',
+                    'Sales Analytics (Last 7 Days)',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 16),
 
-                  // Filter Selection UI có thể thêm ở đây
-                  _buildFilterSelectionUI(context, provider),
-                  const SizedBox(height: 20),
-
-                  // Revenue and Profit Chart
-                  if (data.timeSeriesRevenueProfitData != null &&
-                      data.timeSeriesRevenueProfitData!.isNotEmpty)
-                    _buildChartCard(
-                      context,
-                      _getSalesChartTitle(provider),
-                      LineChart(_buildLineChartData(
-                          data.timeSeriesRevenueProfitData!)),
-                      height: 300,
+                  // Remove Filter Selection UI
+                  // Charts Grid
+                  GridView(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 1.3,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
                     ),
+                    children: [
+                      // Revenue and Profit Chart
+                      if (data.timeSeriesRevenueProfitData != null &&
+                          data.timeSeriesRevenueProfitData!.isNotEmpty)
+                        _buildChartCard(
+                          context,
+                          'Revenue and Profit',
+                          LineChart(_buildLineChartData(
+                              data.timeSeriesRevenueProfitData!)),
+                          height: 300,
+                        ),
 
-                  // Products Sold Chart
-                  if (data.timeSeriesQuantityData != null &&
-                      data.timeSeriesQuantityData!.isNotEmpty)
-                    _buildChartCard(
-                      context,
-                      _getTotalSalesChartTitle(provider),
-                      BarChart(_buildBarChartData(
-                          context, data.timeSeriesQuantityData!)),
-                      height: 300,
-                    ),
+                      // Products Sold Chart
+                      if (data.timeSeriesQuantityData != null &&
+                          data.timeSeriesQuantityData!.isNotEmpty)
+                        _buildChartCard(
+                          context,
+                          'Products Sold',
+                          BarChart(_buildBarChartData(
+                              context, data.timeSeriesQuantityData!)),
+                          height: 300,
+                        ),
 
-                  // Category Sales Ratio Chart
-                  if (data.categorySalesRatio != null &&
-                      data.categorySalesRatio!.isNotEmpty)
-                    _buildChartCard(
-                      context,
-                      _getCategoryRatioChartTitle(provider),
-                      PieChart(_buildPieChartData(data.categorySalesRatio!)),
-                      height: 300,
-                    ),
+                      // Category Sales Ratio Chart
+                      if (data.categorySalesRatio != null &&
+                          data.categorySalesRatio!.isNotEmpty)
+                        _buildChartCard(
+                          context,
+                          'Sales Ratio',
+                          PieChart(_buildPieChartData(data.categorySalesRatio!)),
+                          height: 300,
+                        ),
+                    ],
+                  ),
                 ],
               ),
             );
@@ -218,339 +228,6 @@ class StatisticsScreen extends StatelessWidget {
     final formatter =
         NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
     return formatter.format(amount);
-  }
-
-  // --- Helper Methods cho UI Chọn Bộ Lọc (Thêm vào) ---
-  Widget _buildFilterSelectionUI(
-      BuildContext context, DashboardProvider provider) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          flex: 2,
-          child: DropdownButtonFormField<ChartFilterType>(
-            decoration: const InputDecoration(
-              labelText: 'Filter By',
-              border: OutlineInputBorder(),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-            ),
-            value: provider.currentFilterType,
-            items: ChartFilterType.values.map((type) {
-              return DropdownMenuItem(
-                value: type,
-                child: Text(_filterTypeToString(type)),
-              );
-            }).toList(),
-            onChanged: (newValue) {
-              if (newValue != null) {
-                provider.setFilter(filterType: newValue);
-              }
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          flex: 3,
-          child: _buildFilterValueInput(context, provider),
-        ),
-      ],
-    );
-  }
-
-  // Helper hiển thị UI nhập giá trị lọc tùy theo loại
-  Widget _buildFilterValueInput(
-      BuildContext context, DashboardProvider provider) {
-    switch (provider.currentFilterType) {
-      case ChartFilterType.weekly:
-        return Container(
-          alignment: Alignment.centerLeft,
-          height: 56,
-          child: const Text('Last 7 Days', style: TextStyle(fontSize: 16)),
-        );
-      case ChartFilterType.dateRange:
-        return Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => _selectDate(context, provider, isStartDate: true),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Start Date',
-                    border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-                  ),
-                  child: Text(
-                    provider.startDate == null
-                        ? 'Select Date'
-                        : DateFormat('yyyy-MM-dd').format(provider.startDate!),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: InkWell(
-                onTap: () => _selectDate(context, provider, isStartDate: false),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'End Date',
-                    border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-                  ),
-                  child: Text(
-                    provider.endDate == null
-                        ? 'Select Date'
-                        : DateFormat('yyyy-MM-dd').format(provider.endDate!),
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      case ChartFilterType.monthly:
-        final now = DateTime.now();
-        return Row(
-          children: [
-            Expanded(
-              child: DropdownButtonFormField<int>(
-                decoration: const InputDecoration(
-                  labelText: 'Month',
-                  border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-                ),
-                value: provider.selectedMonth ?? now.month,
-                items: List.generate(12, (index) => index + 1).map((month) {
-                  return DropdownMenuItem(
-                    value: month,
-                    child: Text(
-                        DateFormat('MMMM').format(DateTime(now.year, month))),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  if (newValue != null) {
-                    provider.setFilter(
-                      filterType: ChartFilterType.monthly,
-                      selectedMonth: newValue,
-                      selectedYear: provider.selectedYear ?? now.year,
-                    );
-                  }
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: DropdownButtonFormField<int>(
-                decoration: const InputDecoration(
-                  labelText: 'Year',
-                  border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-                ),
-                value: provider.selectedYear ?? now.year,
-                items:
-                    List.generate(10, (index) => now.year - index).map((year) {
-                  return DropdownMenuItem(
-                    value: year,
-                    child: Text(year.toString()),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  if (newValue != null) {
-                    provider.setFilter(
-                      filterType: ChartFilterType.monthly,
-                      selectedMonth: provider.selectedMonth ?? now.month,
-                      selectedYear: newValue,
-                    );
-                  }
-                },
-              ),
-            ),
-          ],
-        );
-      case ChartFilterType.yearly:
-        final now = DateTime.now();
-        return DropdownButtonFormField<int>(
-          decoration: const InputDecoration(
-            labelText: 'Year',
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-          ),
-          value: provider.selectedYear ?? now.year,
-          items: List.generate(10, (index) => now.year - index).map((year) {
-            return DropdownMenuItem(
-              value: year,
-              child: Text(year.toString()),
-            );
-          }).toList(),
-          onChanged: (newValue) {
-            if (newValue != null) {
-              provider.setFilter(
-                  filterType: ChartFilterType.yearly, selectedYear: newValue);
-            }
-          },
-        );
-      case ChartFilterType.allTime:
-        return Container(
-          alignment: Alignment.centerLeft,
-          height: 56,
-          child: const Text('All Time', style: TextStyle(fontSize: 16)),
-        );
-    }
-  }
-
-  // Helper hiển thị Date Picker
-  Future<void> _selectDate(BuildContext context, DashboardProvider provider,
-      {required bool isStartDate}) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: isStartDate
-          ? (provider.startDate ?? DateTime.now())
-          : (provider.endDate ?? DateTime.now()),
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) {
-      final newStartDate = isStartDate ? picked : provider.startDate;
-      final newEndDate = isStartDate ? provider.endDate : picked;
-      provider.setFilter(
-        filterType: ChartFilterType.dateRange,
-        startDate: newStartDate,
-        endDate: newEndDate,
-      );
-    }
-  }
-
-  // Helper chuyển đổi enum sang String hiển thị
-  String _filterTypeToString(ChartFilterType type) {
-    switch (type) {
-      case ChartFilterType.weekly:
-        return 'Weekly';
-      case ChartFilterType.dateRange:
-        return 'Date Range';
-      case ChartFilterType.monthly:
-        return 'Monthly';
-      case ChartFilterType.yearly:
-        return 'Yearly';
-      case ChartFilterType.allTime:
-        return 'All Time';
-    }
-  }
-
-  // Helper lấy tiêu đề động cho biểu đồ Doanh thu/Lợi nhuận
-  String _getSalesChartTitle(DashboardProvider provider) {
-    switch (provider.currentFilterType) {
-      case ChartFilterType.dateRange:
-        if (provider.startDate != null && provider.endDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Revenue and Profit ($start to $end)';
-        } else if (provider.startDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          return 'Revenue and Profit (Since $start)';
-        } else if (provider.endDate != null) {
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Revenue and Profit (Until $end)';
-        }
-        return 'Revenue and Profit (Select Date Range)';
-      case ChartFilterType.monthly:
-        if (provider.selectedMonth != null && provider.selectedYear != null) {
-          final monthName = DateFormat('MMMM').format(
-              DateTime(provider.selectedYear!, provider.selectedMonth!));
-          return 'Revenue and Profit in $monthName ${provider.selectedYear}';
-        } else if (provider.selectedYear != null) {
-          return 'Revenue and Profit in ${provider.selectedYear}';
-        }
-        return 'Revenue and Profit (Select Month/Year)';
-      case ChartFilterType.yearly:
-        if (provider.selectedYear != null) {
-          return 'Revenue and Profit in ${provider.selectedYear}';
-        }
-        return 'Revenue and Profit (Select Year)';
-      case ChartFilterType.allTime:
-        return 'Revenue and Profit (All Time)';
-      case ChartFilterType.weekly:
-        return 'Revenue and Profit (Last 7 Days)';
-    }
-  }
-
-  // Helper lấy tiêu đề động cho biểu đồ Sản phẩm bán ra
-  String _getTotalSalesChartTitle(DashboardProvider provider) {
-    switch (provider.currentFilterType) {
-      case ChartFilterType.dateRange:
-        if (provider.startDate != null && provider.endDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Products Sold ($start to $end)';
-        } else if (provider.startDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          return 'Products Sold (Since $start)';
-        } else if (provider.endDate != null) {
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Products Sold (Until $end)';
-        }
-        return 'Products Sold (Select Date Range)';
-      case ChartFilterType.monthly:
-        if (provider.selectedMonth != null && provider.selectedYear != null) {
-          final monthName = DateFormat('MMMM').format(
-              DateTime(provider.selectedYear!, provider.selectedMonth!));
-          return 'Products Sold in $monthName ${provider.selectedYear}';
-        } else if (provider.selectedYear != null) {
-          return 'Products Sold in ${provider.selectedYear}';
-        }
-        return 'Products Sold (Select Month/Year)';
-      case ChartFilterType.yearly:
-        if (provider.selectedYear != null) {
-          return 'Products Sold in ${provider.selectedYear}';
-        }
-        return 'Products Sold in ${provider.selectedYear}';
-      case ChartFilterType.allTime:
-        return 'Products Sold (All Time)';
-      case ChartFilterType.weekly:
-        return 'Products Sold (Last 7 Days)';
-    }
-  }
-
-  // Helper lấy tiêu đề động cho biểu đồ Tỷ lệ danh mục
-  String _getCategoryRatioChartTitle(DashboardProvider provider) {
-    switch (provider.currentFilterType) {
-      case ChartFilterType.dateRange:
-        if (provider.startDate != null && provider.endDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Sales Ratio ($start to $end)';
-        } else if (provider.startDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          return 'Sales Ratio (Since $start)';
-        } else if (provider.endDate != null) {
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Sales Ratio (Until $end)';
-        }
-        return 'Sales Ratio (Select Date Range)';
-      case ChartFilterType.monthly:
-        if (provider.selectedMonth != null && provider.selectedYear != null) {
-          final monthName = DateFormat('MMMM').format(
-              DateTime(provider.selectedYear!, provider.selectedMonth!));
-          return 'Sales Ratio in $monthName ${provider.selectedYear}';
-        } else if (provider.selectedYear != null) {
-          return 'Sales Ratio in ${provider.selectedYear}';
-        }
-        return 'Sales Ratio (Select Month/Year)';
-      case ChartFilterType.yearly:
-        if (provider.selectedYear != null) {
-          return 'Sales Ratio in ${provider.selectedYear}';
-        }
-        return 'Sales Ratio (Select Year)';
-      case ChartFilterType.allTime:
-        return 'Sales Ratio (All Time)';
-      case ChartFilterType.weekly:
-        return 'Sales Ratio (Last 7 Days)';
-    }
   }
 
   // --- Helper Methods Vẽ Biểu đồ (Cập nhật để nhận List<TimeBasedChartData>) ---

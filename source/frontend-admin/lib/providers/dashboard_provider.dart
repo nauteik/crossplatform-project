@@ -29,7 +29,6 @@ class DashboardProvider with ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  // --- Trạng thái bộ lọc (giữ nguyên) ---
   ChartFilterType _currentFilterType = ChartFilterType.weekly;
   ChartFilterType get currentFilterType => _currentFilterType;
 
@@ -44,21 +43,13 @@ class DashboardProvider with ChangeNotifier {
 
   int? _selectedYear;
   int? get selectedYear => _selectedYear;
-  // ------------------------
-
 
   DashboardProvider() {
-    // Thiết lập bộ lọc mặc định ban đầu
-    _currentFilterType = ChartFilterType.weekly; // Mặc định 7 ngày
-    // Hoặc thiết lập bộ lọc mặc định khác nếu muốn
-    // final now = DateTime.now();
-    // _currentFilterType = ChartFilterType.yearly;
-    // _selectedYear = now.year;
+    _currentFilterType = ChartFilterType.weekly;
 
-    fetchData(); // Fetch dữ liệu lần đầu với bộ lọc mặc định
+    fetchData();
   }
 
-  // Phương thức để thay đổi bộ lọc (giữ nguyên logic)
   void setFilter({
     required ChartFilterType filterType,
     DateTime? startDate,
@@ -78,7 +69,6 @@ class DashboardProvider with ChangeNotifier {
     _filteredCategorySalesRatio = null;
     _errorMessage = null; // Reset lỗi
 
-
     notifyListeners(); // Thông báo UI rằng bộ lọc đã thay đổi
 
     // Fetch dữ liệu mới với bộ lọc mới
@@ -88,8 +78,6 @@ class DashboardProvider with ChangeNotifier {
 
   Future<void> fetchData() async {
     _isLoading = true;
-     // Không reset error ở đây để giữ lỗi cũ nếu fetch mới lại gặp lỗi
-    // notifyListeners(); // Có thể gọi ở đây hoặc sau khi fetch xong
 
     try {
        final filterParams = {
@@ -115,7 +103,6 @@ class DashboardProvider with ChangeNotifier {
     }
   }
 
-  // Phương thức refresh data (giữ nguyên)
    Future<void> refreshData() async {
      if (!_isLoading) {
         await fetchData();
