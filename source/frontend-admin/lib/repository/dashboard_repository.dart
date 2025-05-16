@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:admin_interface/constants/api_constants.dart';
-import 'package:admin_interface/models/dashboard/category_sales_data.dart';
 import 'package:admin_interface/models/dashboard/dashboard_data.dart';
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
 import 'package:http/http.dart' as http;
 
 class DashboardRepository {
@@ -37,8 +35,9 @@ class DashboardRepository {
 
   Future<Map<String, dynamic>> fetchFilteredDashboardData(
       Map<String, String> filterParams) async {
-    final uri =
-        Uri.parse('$_baseUrl/overview').replace(queryParameters: filterParams);
+    final uri = Uri.parse('$_baseUrl/statistics')
+        .replace(queryParameters: filterParams);
+    print(uri);
 
     try {
       final response = await httpClient.get(uri);
@@ -46,7 +45,7 @@ class DashboardRepository {
       if (response.statusCode == 200) {
         // Parse JSON response
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
-        
+
         // Trả về trực tiếp response JSON từ server
         return jsonResponse;
       } else {

@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class User {
     private String phone;
     private String gender;
     private Date birthday;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     private String rank;
     private int totalSpend;

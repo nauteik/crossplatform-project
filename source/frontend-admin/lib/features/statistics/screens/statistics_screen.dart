@@ -1,153 +1,123 @@
 import 'package:admin_interface/core/utils/chart_filter_type.dart';
-import 'package:admin_interface/mock_dashboard_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart'; // <-- Import model chung mới
-import 'package:admin_interface/models/dashboard/category_sales_data.dart'; // Giữ lại model này
-
-import 'package:admin_interface/providers/dashboard_provider.dart'; // Provider thật (đã cập nhật)
+import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
+import 'package:admin_interface/models/dashboard/category_sales_data.dart';
+import 'package:admin_interface/providers/statistics_provider.dart';
 
 class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Sử dụng Consumer với MockDashboardProvider đã cập nhật
-    // Nếu bạn đang preview với MockProvider, hãy đổi thành Consumer<MockMockDashboardProvider> tạm thời
-    return Consumer<MockDashboardProvider>(
-      builder: (context, provider, child) {
-        // Kiểm tra trạng thái loading dựa trên provider.isLoading
-        if (provider.isLoading && provider.dashboardData == null) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (provider.errorMessage != null) {
-          return Center(
-            child: Padding(
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Thống kê'),
+      ),
+      body: Consumer<StatisticsProvider>(
+        builder: (context, provider, child) {
+          // Kiểm tra trạng thái loading dựa trên provider.isLoading
+          if (provider.isLoading && provider.statisticsData == null) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (provider.errorMessage != null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Error: ${provider.errorMessage}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: provider.refreshData,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else if (provider.statisticsData == null) {
+            return const Center(child: Text('No dashboard data available.'));
+          } else {
+            final data = provider.statisticsData!; // Lấy DTO từ provider
+
+            // Kiểm tra xem có bất kỳ dữ liệu biểu đồ nào được load không trong DTO
+            bool hasChartData =
+                (data.timeSeriesRevenueProfitData?.isNotEmpty ?? false) ||
+                    (data.timeSeriesQuantityData?.isNotEmpty ?? false) ||
+                    (data.categorySalesRatio?.isNotEmpty ?? false);
+
+            // Hiển thị dashboard
+            return SingleChildScrollView(
+              // Cho phép cuộn toàn bộ nội dung
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Hiển thị thông báo "No Chart Data" nếu không có dữ liệu biểu đồ sau khi load
+                  if (!hasChartData &&
+                      !provider.isLoading &&
+                      provider.errorMessage == null) ...[
+                    const SizedBox(height: 30), // Khoảng cách trước thông báo
+                    const Center(
+                        child: Text(
+                            'No chart data available for the selected period.')),
+                  ],
+
                   Text(
-                    'Error: ${provider.errorMessage}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                    'Sales Analytics',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  const SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: provider.refreshData,
-                    child: const Text('Retry'),
-                  ),
+                  const SizedBox(height: 16),
+
+                  // Filter Selection UI có thể thêm ở đây
+                  _buildFilterSelectionUI(context, provider),
+                  const SizedBox(height: 20),
+
+                  // Revenue and Profit Chart
+                  if (data.timeSeriesRevenueProfitData != null &&
+                      data.timeSeriesRevenueProfitData!.isNotEmpty)
+                    _buildChartCard(
+                      context,
+                      _getSalesChartTitle(provider),
+                      LineChart(_buildLineChartData(
+                          data.timeSeriesRevenueProfitData!)),
+                      height: 300,
+                    ),
+
+                  // Products Sold Chart
+                  if (data.timeSeriesQuantityData != null &&
+                      data.timeSeriesQuantityData!.isNotEmpty)
+                    _buildChartCard(
+                      context,
+                      _getTotalSalesChartTitle(provider),
+                      BarChart(_buildBarChartData(
+                          context, data.timeSeriesQuantityData!)),
+                      height: 300,
+                    ),
+
+                  // Category Sales Ratio Chart
+                  if (data.categorySalesRatio != null &&
+                      data.categorySalesRatio!.isNotEmpty)
+                    _buildChartCard(
+                      context,
+                      _getCategoryRatioChartTitle(provider),
+                      PieChart(_buildPieChartData(data.categorySalesRatio!)),
+                      height: 300,
+                    ),
                 ],
               ),
-            ),
-          );
-        } else if (provider.dashboardData == null) {
-          return const Center(child: Text('No dashboard data available.'));
-        } else {
-          final data = provider.dashboardData!; // Lấy DTO từ provider
-
-          // Kiểm tra xem có bất kỳ dữ liệu biểu đồ nào được load không trong DTO
-          bool hasChartData =
-              (data.timeSeriesRevenueProfitData?.isNotEmpty ?? false) ||
-                  (data.timeSeriesQuantityData?.isNotEmpty ?? false) ||
-                  (data.categorySalesRatio?.isNotEmpty ?? false);
-
-          // Hiển thị dashboard
-          return SingleChildScrollView(
-            // Cho phép cuộn toàn bộ nội dung
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Admin Dashboard Overview',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 20),
-
-                // Hiển thị thông báo "No Chart Data" nếu không có dữ liệu biểu đồ sau khi load
-                if (!hasChartData &&
-                    !provider.isLoading &&
-                    provider.errorMessage == null) ...[
-                  const SizedBox(height: 30), // Khoảng cách trước thông báo
-                  const Center(
-                      child: Text(
-                          'No chart data available for the selected period.')),
-                ],
-
-                // --- Lower Section: Charts ---
-                // Thay thế khối comment bằng các biểu đồ mới có điều kiện hiển thị
-                // Dựa vào dữ liệu có sẵn trong provider.dashboardData!
-
-                // --- UI Chọn Bộ Lọc ---
-                _buildFilterSelectionUI(context, provider),
-                const SizedBox(height: 20),
-
-                // Biểu đồ đường: Doanh thu & Lợi nhuận theo thời gian
-                if (data.timeSeriesRevenueProfitData != null &&
-                    data.timeSeriesRevenueProfitData!.isNotEmpty &&
-                    provider.errorMessage == null) ...[
-                  Text(
-                    'Sales Performance',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 10),
-                  _buildChartCard(
-                    context, // Truyền context
-                    _getSalesChartTitle(provider), // Tiêu đề động theo bộ lọc
-                    LineChart(_buildLineChartData(data
-                        .timeSeriesRevenueProfitData!)), // Truyền list dữ liệu từ DTO
-                    height: 300, // Chiều cao cho biểu đồ đường
-                  ),
-                  const SizedBox(height: 30), // Khoảng cách sau biểu đồ
-                ],
-
-                // Biểu đồ cột Sản phẩm bán ra theo thời gian
-                if (data.timeSeriesQuantityData != null &&
-                    data.timeSeriesQuantityData!.isNotEmpty &&
-                    provider.errorMessage == null) ...[
-                  Text(
-                    'Products Sold',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 10),
-                  _buildChartCard(
-                    context, // Truyền context
-                    _getTotalSalesChartTitle(
-                        provider), // Tiêu đề động theo bộ lọc
-                    BarChart(_buildBarChartData(context,
-                        data.timeSeriesQuantityData!)), // Truyền list dữ liệu từ DTO
-                    height: 300, // Chiều cao cho biểu đồ cột
-                  ),
-                  const SizedBox(height: 30), // Khoảng cách sau biểu đồ
-                ],
-
-                // Biểu đồ tròn Tỷ lệ sản phẩm bán ra theo danh mục
-                if (data.categorySalesRatio != null &&
-                    data.categorySalesRatio!.isNotEmpty &&
-                    provider.errorMessage == null) ...[
-                  Text(
-                    'Sales Ratio',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 10),
-                  _buildChartCard(
-                    context, // Truyền context
-                    _getCategoryRatioChartTitle(
-                        provider), // Tiêu đề động theo bộ lọc
-                    PieChart(_buildPieChartData(data
-                        .categorySalesRatio!)), // Truyền list dữ liệu từ DTO
-                    height: 300, // Chiều cao cho biểu đồ tròn
-                  ),
-                  const SizedBox(height: 30), // Khoảng cách sau biểu đồ
-                ],
-              ],
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 
@@ -224,7 +194,7 @@ class StatisticsScreen extends StatelessWidget {
 
   // --- Helper Methods cho UI Chọn Bộ Lọc (Thêm vào) ---
   Widget _buildFilterSelectionUI(
-      BuildContext context, MockDashboardProvider provider) {
+      BuildContext context, StatisticsProvider provider) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -262,7 +232,7 @@ class StatisticsScreen extends StatelessWidget {
 
   // Helper hiển thị UI nhập giá trị lọc tùy theo loại
   Widget _buildFilterValueInput(
-      BuildContext context, MockDashboardProvider provider) {
+      BuildContext context, StatisticsProvider provider) {
     switch (provider.currentFilterType) {
       case ChartFilterType.weekly:
         return Container(
@@ -375,6 +345,66 @@ class StatisticsScreen extends StatelessWidget {
             ),
           ],
         );
+      case ChartFilterType.quarterly:
+        final now = DateTime.now();
+        return Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                decoration: const InputDecoration(
+                  labelText: 'Quarter',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                ),
+                value: provider.selectedQuarter ?? ((now.month - 1) ~/ 3) + 1,
+                items: List.generate(4, (index) => index + 1).map((quarter) {
+                  return DropdownMenuItem(
+                    value: quarter,
+                    child: Text('Q$quarter'),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  if (newValue != null) {
+                    provider.setFilter(
+                      filterType: ChartFilterType.quarterly,
+                      selectedQuarter: newValue,
+                      selectedYear: provider.selectedYear ?? now.year,
+                    );
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                decoration: const InputDecoration(
+                  labelText: 'Year',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                ),
+                value: provider.selectedYear ?? now.year,
+                items:
+                    List.generate(10, (index) => now.year - index).map((year) {
+                  return DropdownMenuItem(
+                    value: year,
+                    child: Text(year.toString()),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  if (newValue != null) {
+                    provider.setFilter(
+                      filterType: ChartFilterType.quarterly,
+                      selectedQuarter: provider.selectedQuarter ?? 1,
+                      selectedYear: newValue,
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+        );
       case ChartFilterType.yearly:
         final now = DateTime.now();
         return DropdownButtonFormField<int>(
@@ -397,17 +427,11 @@ class StatisticsScreen extends StatelessWidget {
             }
           },
         );
-      case ChartFilterType.allTime:
-        return Container(
-          alignment: Alignment.centerLeft,
-          height: 56,
-          child: const Text('All Time', style: TextStyle(fontSize: 16)),
-        );
     }
   }
 
   // Helper hiển thị Date Picker
-  Future<void> _selectDate(BuildContext context, MockDashboardProvider provider,
+  Future<void> _selectDate(BuildContext context, StatisticsProvider provider,
       {required bool isStartDate}) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -439,13 +463,13 @@ class StatisticsScreen extends StatelessWidget {
         return 'Monthly';
       case ChartFilterType.yearly:
         return 'Yearly';
-      case ChartFilterType.allTime:
-        return 'All Time';
+      case ChartFilterType.quarterly:
+        return 'Quarterly';
     }
   }
 
   // Helper lấy tiêu đề động cho biểu đồ Doanh thu/Lợi nhuận
-  String _getSalesChartTitle(MockDashboardProvider provider) {
+  String _getSalesChartTitle(StatisticsProvider provider) {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {
@@ -474,15 +498,15 @@ class StatisticsScreen extends StatelessWidget {
           return 'Revenue and Profit in ${provider.selectedYear}';
         }
         return 'Revenue and Profit (Select Year)';
-      case ChartFilterType.allTime:
-        return 'Revenue and Profit (All Time)';
+      case ChartFilterType.quarterly:
+        return 'Revenue and Profit (Quarterly)';
       case ChartFilterType.weekly:
         return 'Revenue and Profit (Last 7 Days)';
     }
   }
 
   // Helper lấy tiêu đề động cho biểu đồ Sản phẩm bán ra
-  String _getTotalSalesChartTitle(MockDashboardProvider provider) {
+  String _getTotalSalesChartTitle(StatisticsProvider provider) {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {
@@ -511,15 +535,15 @@ class StatisticsScreen extends StatelessWidget {
           return 'Products Sold in ${provider.selectedYear}';
         }
         return 'Products Sold in ${provider.selectedYear}';
-      case ChartFilterType.allTime:
-        return 'Products Sold (All Time)';
+      case ChartFilterType.quarterly:
+        return 'Products Sold (Quarterly)';
       case ChartFilterType.weekly:
         return 'Products Sold (Last 7 Days)';
     }
   }
 
   // Helper lấy tiêu đề động cho biểu đồ Tỷ lệ danh mục
-  String _getCategoryRatioChartTitle(MockDashboardProvider provider) {
+  String _getCategoryRatioChartTitle(StatisticsProvider provider) {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {
@@ -548,8 +572,8 @@ class StatisticsScreen extends StatelessWidget {
           return 'Sales Ratio in ${provider.selectedYear}';
         }
         return 'Sales Ratio (Select Year)';
-      case ChartFilterType.allTime:
-        return 'Sales Ratio (All Time)';
+      case ChartFilterType.quarterly:
+        return 'Sales Ratio (Quarterly)';
       case ChartFilterType.weekly:
         return 'Sales Ratio (Last 7 Days)';
     }

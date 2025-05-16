@@ -23,7 +23,7 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
     super.initState();
     // Load coupons when the widget is built and after the first frame is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
-       Provider.of<CouponProvider>(context, listen: false).loadCoupons();
+      Provider.of<CouponProvider>(context, listen: false).loadCoupons();
     });
   }
 
@@ -43,99 +43,123 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return StatefulBuilder(
-          builder: (BuildContext context, StateSetter dialogSetState) {
-            return AlertDialog(
-              title: const Text('Thêm mã giảm giá mới'),
-              content: SingleChildScrollView(
-                child: ListBody(
-                  children: <Widget>[
-                    TextField(
-                      controller: _codeController,
-                      decoration: const InputDecoration(labelText: 'Mã giảm giá (5 ký tự chữ/số)', counterText: ''),
-                      maxLength: 5,
-                      textCapitalization: TextCapitalization.characters,
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<int>(
-                      value: _selectedDiscountValue,
-                      decoration: const InputDecoration(labelText: 'Giá trị giảm giá'),
-                      items: _discountValues.map((int value) {
-                        final formatter = NumberFormat('#,###', 'vi_VN');
-                        return DropdownMenuItem<int>(
-                          value: value,
-                          child: Text('${formatter.format(value)} VND'),
-                        );
-                      }).toList(),
-                      onChanged: (int? newValue) {
-                        if (newValue != null) {
-                          dialogSetState(() {
-                            _selectedDiscountValue = newValue;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _maxUsesController,
-                      decoration: const InputDecoration(labelText: 'Số lượt dùng tối đa (1-10)'), // Label based on requirements
-                      keyboardType: TextInputType.number,
-                    ),
-                  ],
-                ),
+            builder: (BuildContext context, StateSetter dialogSetState) {
+          return AlertDialog(
+            title: const Text('Thêm mã giảm giá mới'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  TextField(
+                    controller: _codeController,
+                    decoration: const InputDecoration(
+                        labelText: 'Mã giảm giá (5 ký tự chữ/số)',
+                        counterText: ''),
+                    maxLength: 5,
+                    textCapitalization: TextCapitalization.characters,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    value: _selectedDiscountValue,
+                    decoration:
+                        const InputDecoration(labelText: 'Giá trị giảm giá'),
+                    items: _discountValues.map((int value) {
+                      final formatter = NumberFormat('#,###', 'vi_VN');
+                      return DropdownMenuItem<int>(
+                        value: value,
+                        child: Text('${formatter.format(value)} VND'),
+                      );
+                    }).toList(),
+                    onChanged: (int? newValue) {
+                      if (newValue != null) {
+                        dialogSetState(() {
+                          _selectedDiscountValue = newValue;
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _maxUsesController,
+                    decoration: const InputDecoration(
+                        labelText:
+                            'Số lượt dùng tối đa (1-10)'), // Label based on requirements
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
               ),
-              actions: <Widget>[
-                TextButton(
-                  child: const Text('Hủy'),
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop();
-                  },
-                ),
-                Consumer<CouponProvider>( // Use Consumer to show loading state on button if needed
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Hủy'),
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                },
+              ),
+              Consumer<CouponProvider>(
+                  // Use Consumer to show loading state on button if needed
                   builder: (context, couponProvider, child) {
-                    // Optional: Disable button while adding
-                    final bool isAdding = couponProvider.isLoading && couponProvider.coupons.isEmpty; // Simple check
+                // Optional: Disable button while adding
+                final bool isAdding = couponProvider.isLoading &&
+                    couponProvider.coupons.isEmpty; // Simple check
 
-                    return ElevatedButton(
-                       onPressed: isAdding ? null : () async { // Disable if adding
-                         final couponProvider = Provider.of<CouponProvider>(dialogContext, listen: false);
+                return ElevatedButton(
+                  onPressed: isAdding
+                      ? null
+                      : () async {
+                          // Disable if adding
+                          final couponProvider = Provider.of<CouponProvider>(
+                              dialogContext,
+                              listen: false);
 
-                         final String code = _codeController.text.trim();
-                         final int? maxUses = int.tryParse(_maxUsesController.text.trim());
-                         final int value = _selectedDiscountValue;
+                          final String code = _codeController.text.trim();
+                          final int? maxUses =
+                              int.tryParse(_maxUsesController.text.trim());
+                          final int value = _selectedDiscountValue;
 
-                         if (maxUses == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(content: Text('Số lượt dùng tối đa không hợp lệ.')),
-                             );
-                             return;
-                         }
+                          if (maxUses == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Số lượt dùng tối đa không hợp lệ.')),
+                            );
+                            return;
+                          }
 
-                         try {
+                          try {
                             // Call the provider's method (which calls the repository)
                             await couponProvider.addCoupon(
-                               code: code,
-                               value: value,
-                               maxUses: maxUses,
+                              code: code,
+                              value: value,
+                              maxUses: maxUses,
                             );
                             Navigator.of(dialogContext).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
-                               const SnackBar(content: Text('Đã thêm mã giảm giá thành công.')),
+                              const SnackBar(
+                                  content:
+                                      Text('Đã thêm mã giảm giá thành công.')),
                             );
-                         } catch (e) {
+                          } catch (e) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(content: Text('Lỗi khi thêm mã giảm giá: ${e.toString()}')),
+                              SnackBar(
+                                  content: Text(
+                                      'Lỗi khi thêm mã giảm giá: ${e.toString()}')),
                             );
                             // Dialog stays open on error
-                         }
-                       },
-                       child: isAdding ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2,)) : const Text('Thêm'), // Show loading on button
-                     );
-                  }
-                ),
-              ],
-            );
-          }
-        );
+                          }
+                        },
+                  child: isAdding
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ))
+                      : const Text('Thêm'), // Show loading on button
+                );
+              }),
+            ],
+          );
+        });
       },
     );
   }
@@ -149,27 +173,43 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('ID: ${coupon.id}', style: const TextStyle(fontSize: 14, color: Colors.grey)), // Show backend ID
+                Text('ID: ${coupon.id}',
+                    style: const TextStyle(
+                        fontSize: 14, color: Colors.grey)), // Show backend ID
                 const SizedBox(height: 8),
-                Text('Giá trị: ${coupon.formattedValue} VND', style: const TextStyle(fontSize: 16)),
+                Text('Giá trị: ${coupon.formattedValue} VND',
+                    style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 8),
-                Text('Đã dùng: ${coupon.usedCount}/${coupon.maxUses} lượt', style: const TextStyle(fontSize: 16)),
-                 const SizedBox(height: 8),
-                Text('Trạng thái: ${coupon.valid ? "Còn hiệu lực" : "Hết hiệu lực"}', style: TextStyle(fontSize: 16, color: coupon.valid ? Colors.green : Colors.red)), // Show valid status
+                Text('Đã dùng: ${coupon.usedCount}/${coupon.maxUses} lượt',
+                    style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 8),
-                Text('Ngày tạo: ${coupon.formattedCreationTime}', style: const TextStyle(fontSize: 16)),
+                Text(
+                    'Trạng thái: ${coupon.valid ? "Còn hiệu lực" : "Hết hiệu lực"}',
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: coupon.valid
+                            ? Colors.green
+                            : Colors.red)), // Show valid status
+                const SizedBox(height: 8),
+                Text('Ngày tạo: ${coupon.formattedCreationTime}',
+                    style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 16),
-                Text('Đơn hàng đã áp dụng (${coupon.ordersApplied.length}):', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('Đơn hàng đã áp dụng (${coupon.ordersApplied.length}):',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 if (coupon.ordersApplied.isEmpty)
                   const Text('Chưa được áp dụng cho đơn hàng nào.')
                 else
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: coupon.ordersApplied.map((orderId) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                      child: Text('- $orderId'),
-                    )).toList(),
+                    children: coupon.ordersApplied
+                        .map((orderId) => Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 2.0),
+                              child: Text('- $orderId'),
+                            ))
+                        .toList(),
                   ),
               ],
             ),
@@ -188,39 +228,44 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
   }
 
   // Confirmation dialog for deletion
-   Future<bool> _confirmDelete(BuildContext context, Coupon coupon) async {
-     return await showDialog(
-       context: context,
-       builder: (BuildContext context) {
-         return AlertDialog(
-           title: const Text('Xác nhận xóa'),
-           content: Text('Bạn có chắc chắn muốn xóa mã giảm giá "${coupon.code}" không?'),
-           actions: <Widget>[
-             TextButton(
-               onPressed: () => Navigator.of(context).pop(false), // User cancels
-               child: const Text('Hủy'),
-             ),
-             TextButton(
-               onPressed: () => Navigator.of(context).pop(true), // User confirms
-               child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-             ),
-           ],
-         );
-       },
-     ) ?? false; // Return false if dialog is dismissed
-   }
-
+  Future<bool> _confirmDelete(BuildContext context, Coupon coupon) async {
+    return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Xác nhận xóa'),
+              content: Text(
+                  'Bạn có chắc chắn muốn xóa mã giảm giá "${coupon.code}" không?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () =>
+                      Navigator.of(context).pop(false), // User cancels
+                  child: const Text('Hủy'),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      Navigator.of(context).pop(true), // User confirms
+                  child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Return false if dialog is dismissed
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       appBar: AppBar(
-            title: const Text('Quản lý mã giảm giá'),
-          ),
+      appBar: AppBar(
+        title: const Text('Quản lý mã giảm giá'),
+      ),
       body: Consumer<CouponProvider>(
         builder: (context, couponProvider, child) {
-          if (couponProvider.isLoading && couponProvider.coupons.isEmpty && couponProvider.errorMessage == null) {
-             // Show initial loading only if list is empty and no error yet
+          if (couponProvider.isLoading &&
+              couponProvider.coupons.isEmpty &&
+              couponProvider.errorMessage == null) {
+            // Show initial loading only if list is empty and no error yet
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -231,7 +276,10 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(couponProvider.errorMessage!, textAlign: TextAlign.center,),
+                    Text(
+                      couponProvider.errorMessage!,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => couponProvider.loadCoupons(),
@@ -262,68 +310,87 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
             itemCount: couponProvider.coupons.length,
             itemBuilder: (context, index) {
               final coupon = couponProvider.coupons[index];
-               // Use Dismissible for swipe-to-delete
-               return Dismissible(
-                 key: Key(coupon.id), // Unique key for the item
-                 direction: DismissDirection.endToStart, // Swipe from right to left
-                 background: Container(
-                   color: Colors.red,
-                   alignment: Alignment.centerRight,
-                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                   child: const Icon(Icons.delete, color: Colors.white),
-                 ),
-                 confirmDismiss: (direction) async {
-                    // Show confirmation dialog before actually dismissing
-                    return await _confirmDelete(context, coupon);
-                 },
-                 onDismissed: (direction) {
-                   // Call the provider to delete the coupon after confirmation
-                   Provider.of<CouponProvider>(context, listen: false).deleteCoupon(coupon.id).catchError((error) {
-                     // Handle errors specific to deletion if necessary
-                     ScaffoldMessenger.of(context).showSnackBar(
-                       SnackBar(content: Text('Xóa mã "${coupon.code}" thất bại: ${error.toString()}')),
-                     );
-                     // Need to manually re-add the item if delete failed on backend
-                     // This is complex, often better to rely on loadCoupons() after error or a more robust state management
-                     // For simplicity here, we just show an error snackbar. The state might be temporarily inconsistent.
-                   });
-                   // Show a temporary message
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     SnackBar(content: Text('Đang xóa mã "${coupon.code}"...')),
-                   );
-                 },
-                 child: Card(
-                   elevation: 2.0,
-                   margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 0),
-                   child: ListTile(
-                     leading: CircleAvatar(
-                          // Show usage percentage or status
-                          backgroundColor: coupon.valid ? (coupon.usedCount >= coupon.maxUses ? Colors.orangeAccent : Colors.green) : Colors.grey,
-                          child: Text('${coupon.usedCount}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                     ),
-                     title: Text(coupon.code, style: const TextStyle(fontWeight: FontWeight.bold)),
-                     subtitle: Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
-                          Text('Giá trị: ${coupon.formattedValue} VND'),
-                         Text('Lượt dùng: ${coupon.usedCount}/${coupon.maxUses}'),
-                          Text(coupon.valid ? "Còn hiệu lực" : "Hết hiệu lực", style: TextStyle(color: coupon.valid ? Colors.green.shade700 : Colors.red.shade700)),
-                       ],
-                     ),
-                     trailing: const Icon(Icons.visibility),
-                     onTap: () => _showCouponDetailsDialog(context, coupon),
-                   ),
-                 ),
-               );
+              // Use Dismissible for swipe-to-delete
+              return Dismissible(
+                key: Key(coupon.id), // Unique key for the item
+                direction:
+                    DismissDirection.endToStart, // Swipe from right to left
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                confirmDismiss: (direction) async {
+                  // Show confirmation dialog before actually dismissing
+                  return await _confirmDelete(context, coupon);
+                },
+                onDismissed: (direction) {
+                  // Call the provider to delete the coupon after confirmation
+                  Provider.of<CouponProvider>(context, listen: false)
+                      .deleteCoupon(coupon.id)
+                      .catchError((error) {
+                    // Handle errors specific to deletion if necessary
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Xóa mã "${coupon.code}" thất bại: ${error.toString()}')),
+                    );
+                    // Need to manually re-add the item if delete failed on backend
+                    // This is complex, often better to rely on loadCoupons() after error or a more robust state management
+                    // For simplicity here, we just show an error snackbar. The state might be temporarily inconsistent.
+                  });
+                  // Show a temporary message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Đang xóa mã "${coupon.code}"...')),
+                  );
+                },
+                child: Card(
+                  elevation: 2.0,
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 4.0, horizontal: 0),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      // Show usage percentage or status
+                      backgroundColor: coupon.valid
+                          ? (coupon.usedCount >= coupon.maxUses
+                              ? Colors.orangeAccent
+                              : Colors.green)
+                          : Colors.grey,
+                      child: Text('${coupon.usedCount}',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                    title: Text(coupon.code,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Giá trị: ${coupon.formattedValue} VND'),
+                        Text(
+                            'Lượt dùng: ${coupon.usedCount}/${coupon.maxUses}'),
+                        Text(coupon.valid ? "Còn hiệu lực" : "Hết hiệu lực",
+                            style: TextStyle(
+                                color: coupon.valid
+                                    ? Colors.green.shade700
+                                    : Colors.red.shade700)),
+                      ],
+                    ),
+                    trailing: const Icon(Icons.visibility),
+                    onTap: () => _showCouponDetailsDialog(context, coupon),
+                  ),
+                ),
+              );
             },
           );
         },
       ),
-       floatingActionButton: FloatingActionButton(
-         onPressed: () => _showAddCouponDialog(context),
-         tooltip: 'Thêm mã giảm giá',
-         child: const Icon(Icons.add),
-       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddCouponDialog(context),
+        tooltip: 'Thêm mã giảm giá',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

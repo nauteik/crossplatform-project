@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:admin_interface/proxy/screen_access_interface.dart';
 import 'package:admin_interface/features/coupons_management/screens/coupons_management_screen.dart';
-import 'package:admin_interface/features/home/screens/home_screen.dart';
+import 'package:admin_interface/features/overview/screens/overview_screen.dart';
 import 'package:admin_interface/features/orders_management/screens/orders_management_screen.dart';
 import 'package:admin_interface/features/products_management/screens/products_management_screen.dart';
 import 'package:admin_interface/features/statistics/screens/statistics_screen.dart';
@@ -14,7 +14,7 @@ class RealScreenAccess implements ScreenAccessInterface {
   Widget getScreen(int index, BuildContext context) {
     switch (index) {
       case 0:
-        return const HomeScreen();
+        return const OverviewScreen();
       case 1:
         return const StatisticsScreen();
       case 2:
@@ -28,7 +28,7 @@ class RealScreenAccess implements ScreenAccessInterface {
       case 6:
         return const ChatSupportScreen();
       default:
-        return const HomeScreen();
+        return const OverviewScreen();
     }
   }
 }
