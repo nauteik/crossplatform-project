@@ -1,2 +1,0 @@
-D:/TDTU/HK6/Design Pattern/design-pattern-final-hkt/frontend-admin/android/app/.cxx/Debug/l1z2f3u6/x86/CMakeFiles/edit_cache.dir
-D:/TDTU/HK6/Design Pattern/design-pattern-final-hkt/frontend-admin/android/app/.cxx/Debug/l1z2f3u6/x86/CMakeFiles/rebuild_cache.dir

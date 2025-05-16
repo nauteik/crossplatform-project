@@ -1,8 +1,0 @@
-{
-    "cmake.ignoreCMakeListsMissing": true,
-    "[java]": {
-        "java.configuration.checkProjectSettingsExclusions": false,
-        "java.import.gradle.enabled": false
-    }
-
-}
