@@ -16,13 +16,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.security.Key;
+import java.security.SecureRandom;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -36,6 +33,9 @@ public class UserService implements UserDetailsService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
+
+    @Autowired
+    private EmailService emailService;
 
     public User registerUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
@@ -415,6 +415,57 @@ public class UserService implements UserDetailsService {
                 .setExpiration(expiryDate)
                 .signWith(secretKey)
                 .compact();
+    }
+
+    /**
+     * Tạo mật khẩu ngẫu nhiên với độ dài xác định
+     * @param length Độ dài của mật khẩu
+     * @return Mật khẩu ngẫu nhiên
+     */
+    private String generateRandomPassword(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+        SecureRandom random = new SecureRandom();
+        StringBuilder sb = new StringBuilder();
+        
+        for (int i = 0; i < length; i++) {
+            int randomIndex = random.nextInt(chars.length());
+            sb.append(chars.charAt(randomIndex));
+        }
+        
+        return sb.toString();
+    }
+
+    /**
+     * Đặt lại mật khẩu cho người dùng
+     * @param email Email của người dùng
+     * @return true nếu đặt lại mật khẩu thành công, false nếu không tìm thấy email
+     */
+    public boolean resetPassword(String email) {
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        
+        if (userOptional.isEmpty()) {
+            return false;
+        }
+        
+        User user = userOptional.get();
+        
+        // Tạo mật khẩu ngẫu nhiên 8 ký tự
+        String newPassword = generateRandomPassword(8);
+        
+        // Cập nhật mật khẩu đã mã hóa vào cơ sở dữ liệu
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        // Gửi email chứa mật khẩu mới
+        Map<String, Object> emailData = new HashMap<>();
+        emailData.put("to", user.getEmail());
+        emailData.put("username", user.getUsername());
+        emailData.put("email", user.getEmail());
+        emailData.put("newPassword", newPassword);
+        
+        emailService.sendPasswordResetEmail(emailData);
+        
+        return true;
     }
 }
 

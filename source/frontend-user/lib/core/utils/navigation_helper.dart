@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/product/presentation/screens/product_detail_screen.dart';
 import '../../features/product/presentation/screens/product_review_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
@@ -16,49 +17,54 @@ class NavigationHelper {
       page: const LoginScreen(),
     );
   }
+
   static Future<T?> navigateToRegister<T>(BuildContext context) {
     return pushWithSlideTransition(
       context: context,
       page: const RegisterScreen(),
     );
   }
-  
-  static Future<T?> navigateToProductDetail<T>(BuildContext context, String productId) {
+
+  static Future<T?> navigateToProductDetail<T>(
+      BuildContext context, String productId) {
     return pushWithSlideTransition(
       context: context,
       page: ProductDetailScreen(productId: productId),
     );
   }
 
-  static Future<T?> navigateToProductReview<T>(BuildContext context, String productId) {
+  static Future<T?> navigateToProductReview<T>(
+      BuildContext context, String productId) {
     return pushWithSlideTransition(
       context: context,
       page: ProductReviewScreen(productId: productId),
     );
   }
-  
+
   static Future<T?> navigateToCart<T>(BuildContext context) {
     return pushWithSlideTransition(
       context: context,
       page: const CartScreen(),
     );
   }
-  
-  static Future<T?> navigateToOrderHistory<T>(BuildContext context, String userId) {
+
+  static Future<T?> navigateToOrderHistory<T>(
+      BuildContext context, String userId) {
     return pushWithSlideTransition(
       context: context,
       page: OrderHistoryScreen(userId: userId),
     );
   }
-  
+
   static Future<T?> navigateToAddressManagement<T>(BuildContext context) {
     return pushWithSlideTransition(
       context: context,
       page: const AddressScreen(),
     );
   }
-  
-  static Future<AddressModel?> navigateToAddressSelection<T>(BuildContext context) {
+
+  static Future<AddressModel?> navigateToAddressSelection<T>(
+      BuildContext context) {
     return Navigator.of(context).push<AddressModel>(
       MaterialPageRoute(
         builder: (context) => AddressScreen(
@@ -67,6 +73,15 @@ class NavigationHelper {
             Navigator.of(context).pop(address);
           },
         ),
+      ),
+    );
+  }
+
+  static void navigateToForgotPassword(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ForgotPasswordScreen(),
       ),
     );
   }
