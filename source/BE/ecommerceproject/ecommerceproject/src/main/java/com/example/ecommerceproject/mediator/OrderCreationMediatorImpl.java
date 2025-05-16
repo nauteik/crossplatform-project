@@ -105,7 +105,7 @@ public class OrderCreationMediatorImpl implements OrderCreationMediator {
         order.setTotalAmount(totalAmount);
         order.setStatus(OrderStatus.PENDING);
         order.setPaymentMethod(paymentMethod);
-        order.setShippingAddress(shippingAddress);
+        // order.setShippingAddress(shippingAddress);
         order.setCreatedAt(LocalDateTime.now());
         order.setUpdatedAt(LocalDateTime.now());
 

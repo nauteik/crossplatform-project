@@ -14,13 +14,14 @@ class AuthProvider extends ChangeNotifier {
   Map<String, dynamic>? _userData;
   String? _errorMessage;
   String _username = '';
+  String? _userId;
 
   bool get isAuthenticated => _isAuthenticated;
   String? get token => _token;
   Map<String, dynamic>? get userData => _userData;
   String? get errorMessage => _errorMessage;
   String get username => _username;
-  String? get userId => _userData?['id'] as String?;
+  String? get userId => _userId;
 
   AuthProvider() {
     _loadAuthState();
@@ -321,5 +322,19 @@ class AuthProvider extends ChangeNotifier {
     } catch (e) {
       print('Lỗi khi tải thông tin người dùng chi tiết: $e');
     }
+  }
+
+  // Thiết lập token và userId trực tiếp (hữu ích khi tạo tài khoản tự động)
+  Future<void> setTokenAndUserId(String token, String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    await prefs.setString('jwt_token', token);
+    await prefs.setString('userId', userId);
+    
+    _token = token;
+    _userId = userId;
+    _isAuthenticated = true;
+    
+    notifyListeners();
   }
 }

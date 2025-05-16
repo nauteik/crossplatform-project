@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../../core/models/address_model.dart';
 import '../../../../core/services/address_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import '../../../../core/constants/api_constants.dart';
 
 class AddressProvider extends ChangeNotifier {
   final AddressService _addressService = AddressService();
@@ -23,18 +27,33 @@ class AddressProvider extends ChangeNotifier {
   }
   
   // Lấy danh sách địa chỉ của người dùng
-  Future<void> fetchUserAddresses(String userId, String token) async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
+  Future<void> fetchUserAddresses(String? userId, String token) async {
+    if (userId == null) return;
     
     try {
-      _addresses = await _addressService.getUserAddresses(userId, token);
-      _isLoading = false;
+      _isLoading = true;
       notifyListeners();
+      
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/user/addresses/$userId'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      
+      // Xử lý phản hồi với UTF-8
+      final responseBody = utf8.decode(response.bodyBytes);
+      final data = jsonDecode(responseBody);
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> addressesJson = data['data'] ?? [];
+        _addresses = addressesJson.map((json) => AddressModel.fromJson(json)).toList();
+      }
     } catch (e) {
+      print('Error fetching addresses: $e');
+    } finally {
       _isLoading = false;
-      _errorMessage = e.toString();
       notifyListeners();
     }
   }

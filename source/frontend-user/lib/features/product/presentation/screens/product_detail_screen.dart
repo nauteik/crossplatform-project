@@ -207,16 +207,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         Provider.of<ProductProvider>(context, listen: false);
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
 
-    if (!authProvider.isAuthenticated) {
-      NavigationHelper.navigateToLogin(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
+    // Cập nhật trạng thái đăng nhập cho CartProvider
+    cartProvider.setAuthenticated(authProvider.isAuthenticated);
 
     if (productProvider.currentProduct == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -274,32 +266,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chi Tiết Sản Phẩm'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_border),
-            onPressed: () {
-              // Thêm vào danh sách yêu thích
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Đã thêm vào danh sách yêu thích'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              // Chia sẻ sản phẩm
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Đã sao chép link sản phẩm'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-        ],
+          actions: [
+          
+          ],
       ),
       body: Consumer<ProductProvider>(
         builder: (context, productProvider, child) {
@@ -528,17 +497,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           final productProvider = Provider.of<ProductProvider>(context, listen: false);
           final cartProvider = Provider.of<CartProvider>(context, listen: false);
           
-          // Check if user is authenticated
-          if (!authProvider.isAuthenticated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Vui lòng đăng nhập để mua hàng'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-            NavigationHelper.navigateToLogin(context);
-            return;
-          }
+          // Cập nhật trạng thái đăng nhập cho CartProvider
+          cartProvider.setAuthenticated(authProvider.isAuthenticated);
           
           // Check if product is available
           if (productProvider.currentProduct == null) {
