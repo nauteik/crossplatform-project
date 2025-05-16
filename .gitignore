@@ -1,0 +1,8 @@
+source/frontend-admin/linux/flutter/ephemeral/.plugin_symlinks/file_selector_linux
+source/frontend-admin/linux/flutter/ephemeral/.plugin_symlinks/image_picker_linux
+source/frontend-admin/linux/flutter/ephemeral/.plugin_symlinks/path_provider_linux
+source/frontend-admin/linux/flutter/ephemeral/.plugin_symlinks/shared_preferences_linux
+source/frontend-admin/windows/flutter/ephemeral/.plugin_symlinks/file_selector_windows
+source/frontend-admin/windows/flutter/ephemeral/.plugin_symlinks/image_picker_windows
+source/frontend-admin/windows/flutter/ephemeral/.plugin_symlinks/path_provider_windows
+source/frontend-admin/windows/flutter/ephemeral/.plugin_symlinks/shared_preferences_windows
