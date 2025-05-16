@@ -3,8 +3,6 @@ package com.example.ecommerceproject.service;
 import com.example.ecommerceproject.model.Order;
 import com.example.ecommerceproject.singleton.AppLogger;
 import com.example.ecommerceproject.strategy.PaymentStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

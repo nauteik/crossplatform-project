@@ -1,11 +1,13 @@
 import 'dart:io';
+import 'package:admin_interface/core/utils/image_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/message_model.dart';
-import '../../../models/user_model.dart';
 import '../../../providers/message_provider.dart';
+import '../../../providers/auth_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatSupportScreen extends StatefulWidget {
   const ChatSupportScreen({Key? key}) : super(key: key);
@@ -19,20 +21,100 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
   final ImagePicker _picker = ImagePicker();
   List<File> _selectedImages = [];
   String? _adminId;
+  final ScrollController _scrollController = ScrollController();
   
   @override
   void initState() {
     super.initState();
-    // TODO: Thay thế 'admin-id' bằng ID thực của admin đang đăng nhập
-    _adminId = 'admin-id';
     
-    // Load danh sách users đã gửi tin nhắn
+    // Lấy ID admin từ AuthProvider
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_adminId != null) {
-        context.read<MessageProvider>().loadUsers(_adminId!);
-        context.read<MessageProvider>().loadUnreadCount();
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      // Debug để xem thông tin hiện tại
+      authProvider.printCurrentAdminInfo();
+      
+      // Hiển thị userId hiện tại từ SharedPreferences
+      _checkCurrentAdminIdFromPrefs();
+      
+      print('Current Admin ID: ${authProvider.userId}');
+      
+      setState(() {
+        _adminId = authProvider.userId;
+      });
+      
+      // Load danh sách users đã gửi tin nhắn
+      if (_adminId != null && _adminId!.isNotEmpty) {
+        print('Admin ID set: $_adminId');
+        context.read<MessageProvider>().loadUsers(_adminId!).then((_) {
+          // In ra thông tin sau khi users được tải
+          final users = context.read<MessageProvider>().users;
+          print('Loaded ${users.length} users');
+          for (var user in users) {
+            print('User: ${user.id} - ${user.name}');
+          }
+        }).catchError((error) {
+          print('Error loading users: $error');
+        });
+        
+        context.read<MessageProvider>().loadUnreadCount().catchError((error) {
+          print('Error loading unread count: $error');
+        });
+      } else {
+        print('Admin ID is null or empty! Checking SharedPreferences...');
+        _checkAdminFromSharedPreferences();
       }
     });
+  }
+  
+  // Hàm kiểm tra và hiển thị id lưu trong SharedPreferences
+  Future<void> _checkCurrentAdminIdFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedAdminId = prefs.getString('admin_id');
+      final storedAdminEmail = prefs.getString('admin_email');
+      final storedAdminName = prefs.getString('admin_name');
+      
+      print('------------------------------');
+      print('SharedPreferences Admin Info:');
+      print('Admin ID: $storedAdminId');
+      print('Admin Email: $storedAdminEmail');
+      print('Admin Name: $storedAdminName');
+      print('------------------------------');
+    } catch (e) {
+      print('Error checking admin prefs: $e');
+    }
+  }
+  
+  // Hàm mới để lấy thông tin admin từ SharedPreferences nếu không có trong AuthProvider
+  Future<void> _checkAdminFromSharedPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedAdminId = prefs.getString('admin_id');
+      
+      if (storedAdminId != null && storedAdminId.isNotEmpty) {
+        print('Retrieved Admin ID from SharedPreferences: $storedAdminId');
+        setState(() {
+          _adminId = storedAdminId;
+        });
+        
+        // Tải dữ liệu với admin ID từ SharedPreferences
+        context.read<MessageProvider>().loadUsers(_adminId!).catchError((error) {
+          print('Error loading users with stored admin ID: $error');
+        });
+        
+        context.read<MessageProvider>().loadUnreadCount().catchError((error) {
+          print('Error loading unread count: $error');
+        });
+      } else {
+        print('No Admin ID found in SharedPreferences!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể xác định ID quản trị viên. Vui lòng đăng nhập lại.')),
+        );
+      }
+    } catch (e) {
+      print('Error checking admin from SharedPreferences: $e');
+    }
   }
   
   Future<void> _pickImage() async {
@@ -48,6 +130,16 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
     setState(() {
       _selectedImages.removeAt(index);
     });
+  }
+  
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0, 
+        duration: const Duration(milliseconds: 300), 
+        curve: Curves.easeOut
+      );
+    }
   }
   
   Future<void> _sendMessage() async {
@@ -70,6 +162,9 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
           setState(() {
             _selectedImages = [];
           });
+          
+          // Cuộn xuống tin nhắn mới nhất
+          _scrollToBottom();
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Lỗi: ${e.toString()}')),
@@ -85,6 +180,14 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
       appBar: AppBar(
         title: const Text('Hỗ trợ khách hàng'),
         centerTitle: true,
+        actions: [
+          // Thêm nút refresh để tải lại dữ liệu
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _refreshData(),
+            tooltip: 'Tải lại dữ liệu',
+          ),
+        ],
       ),
       body: Row(
         children: [
@@ -187,6 +290,7 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
                       child: provider.messages.isEmpty
                           ? const Center(child: Text('Không có tin nhắn nào'))
                           : ListView.builder(
+                              controller: _scrollController,
                               reverse: true,
                               itemCount: provider.messages.length,
                               itemBuilder: (context, index) {
@@ -330,7 +434,7 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
                             showDialog(
                               context: context,
                               builder: (context) => Dialog(
-                                child: Image.network('$imageUrl'),
+                                child: Image.network(ImageHelper.getProductImage(imageUrl)),
                               ),
                             );
                           },
@@ -338,7 +442,7 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
                             width: 150,
                             height: 150,
                             child: Image.network(
-                              '$imageUrl',
+                              ImageHelper.getProductImage(imageUrl),
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -369,6 +473,43 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+  
+  // Hàm để tải lại dữ liệu khi refresh
+  Future<void> _refreshData() async {
+    try {
+      // Hiển thị thông báo đang tải
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đang tải lại dữ liệu...')),
+      );
+      
+      if (_adminId == null || _adminId!.isEmpty) {
+        print('Kiểm tra lại ID quản trị viên từ SharedPreferences...');
+        await _checkAdminFromSharedPreferences();
+      } else {
+        print('Tải lại dữ liệu với adminId: $_adminId');
+        await context.read<MessageProvider>().loadUsers(_adminId!);
+        
+        // Nếu đang có cuộc hội thoại, tải lại
+        final selectedUser = context.read<MessageProvider>().selectedUser;
+        if (selectedUser != null) {
+          await context.read<MessageProvider>().loadConversation(selectedUser.id, _adminId!);
+        }
+        
+        await context.read<MessageProvider>().loadUnreadCount();
+        
+        // Hiển thị thông báo tải thành công
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã tải lại dữ liệu thành công')),
+        );
+      }
+    } catch (e) {
+      print('Lỗi khi tải lại dữ liệu: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: ${e.toString()}')),
+      );
+    }
   }
 } 

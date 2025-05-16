@@ -59,7 +59,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Orders'),
+        title: const Text('Đơn hàng của tôi'),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -94,7 +94,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                           _loadOrders();
                         });
                       },
-                      child: const Text('Retry'),
+                      child: const Text('Thử lại'),
                     ),
                   ],
                 ),
@@ -111,12 +111,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'No orders found',
+                      'Không có đơn hàng nào',
                       style: TextStyle(fontSize: 18),
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Your order history will appear here',
+                      'Lịch sử đơn hàng của bạn sẽ xuất hiện ở đây',
                       style: TextStyle(color: Colors.grey),
                     ),
                     const SizedBox(height: 24),
@@ -125,7 +125,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                         // Navigate back to home/product browsing
                         Navigator.of(context).pop();
                       },
-                      child: const Text('Start Shopping'),
+                      child: const Text('Bắt đầu mua hàng'),
                     ),
                   ],
                 ),
@@ -241,7 +241,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                         ),
                       );
                     },
-                    child: const Text('View Details'),
+                    child: const Text('Xem chi tiết'),
                   ),
                 ],
               ),
@@ -296,9 +296,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
   String _formatPaymentMethod(String method) {
     switch (method) {
       case 'CREDIT_CARD':
-        return 'Credit Card';
+        return 'Thẻ tín dụng';
       case 'COD':
-        return 'Cash on Delivery';
+        return 'Thanh toán khi nhận hàng';
       default:
         return method;
     }

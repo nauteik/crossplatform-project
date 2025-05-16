@@ -12,16 +12,21 @@ class MessageRepository {
   // Lấy cuộc hội thoại giữa admin và user
   Future<List<Message>> getConversation(String userId, String adminId) async {
     final url = '$baseUrl/api/messages/conversation?userId=$userId&adminId=$adminId';
+    print('Fetching conversation: $url');
     
     final response = await http.get(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
     );
     
+    print('Conversation response status: ${response.statusCode}');
+    print('Conversation response body: ${response.body}');
+    
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = json.decode(response.body);
-      if (responseData['code'] == 'SUCCESS') {
+      if (responseData['status'] == 200) {
         final List<dynamic> messageData = responseData['data'];
+        print('Message data: $messageData');
         return messageData.map((data) => Message.fromMap(data)).toList();
       } else {
         throw Exception(responseData['message']);
@@ -34,22 +39,37 @@ class MessageRepository {
   // Lấy danh sách users đã gửi tin nhắn cho admin
   Future<List<User>> getUsersWithMessages(String adminId) async {
     final url = '$baseUrl/api/messages/admin/$adminId/users';
+    print('Đang tải danh sách người dùng từ: $url');
     
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-    );
-    
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> responseData = json.decode(response.body);
-      if (responseData['code'] == 'SUCCESS') {
-        final List<dynamic> userData = responseData['data'];
-        return userData.map((data) => User.fromJson(data)).toList();
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+      );
+      
+      print('API getUsersWithMessages response code: ${response.statusCode}');
+      
+      // In ra một phần của nội dung phản hồi (nếu quá dài)
+      final responseBody = response.body;
+      final previewLength = responseBody.length > 300 ? 300 : responseBody.length;
+      print('API getUsersWithMessages preview: ${responseBody.substring(0, previewLength)}...');
+      
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+        if (responseData['status'] == 200 && responseData['data'] != null) {
+          final List<dynamic> userData = responseData['data'];
+          return userData.map((data) => User.fromJson(data)).toList();
+        } else {
+          print('API getUsersWithMessages lỗi status: ${responseData['status']}, message: ${responseData['message']}');
+          throw Exception(responseData['message'] ?? 'Lỗi khi tải danh sách người dùng');
+        }
       } else {
-        throw Exception(responseData['message']);
+        print('API getUsersWithMessages lỗi HTTP: ${response.statusCode}');
+        throw Exception('Lỗi khi kết nối tới máy chủ: ${response.statusCode}');
       }
-    } else {
-      throw Exception('Failed to load users');
+    } catch (e) {
+      print('Lỗi khi tải danh sách người dùng: $e');
+      rethrow;
     }
   }
   
@@ -84,7 +104,7 @@ class MessageRepository {
     if (response.statusCode == 201) {
       final responseBody = await response.stream.bytesToString();
       final Map<String, dynamic> responseData = json.decode(responseBody);
-      if (responseData['code'] == 'SUCCESS') {
+      if (responseData['status'] == 200) {
         return Message.fromMap(responseData['data']);
       } else {
         throw Exception(responseData['message']);
@@ -123,7 +143,7 @@ class MessageRepository {
     
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = json.decode(response.body);
-      if (responseData['code'] == 'SUCCESS') {
+      if (responseData['status'] == 200) {
         return responseData['data']['count'] as int;
       } else {
         throw Exception(responseData['message']);
@@ -144,7 +164,7 @@ class MessageRepository {
     
     if (response.statusCode == 200) {
       final Map<String, dynamic> responseData = json.decode(response.body);
-      return responseData['code'] == 'SUCCESS';
+      return responseData['status'] == 200;
     } else {
       throw Exception('Failed to delete message');
     }

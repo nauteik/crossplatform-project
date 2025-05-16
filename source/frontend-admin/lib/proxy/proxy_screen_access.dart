@@ -10,8 +10,10 @@ class ProxyScreenAccess implements ScreenAccessInterface {
 
   // List of screen indices that require admin permission - now empty
   final List<int> _adminOnlyScreens = [
+
     // 4 - removing restriction for UsersManagementScreen
   ];
+
 
   @override
   Widget getScreen(int index, BuildContext context) {

@@ -6,6 +6,7 @@ import 'package:admin_interface/features/orders_management/screens/orders_manage
 import 'package:admin_interface/features/products_management/screens/products_management_screen.dart';
 import 'package:admin_interface/features/statistics/screens/statistics_screen.dart';
 import 'package:admin_interface/features/users_management/screens/user_management_screen.dart';
+import 'package:admin_interface/features/customers_support/screens/chat_support_screen.dart';
 
 // The RealScreenAccess provides the actual implementation of accessing screens
 class RealScreenAccess implements ScreenAccessInterface {
@@ -24,6 +25,8 @@ class RealScreenAccess implements ScreenAccessInterface {
         return const OrdersManagementScreen();
       case 5:
         return const CouponsManagementScreen();
+      case 6:
+        return const ChatSupportScreen();
       default:
         return const OverviewScreen();
     }

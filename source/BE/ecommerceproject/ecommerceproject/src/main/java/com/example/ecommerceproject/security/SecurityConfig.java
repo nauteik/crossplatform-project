@@ -16,7 +16,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.io.PrintWriter;
 import java.util.Arrays;
 
 @Configuration
@@ -53,6 +52,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/user/getAll").permitAll()
                 .requestMatchers("/api/user/get/**").permitAll()
@@ -76,8 +76,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/producttype/create").permitAll()
                 .requestMatchers("/api/producttype/update/{id}").permitAll()
                 .requestMatchers("/api/producttype/delete/{id}").permitAll()
+                // Address API paths
+                .requestMatchers("/api/address/**").permitAll()
                 // Message API paths
                 .requestMatchers("/api/messages/**").permitAll()
+                .requestMatchers("/chat/**").permitAll()
                 // Product API paths
                 .requestMatchers("/api/tags/**").permitAll()
                 // Product API paths

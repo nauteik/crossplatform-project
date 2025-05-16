@@ -32,6 +32,7 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    print('Creating User from JSON: $json');
     DateTime? parseBirthday(dynamic dateJson) {
       if (dateJson == null) return null;
       if (dateJson is String) {
@@ -56,9 +57,8 @@ class User {
         return 0;
       }
 
-
-    return User(
-      id: json['id'] ?? '',
+    var user = User(
+      id: json['id'] ?? json['_id'] ?? '',
       email: json['email'] ?? '',
       password: null,
       avatar: json['avatar'] as String?,
@@ -72,6 +72,9 @@ class User {
       totalSpend: parseInt(json['totalSpend']),
       role: parseRole(json['role']),
     );
+    
+    print('Created User: ${user.id}, ${user.name}, ${user.email}, Role: ${user.role}');
+    return user;
   }
 
   // Phương thức chuyển User thành JSON (khi gửi lên backend)

@@ -2,8 +2,6 @@ package com.example.ecommerceproject.strategy;
 
 import com.example.ecommerceproject.model.Order;
 import com.example.ecommerceproject.singleton.AppLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

@@ -229,6 +229,21 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     
     return brandMap.values.toList();
   }
+  
+  // Phương thức mới để đảm bảo brands được tải đúng cách
+  Future<List<dynamic>> _ensureBrandsLoaded(BuildContext context) async {
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    
+    // Kiểm tra xem products đã được tải chưa
+    if (productProvider.products.isEmpty && productProvider.status != ProductStatus.loading) {
+      // Nếu chưa, thực hiện fetch products
+      await productProvider.fetchPagedProducts();
+    }
+    
+    // Lấy danh sách brands từ products
+    return _getBrands(productProvider.products);
+  }
+
   Widget _buildErrorView(String title) {
     return Center(
       child: Padding(
@@ -704,7 +719,8 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final typeProvider = Provider.of<ProductTypeProvider>(context, listen: false);
     
-    final brands = _getBrands(productProvider.products);
+    // Sử dụng FutureBuilder để đảm bảo brands được tải trước khi hiển thị dialog
+    Future<List<dynamic>> brandsFuture = _ensureBrandsLoaded(context);
     
     final isDesktop = MediaQuery.of(context).size.width >= 1200;
     final isTablet = MediaQuery.of(context).size.width >= 600 && MediaQuery.of(context).size.width < 1200;
@@ -713,32 +729,216 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
       showDialog(
         context: context,
         builder: (context) {
-          return StatefulBuilder(
-            builder: (context, setState) {
-              final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+          return FutureBuilder<List<dynamic>>(
+            future: brandsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const AlertDialog(
+                  content: Center(child: CircularProgressIndicator()),
+                );
+              }
               
-              return AlertDialog(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Lọc sản phẩm'),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
+              final brands = snapshot.data ?? [];
+              
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+                  
+                  return AlertDialog(
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Lọc sản phẩm'),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                content: SizedBox(
-                  width: isDesktop ? 800 : 500,
-                  height: isDesktop ? 600 : 500,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    content: SizedBox(
+                      width: isDesktop ? 800 : 500,
+                      height: isDesktop ? 600 : 500,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Loại sản phẩm',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: typeProvider.productTypes.map((type) {
+                                      final isSelected = _selectedProductTypes.contains(type.id);
+                                      return FilterChip(
+                                        label: Text(type.name),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          setState(() {
+                                            if (selected) {
+                                              _selectedProductTypes.add(type.id);
+                                            } else {
+                                              _selectedProductTypes.remove(type.id);
+                                            }
+                                          });
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                  
+                                  const SizedBox(height: 24),
+                                  
+                                  const Text(
+                                    'Khoảng giá',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  RangeSlider(
+                                    values: _priceRange,
+                                    min: _minPrice,
+                                    max: _maxPrice,
+                                    divisions: 20,
+                                    labels: RangeLabels(
+                                      currencyFormatter.format(_priceRange.start),
+                                      currencyFormatter.format(_priceRange.end),
+                                    ),
+                                    onChanged: (RangeValues values) {
+                                      setState(() {
+                                        _priceRange = values;
+                                      });
+                                    },
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(currencyFormatter.format(_priceRange.start)),
+                                      Text(currencyFormatter.format(_priceRange.end)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          
+                          if (isDesktop) const VerticalDivider(),
+                          
+                          if (isDesktop)
+                            Expanded(
+                              child: SingleChildScrollView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Thương hiệu',
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: brands.map((brand) {
+                                        final brandId = brand['id']?.toString() ?? '';
+                                        final isSelected = _selectedBrands.contains(brandId);
+                                        return FilterChip(
+                                          label: Text(brand['name']?.toString() ?? 'Unknown'),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            setState(() {
+                                              if (selected) {
+                                                _selectedBrands.add(brandId);
+                                              } else {
+                                                _selectedBrands.remove(brandId);
+                                              }
+                                            });
+                                          },
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedProductTypes.clear();
+                            _selectedBrands.clear();
+                            _priceRange = RangeValues(_minPrice, _maxPrice);
+                          });
+                        },
+                        child: const Text('Đặt lại'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _applyFilters();
+                        },
+                        child: const Text('Áp dụng'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          );
+        },
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) {
+          return FutureBuilder<List<dynamic>>(
+            future: brandsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              
+              final brands = snapshot.data ?? [];
+              
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+                  
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    height: MediaQuery.of(context).size.height * 0.8,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Lọc sản phẩm',
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                        
+                        Expanded(
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
                             children: [
                               const Text(
                                 'Loại sản phẩm',
@@ -766,7 +966,7 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                                 }).toList(),
                               ),
                               
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 16),
                               
                               const Text(
                                 'Khoảng giá',
@@ -795,20 +995,11 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                                   Text(currencyFormatter.format(_priceRange.end)),
                                 ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      
-                      if (isDesktop) const VerticalDivider(),
-                      
-                      if (isDesktop)
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                              
+                              // Hiển thị phần thương hiệu cho cả màn hình nhỏ
+                              if (brands.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                
                                 const Text(
                                   'Thương hiệu',
                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -836,189 +1027,41 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                                   }).toList(),
                                 ),
                               ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedProductTypes.clear();
-                        _selectedBrands.clear();
-                        _priceRange = RangeValues(_minPrice, _maxPrice);
-                      });
-                    },
-                    child: const Text('Đặt lại'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _applyFilters();
-                    },
-                    child: const Text('Áp dụng'),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-      );
-    } else {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) {
-          return StatefulBuilder(
-            builder: (context, setState) {
-              final currencyFormatter = NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
-              
-              return Container(
-                padding: const EdgeInsets.all(16),
-                height: MediaQuery.of(context).size.height * 0.8,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Lọc sản phẩm',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    
-                    Expanded(
-                      child: ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          const Text(
-                            'Loại sản phẩm',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: typeProvider.productTypes.map((type) {
-                              final isSelected = _selectedProductTypes.contains(type.id);
-                              return FilterChip(
-                                label: Text(type.name),
-                                selected: isSelected,
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      _selectedProductTypes.add(type.id);
-                                    } else {
-                                      _selectedProductTypes.remove(type.id);
-                                    }
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          const Text(
-                            'Khoảng giá',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          RangeSlider(
-                            values: _priceRange,
-                            min: _minPrice,
-                            max: _maxPrice,
-                            divisions: 20,
-                            labels: RangeLabels(
-                              currencyFormatter.format(_priceRange.start),
-                              currencyFormatter.format(_priceRange.end),
-                            ),
-                            onChanged: (RangeValues values) {
-                              setState(() {
-                                _priceRange = values;
-                              });
-                            },
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(currencyFormatter.format(_priceRange.start)),
-                              Text(currencyFormatter.format(_priceRange.end)),
                             ],
                           ),
-                          
-                          const SizedBox(height: 16),
-                          
-                          const Text(
-                            'Thương hiệu',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: brands.map((brand) {
-                              final brandId = brand['id']?.toString() ?? '';
-                              final isSelected = _selectedBrands.contains(brandId);
-                              return FilterChip(
-                                label: Text(brand['name']?.toString() ?? 'Unknown'),
-                                selected: isSelected,
-                                onSelected: (selected) {
+                        ),
+                        
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
                                   setState(() {
-                                    if (selected) {
-                                      _selectedBrands.add(brandId);
-                                    } else {
-                                      _selectedBrands.remove(brandId);
-                                    }
+                                    _selectedProductTypes.clear();
+                                    _selectedBrands.clear();
+                                    _priceRange = RangeValues(_minPrice, _maxPrice);
                                   });
                                 },
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedProductTypes.clear();
-                                _selectedBrands.clear();
-                                _priceRange = RangeValues(_minPrice, _maxPrice);
-                              });
-                            },
-                            child: const Text('Đặt lại'),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              _applyFilters();
-                            },
-                            child: const Text('Áp dụng'),
-                          ),
+                                child: const Text('Đặt lại'),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                                child: const Text('Áp dụng'),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  );
+                },
               );
             },
           );

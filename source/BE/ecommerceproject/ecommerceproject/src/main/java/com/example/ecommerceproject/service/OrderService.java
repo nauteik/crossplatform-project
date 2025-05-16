@@ -1,6 +1,7 @@
 package com.example.ecommerceproject.service;
 
 import com.example.ecommerceproject.model.*;
+import com.example.ecommerceproject.repository.CartRepository;
 import com.example.ecommerceproject.repository.OrderRepository;
 import com.example.ecommerceproject.repository.ProductRepository;
 import org.slf4j.Logger;
@@ -31,6 +32,12 @@ public class OrderService {
     private OrderRepository orderRepository;
 
     @Autowired
+    private CartRepository cartRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
     private CartService cartService;
 
     @Autowired
@@ -38,207 +45,113 @@ public class OrderService {
 
     @Autowired
     private PaymentService paymentService;
-    @Autowired
-    private ProductRepository productRepository;
 
     /**
-     * Create a new order with PENDING status
-     *
-     * @param userId User ID
-     * @param shippingAddress Shipping address
-     * @param paymentMethod Payment method (must be supported by PaymentService)
-     * @param selectedItemIds Optional list of specific cart item IDs to include in the order
-     * @return The created order
-     * @throws IllegalArgumentException if cart is empty or products are unavailable
+     * Create a new order from cart items
      */
-    @Transactional
-    public Order createOrder(String userId, String shippingAddress, String paymentMethod, List<String> selectedItemIds) {
-        // Validate payment method is supported
-        if (!paymentService.getSupportedPaymentMethods().contains(paymentMethod)) {
-            throw new IllegalArgumentException("Unsupported payment method: " + paymentMethod);
-        }
+    public Order createOrder(String userId, Address shippingAddress, String paymentMethod, List<String> selectedItemIds) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Cart not found for user: " + userId));
 
-        // Get user's cart
-        Cart cart = cartService.getCartByUserId(userId);
-        if (cart.getItems().isEmpty()) {
-            throw new IllegalArgumentException("Cannot create order with empty cart");
-        }
-
-        // Filter items if selectedItemIds is provided
-        List<CartItem> itemsToOrder = cart.getItems();
+        List<CartItem> cartItems;
         if (selectedItemIds != null && !selectedItemIds.isEmpty()) {
-            logger.info("Creating order with selected items only. User: {}, Selected item count: {}",
-                    userId, selectedItemIds.size());
-
-            itemsToOrder = cart.getItems().stream()
+            // Filter cart items based on selected item IDs
+            cartItems = cart.getItems().stream()
                     .filter(item -> selectedItemIds.contains(item.getProductId()))
                     .collect(Collectors.toList());
-
-            if (itemsToOrder.isEmpty()) {
-                throw new IllegalArgumentException("None of the selected items were found in the cart");
+            if (cartItems.isEmpty()) {
+                throw new IllegalArgumentException("No selected items found in cart");
             }
-        }
-
-        // Convert CartItems to OrderItems and check product availability
-        List<OrderItem> orderItems = new ArrayList<>();
-        double totalAmount = 0.0;
-
-        for (CartItem cartItem : itemsToOrder) {
-            // Check product availability/quantity
-            Product product = productService.getProductById(cartItem.getProductId());
-
-            if (product == null) {
-                throw new IllegalArgumentException("Product not found: " + cartItem.getProductId());
-            }
-
-            if (product.getQuantity() < cartItem.getQuantity()) {
-                throw new IllegalArgumentException("Not enough stock for product: " + product.getName());
-            }
-
-            // Decrease product quantity
-            productService.decreaseQuantity(cartItem.getProductId(), cartItem.getQuantity());
-
-            // Add to order items
-            OrderItem orderItem = new OrderItem(
-                    cartItem.getProductId(),
-                    cartItem.getProductName(),
-                    cartItem.getQuantity(),
-                    cartItem.getPrice(),
-                    cartItem.getImageUrl()
-            );
-            orderItems.add(orderItem);
-
-            // Calculate total amount
-            totalAmount += cartItem.getPrice() * cartItem.getQuantity();
-        }
-
-        // Create order with PENDING status
-        Order order = new Order();
-        order.setUserId(userId);
-        order.setItems(orderItems);
-        order.setTotalAmount(totalAmount);
-        order.setStatus(OrderStatus.PENDING);
-        order.setPaymentMethod(paymentMethod);
-        order.setShippingAddress(shippingAddress);
-        order.setCreatedAt(LocalDateTime.now());
-        order.setUpdatedAt(LocalDateTime.now());
-
-        // Save the order
-        Order savedOrder = orderRepository.save(order);
-        logger.info("Created order: {} with status: {} for user: {}",
-                savedOrder.getId(), savedOrder.getStatus(), savedOrder.getUserId());
-
-        return savedOrder;
-    }
-
-    /**
-     * Process payment for an existing order
-     *
-     * @param orderId Order ID
-     * @param paymentDetails Payment details (depends on payment method)
-     * @return The updated order
-     * @throws IllegalArgumentException if order not found or not in PENDING status
-     */
-    @Transactional
-    public Order processOrderPayment(String orderId, Map<String, Object> paymentDetails) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
-
-        if (order.getStatus() != OrderStatus.PENDING) {
-            throw new IllegalArgumentException("Cannot process payment for order with status: " + order.getStatus());
-        }
-
-        // Process the payment through PaymentService
-        boolean paymentSuccess = paymentService.processPayment(order, paymentDetails);
-
-        // Update order status based on payment result
-        if (paymentSuccess) {
-            order.updateStatus(OrderStatus.PAID);
-            logger.info("Payment successful for order: {}, updating status to: {}",
-                    order.getId(), order.getStatus());
-
-            List<String> productIds = order.getItems().stream()
-                    .map(OrderItem::getProductId)
-                    .collect(Collectors.toList());
-
-            cartService.removeItemsFromCart(order.getUserId(), productIds);
-            logger.info("Removed {} items from cart for user: {} after successful payment",
-                    productIds.size(), order.getUserId());
         } else {
-            order.updateStatus(OrderStatus.FAILED);
-            logger.warn("Payment failed for order: {}, updating status to: {}",
-                    order.getId(), order.getStatus());
-
-            // Restore product quantities if payment fails
-            restoreProductQuantities(order);
+            cartItems = cart.getItems();
+            if (cartItems.isEmpty()) {
+                throw new IllegalArgumentException("Cart is empty");
+            }
         }
 
-        // Save the updated order
-        Order updatedOrder = orderRepository.save(order);
-        return updatedOrder;
-    }
+        // Convert cart items to order items
+        List<OrderItem> orderItems = cartItems.stream().map(cartItem -> {
+            Product product = productRepository.findById(cartItem.getProductId())
+                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + cartItem.getProductId()));
 
-    /**
-     * Restore product quantities for failed orders
-     */
-    private void restoreProductQuantities(Order order) {
-        for (OrderItem item : order.getItems()) {
-            productService.increaseQuantity(item.getProductId(), item.getQuantity());
-            logger.info("Restored {} units of product: {} after failed payment",
-                    item.getQuantity(), item.getProductId());
-        }
-    }
+            OrderItem orderItem = new OrderItem();
+            orderItem.setProductId(cartItem.getProductId());
+            orderItem.setProductName(product.getName());
+            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setPrice(product.getPrice());
+            orderItem.setImageUrl(product.getPrimaryImageUrl());
+            return orderItem;
+        }).collect(Collectors.toList());
 
-    /**
-     * Update the status of an order
-     *
-     * @param orderId Order ID
-     * @param newStatus New order status
-     * @return The updated order
-     * @throws IllegalArgumentException if order not found
-     */
-    @Transactional
-    public Order updateOrderStatus(String orderId, OrderStatus newStatus) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+        // Calculate total amount
+        double totalAmount = orderItems.stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
 
-        order.updateStatus(newStatus);
-        logger.info("Updated order: {} status from: {} to: {}",
-                order.getId(), order.getStatus(), newStatus);
-
+        // Create new order
+        Order order = new Order(userId, orderItems, totalAmount, OrderStatus.PENDING, paymentMethod, shippingAddress);
         return orderRepository.save(order);
     }
 
     /**
-     * Get an order by ID
-     *
-     * @param orderId Order ID
-     * @return The order
-     * @throws IllegalArgumentException if order not found
+     * Get order by ID
      */
     public Order getOrderById(String orderId) {
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
+                .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + orderId));
     }
 
     /**
      * Get all orders for a user
-     *
-     * @param userId User ID
-     * @return List of orders
      */
     public List<Order> getOrdersByUserId(String userId) {
         return orderRepository.findByUserId(userId);
     }
 
     /**
-     * Get all orders
-     *
-     * @return List of all orders in the system
+     * Process order payment
+     */
+    public Order processOrderPayment(String orderId, Map<String, Object> paymentDetails) {
+        Order order = getOrderById(orderId);
+
+        // Validate order status
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new IllegalArgumentException("Cannot process payment for order with status: " + order.getStatus());
+        }
+
+        // Process payment based on payment method
+        boolean paymentSuccess = processPaymentByMethod(order.getPaymentMethod(), paymentDetails, order.getTotalAmount());
+
+        // Update order status based on payment result
+        if (paymentSuccess) {
+            order.updateStatus(OrderStatus.PAID);
+        } else {
+            order.updateStatus(OrderStatus.FAILED);
+        }
+
+        return orderRepository.save(order);
+    }
+
+    private boolean processPaymentByMethod(String paymentMethod, Map<String, Object> paymentDetails, double amount) {
+        // In a real application, this would integrate with payment gateways
+        // For demo purposes, we'll simulate successful payments
+        return true;
+    }
+
+    /**
+     * Get all orders (for admin)
      */
     public List<Order> getAllOrders() {
-        logger.info("Retrieving all orders");
         return orderRepository.findAll();
+    }
+
+    /**
+     * Update order status
+     */
+    public Order updateOrderStatus(String orderId, OrderStatus newStatus) {
+        Order order = getOrderById(orderId);
+        order.updateStatus(newStatus);
+        return orderRepository.save(order);
     }
 
     public int getOrderCount() {
@@ -289,177 +202,6 @@ public class OrderService {
                 .filter(item -> category.equals(productService.getProductTypeNameById(item.getProductId())))
                 .mapToInt(OrderItem::getQuantity)
                 .sum();
-    }
-
-    // Lấy dữ liệu doanh thu và lợi nhuận theo tháng
-    public List<TimeBasedChartData> getMonthlyRevenueAndProfitData(int month, int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-        YearMonth yearMonth = YearMonth.of(year, month);
-        int daysInMonth = yearMonth.lengthOfMonth();
-
-        for (int day = 1; day <= daysInMonth; day++) {
-            LocalDate date = LocalDate.of(year, month, day);
-            String formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-            Double revenue = getRevenueByDate(date);
-            Double profit = getProfitByDate(date);
-
-            result.add(new TimeBasedChartData(formattedDate, revenue, profit, null));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu số lượng bán theo tháng
-    public List<TimeBasedChartData> getMonthlyQuantitySoldData(int month, int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-        YearMonth yearMonth = YearMonth.of(year, month);
-        int daysInMonth = yearMonth.lengthOfMonth();
-
-        for (int day = 1; day <= daysInMonth; day++) {
-            LocalDate date = LocalDate.of(year, month, day);
-            String formattedDate = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-            Integer quantitySold = getQuantitySoldByDate(date);
-
-            result.add(new TimeBasedChartData(formattedDate, null, null, quantitySold));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu bán theo danh mục trong tháng
-    public List<CategorySalesData> getCategorySalesDataByMonth(int month, int year) {
-        LocalDateTime startOfMonth = LocalDate.of(year, month, 1).atStartOfDay();
-        LocalDateTime endOfMonth = YearMonth.of(year, month).atEndOfMonth().plusDays(1).atStartOfDay().minusNanos(1);
-
-        List<Order> orders = orderRepository.findByCreatedAtBetween(startOfMonth, endOfMonth);
-
-        return calculateCategorySalesData(orders);
-    }
-
-    // Lấy dữ liệu doanh thu và lợi nhuận theo quý
-    public List<TimeBasedChartData> getQuarterlyRevenueAndProfitData(int quarter, int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-
-        // Xác định tháng bắt đầu và kết thúc của quý
-        int startMonth = (quarter - 1) * 3 + 1;
-        int endMonth = startMonth + 2;
-
-        for (int month = startMonth; month <= endMonth; month++) {
-            YearMonth yearMonth = YearMonth.of(year, month);
-            String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-            // Tính tổng doanh thu và lợi nhuận trong tháng
-            Double monthlyRevenue = 0.0;
-            Double monthlyProfit = 0.0;
-
-            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                LocalDate date = LocalDate.of(year, month, day);
-                monthlyRevenue += getRevenueByDate(date);
-                monthlyProfit += getProfitByDate(date);
-            }
-
-            result.add(new TimeBasedChartData(formattedMonth, monthlyRevenue, monthlyProfit, null));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu số lượng bán theo quý
-    public List<TimeBasedChartData> getQuarterlyQuantitySoldData(int quarter, int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-
-        // Xác định tháng bắt đầu và kết thúc của quý
-        int startMonth = (quarter - 1) * 3 + 1;
-        int endMonth = startMonth + 2;
-
-        for (int month = startMonth; month <= endMonth; month++) {
-            YearMonth yearMonth = YearMonth.of(year, month);
-            String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-            // Tính tổng số lượng bán trong tháng
-            Integer monthlyQuantity = 0;
-
-            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                LocalDate date = LocalDate.of(year, month, day);
-                monthlyQuantity += getQuantitySoldByDate(date);
-            }
-
-            result.add(new TimeBasedChartData(formattedMonth, null, null, monthlyQuantity));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu bán theo danh mục trong quý
-    public List<CategorySalesData> getCategorySalesDataByQuarter(int quarter, int year) {
-        // Xác định tháng bắt đầu và kết thúc của quý
-        int startMonth = (quarter - 1) * 3 + 1;
-        int endMonth = startMonth + 2;
-
-        LocalDateTime startOfQuarter = LocalDate.of(year, startMonth, 1).atStartOfDay();
-        LocalDateTime endOfQuarter = YearMonth.of(year, endMonth).atEndOfMonth().plusDays(1).atStartOfDay().minusNanos(1);
-
-        List<Order> orders = orderRepository.findByCreatedAtBetween(startOfQuarter, endOfQuarter);
-
-        return calculateCategorySalesData(orders);
-    }
-
-    // Lấy dữ liệu doanh thu và lợi nhuận theo năm
-    public List<TimeBasedChartData> getYearlyRevenueAndProfitData(int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-
-        for (int month = 1; month <= 12; month++) {
-            YearMonth yearMonth = YearMonth.of(year, month);
-            String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-            // Tính tổng doanh thu và lợi nhuận trong tháng
-            Double monthlyRevenue = 0.0;
-            Double monthlyProfit = 0.0;
-
-            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                LocalDate date = LocalDate.of(year, month, day);
-                monthlyRevenue += getRevenueByDate(date);
-                monthlyProfit += getProfitByDate(date);
-            }
-
-            result.add(new TimeBasedChartData(formattedMonth, monthlyRevenue, monthlyProfit, null));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu số lượng bán theo năm
-    public List<TimeBasedChartData> getYearlyQuantitySoldData(int year) {
-        List<TimeBasedChartData> result = new ArrayList<>();
-
-        for (int month = 1; month <= 12; month++) {
-            YearMonth yearMonth = YearMonth.of(year, month);
-            String formattedMonth = yearMonth.format(DateTimeFormatter.ofPattern("yyyy-MM"));
-
-            // Tính tổng số lượng bán trong tháng
-            Integer monthlyQuantity = 0;
-
-            for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-                LocalDate date = LocalDate.of(year, month, day);
-                monthlyQuantity += getQuantitySoldByDate(date);
-            }
-
-            result.add(new TimeBasedChartData(formattedMonth, null, null, monthlyQuantity));
-        }
-
-        return result;
-    }
-
-    // Lấy dữ liệu bán theo danh mục trong năm
-    public List<CategorySalesData> getCategorySalesDataByYear(int year) {
-        LocalDateTime startOfYear = LocalDate.of(year, 1, 1).atStartOfDay();
-        LocalDateTime endOfYear = LocalDate.of(year, 12, 31).plusDays(1).atStartOfDay().minusNanos(1);
-
-        List<Order> orders = orderRepository.findByCreatedAtBetween(startOfYear, endOfYear);
-
-        return calculateCategorySalesData(orders);
     }
 
     // Phương thức hỗ trợ để tính toán dữ liệu bán theo danh mục
@@ -519,6 +261,10 @@ public class OrderService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
 
+        return orderRepository.findByCreatedAtBetween(startDateTime, endDateTime);
+    }
+
+    public List<Order> getOrdersBetweenDates(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return orderRepository.findByCreatedAtBetween(startDateTime, endDateTime);
     }
 }

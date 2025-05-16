@@ -4,8 +4,6 @@ import com.example.ecommerceproject.model.Cart;
 import com.example.ecommerceproject.model.CartItem;
 import com.example.ecommerceproject.repository.CartRepository;
 import com.example.ecommerceproject.singleton.AppLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

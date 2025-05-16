@@ -2,7 +2,6 @@ package com.example.ecommerceproject.model;
 
  import lombok.Data;
  import lombok.NoArgsConstructor;
- import lombok.AllArgsConstructor;
 
  @Data // Nếu sử dụng Lombok
  @NoArgsConstructor // Nếu sử dụng Lombok

@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
-import 'package:admin_interface/models/dashboard/category_sales_data.dart';
+import 'package:admin_interface/models/time_based_chart_data.dart';
+import 'package:admin_interface/models/category_sales_data.dart';
 import 'package:admin_interface/providers/statistics_provider.dart';
 
 class StatisticsScreen extends StatelessWidget {
@@ -20,7 +20,7 @@ class StatisticsScreen extends StatelessWidget {
       body: Consumer<StatisticsProvider>(
         builder: (context, provider, child) {
           // Kiểm tra trạng thái loading dựa trên provider.isLoading
-          if (provider.isLoading && provider.dashboardData == null) {
+          if (provider.isLoading && provider.statisticsData == null) {
             return const Center(child: CircularProgressIndicator());
           } else if (provider.errorMessage != null) {
             return Center(
@@ -43,10 +43,10 @@ class StatisticsScreen extends StatelessWidget {
                 ),
               ),
             );
-          } else if (provider.dashboardData == null) {
+          } else if (provider.statisticsData == null) {
             return const Center(child: Text('No dashboard data available.'));
           } else {
-            final data = provider.dashboardData!; // Lấy DTO từ provider
+            final data = provider.statisticsData!; // Lấy DTO từ provider
 
             // Kiểm tra xem có bất kỳ dữ liệu biểu đồ nào được load không trong DTO
             bool hasChartData =
@@ -61,33 +61,6 @@ class StatisticsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- Top Row: Key Metrics Grid ---
-
-                  Text(
-                    'Overall Metrics', // Thêm tiêu đề cho phần metrics
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 10),
-                  GridView.count(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 16.0,
-                    mainAxisSpacing: 16.0,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    childAspectRatio: 2.0, // Tỷ lệ khung hình cho ô metric
-                    children: [
-                      _buildMetricCard(context, 'Total Users',
-                          data.totalUsers.toString(), Icons.people),
-                      _buildMetricCard(context, 'Total Orders',
-                          data.totalOrders.toString(), Icons.shopping_cart),
-                      _buildMetricCard(context, 'Total Product Types',
-                          data.totalProductTypes.toString(), Icons.category),
-                      _buildMetricCard(context, 'Total Products',
-                          data.totalProducts.toString(), Icons.inventory),
-                    ],
-                  ),
-                  const SizedBox(height: 30), // Khoảng cách sau metrics
-
                   // Hiển thị thông báo "No Chart Data" nếu không có dữ liệu biểu đồ sau khi load
                   if (!hasChartData &&
                       !provider.isLoading &&
@@ -98,7 +71,6 @@ class StatisticsScreen extends StatelessWidget {
                             'No chart data available for the selected period.')),
                   ],
 
-                  // --- Lower Section: Charts ---
                   Text(
                     'Sales Analytics',
                     style: Theme.of(context).textTheme.headlineSmall,
@@ -149,44 +121,6 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  // Helper method to build a metric card (giữ nguyên như file bạn gửi)
-  Widget _buildMetricCard(
-      BuildContext context, String title, String value, IconData icon) {
-    return Card(
-      elevation: 4.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon,
-                size: 30,
-                color:
-                    Theme.of(context).primaryColor), // Kích thước icon nhỏ hơn
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20, // Kích thước font nhỏ hơn
-                  ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // Helper method to build a card container for charts (giữ nguyên như file bạn gửi)
   Widget _buildChartCard(BuildContext context, String title, Widget chartWidget,
       {double height = 250}) {
@@ -211,13 +145,6 @@ class StatisticsScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  // Helper method to format currency (assuming VND) (giữ nguyên như file bạn gửi)
-  String _formatCurrency(double amount) {
-    final formatter =
-        NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
-    return formatter.format(amount);
   }
 
   // --- Helper Methods cho UI Chọn Bộ Lọc (Thêm vào) ---
@@ -373,6 +300,66 @@ class StatisticsScreen extends StatelessWidget {
             ),
           ],
         );
+      case ChartFilterType.quarterly:
+        final now = DateTime.now();
+        return Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                decoration: const InputDecoration(
+                  labelText: 'Quarter',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                ),
+                value: provider.selectedQuarter ?? ((now.month - 1) ~/ 3) + 1,
+                items: List.generate(4, (index) => index + 1).map((quarter) {
+                  return DropdownMenuItem(
+                    value: quarter,
+                    child: Text('Q$quarter'),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  if (newValue != null) {
+                    provider.setFilter(
+                      filterType: ChartFilterType.quarterly,
+                      selectedQuarter: newValue,
+                      selectedYear: provider.selectedYear ?? now.year,
+                    );
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<int>(
+                decoration: const InputDecoration(
+                  labelText: 'Year',
+                  border: OutlineInputBorder(),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                ),
+                value: provider.selectedYear ?? now.year,
+                items:
+                    List.generate(10, (index) => now.year - index).map((year) {
+                  return DropdownMenuItem(
+                    value: year,
+                    child: Text(year.toString()),
+                  );
+                }).toList(),
+                onChanged: (newValue) {
+                  if (newValue != null) {
+                    provider.setFilter(
+                      filterType: ChartFilterType.quarterly,
+                      selectedQuarter: provider.selectedQuarter ?? 1,
+                      selectedYear: newValue,
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+        );
       case ChartFilterType.yearly:
         final now = DateTime.now();
         return DropdownButtonFormField<int>(
@@ -394,12 +381,6 @@ class StatisticsScreen extends StatelessWidget {
                   filterType: ChartFilterType.yearly, selectedYear: newValue);
             }
           },
-        );
-      case ChartFilterType.allTime:
-        return Container(
-          alignment: Alignment.centerLeft,
-          height: 56,
-          child: const Text('All Time', style: TextStyle(fontSize: 16)),
         );
     }
   }
@@ -437,8 +418,8 @@ class StatisticsScreen extends StatelessWidget {
         return 'Monthly';
       case ChartFilterType.yearly:
         return 'Yearly';
-      case ChartFilterType.allTime:
-        return 'All Time';
+      case ChartFilterType.quarterly:
+        return 'Quarterly';
     }
   }
 
@@ -472,8 +453,8 @@ class StatisticsScreen extends StatelessWidget {
           return 'Revenue and Profit in ${provider.selectedYear}';
         }
         return 'Revenue and Profit (Select Year)';
-      case ChartFilterType.allTime:
-        return 'Revenue and Profit (All Time)';
+      case ChartFilterType.quarterly:
+        return 'Revenue and Profit (Quarterly)';
       case ChartFilterType.weekly:
         return 'Revenue and Profit (Last 7 Days)';
     }
@@ -509,8 +490,8 @@ class StatisticsScreen extends StatelessWidget {
           return 'Products Sold in ${provider.selectedYear}';
         }
         return 'Products Sold in ${provider.selectedYear}';
-      case ChartFilterType.allTime:
-        return 'Products Sold (All Time)';
+      case ChartFilterType.quarterly:
+        return 'Products Sold (Quarterly)';
       case ChartFilterType.weekly:
         return 'Products Sold (Last 7 Days)';
     }
@@ -546,8 +527,8 @@ class StatisticsScreen extends StatelessWidget {
           return 'Sales Ratio in ${provider.selectedYear}';
         }
         return 'Sales Ratio (Select Year)';
-      case ChartFilterType.allTime:
-        return 'Sales Ratio (All Time)';
+      case ChartFilterType.quarterly:
+        return 'Sales Ratio (Quarterly)';
       case ChartFilterType.weekly:
         return 'Sales Ratio (Last 7 Days)';
     }

@@ -20,6 +20,7 @@ class AuthProvider extends ChangeNotifier {
   User? get currentUser => _currentUser;
   String? get token => _token;
   bool get initialized => _initialized;
+  String? get userId => _currentUser?.id;
 
   // Check if user is already logged in from stored token
   Future<void> checkLoginStatus() async {
@@ -30,10 +31,24 @@ class AuthProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     final storedToken = prefs.getString('auth_token');
+    final storedUserId = prefs.getString('admin_id');
 
     if (storedToken != null && !_isTokenExpired(storedToken)) {
       _token = storedToken;
       _extractUserFromToken(storedToken);
+      
+      // Nếu không có thông tin user từ token, thử lấy từ userId đã lưu
+      if (_currentUser == null && storedUserId != null) {
+        // Tạo một user đơn giản với ID đã lưu trước đó
+        _currentUser = User(
+          id: storedUserId,
+          email: prefs.getString('admin_email') ?? '',
+          name: prefs.getString('admin_name') ?? '',
+          role: 1, // Admin role
+        );
+        
+      }
+      
       _isLoggedIn = true;
     }
 
@@ -57,18 +72,34 @@ class AuthProvider extends ChangeNotifier {
       );
 
       final responseData = json.decode(response.body);
-
+      
       if (response.statusCode == 200 && responseData['status'] == 200) {
         final data = responseData['data'];
         if (data != null && data['token'] != null) {
           _token = data['token'];
 
-          // Extract user from token
-          _extractUserFromToken(_token!);
+          // Tạo user object từ dữ liệu JSON trả về thay vì từ token
+          _currentUser = User(
+            id: data['id'] ?? '',
+            email: data['email'] ?? '',
+            name: data['name'] ?? '',
+            username: data['username'] ?? username,
+            role: data['role'] ?? 0,
+          );
+          
+
 
           // Save token to shared preferences
           final prefs = await SharedPreferences.getInstance();
           prefs.setString('auth_token', _token!);
+          
+          // Lưu thông tin admin ID để sử dụng sau này
+          if (_currentUser != null) {
+            prefs.setString('admin_id', _currentUser!.id);
+            prefs.setString('admin_email', _currentUser!.email);
+            prefs.setString('admin_name', _currentUser!.name);
+            
+          }
 
           _isLoggedIn = true;
           _isLoading = false;
@@ -98,6 +129,9 @@ class AuthProvider extends ChangeNotifier {
 
     final prefs = await SharedPreferences.getInstance();
     prefs.remove('auth_token');
+    prefs.remove('admin_id');
+    prefs.remove('admin_email');
+    prefs.remove('admin_name');
 
     notifyListeners();
   }
@@ -110,11 +144,13 @@ class AuthProvider extends ChangeNotifier {
       // The JWT payload should contain user information
       // Adjust the fields based on your actual JWT structure
       _currentUser = User(
-        id: decodedToken['sub'] ?? '',
+        id: decodedToken['id'] ?? decodedToken['sub'] ?? '',
         email: decodedToken['email'] ?? '',
         name: decodedToken['name'] ?? '',
         role: decodedToken['role'] ?? 0,
       );
+      
+      
     } catch (e) {
       print('Error extracting user from token: $e');
     }
@@ -131,5 +167,10 @@ class AuthProvider extends ChangeNotifier {
 
   bool isAdmin() {
     return _currentUser?.role == 1;
+  }
+
+  // Hiển thị thông tin admin hiện tại (debugging)
+  void printCurrentAdminInfo() {
+    print('Current Admin: ${_currentUser?.toJson()}');
   }
 }

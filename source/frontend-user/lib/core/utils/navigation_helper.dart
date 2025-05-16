@@ -5,7 +5,9 @@ import '../../features/product/presentation/screens/product_detail_screen.dart';
 import '../../features/product/presentation/screens/product_review_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
 import '../../features/payment/screens/order_history_screen.dart';
+import '../../features/profile/presentation/screens/address_screen.dart';
 import '../../utils/route_transitions.dart';
+import '../../core/models/address_model.dart';
 
 class NavigationHelper {
   static Future<T?> navigateToLogin<T>(BuildContext context) {
@@ -46,6 +48,26 @@ class NavigationHelper {
     return pushWithSlideTransition(
       context: context,
       page: OrderHistoryScreen(userId: userId),
+    );
+  }
+  
+  static Future<T?> navigateToAddressManagement<T>(BuildContext context) {
+    return pushWithSlideTransition(
+      context: context,
+      page: const AddressScreen(),
+    );
+  }
+  
+  static Future<AddressModel?> navigateToAddressSelection<T>(BuildContext context) {
+    return Navigator.of(context).push<AddressModel>(
+      MaterialPageRoute(
+        builder: (context) => AddressScreen(
+          isSelecting: true,
+          onAddressSelected: (address) {
+            Navigator.of(context).pop(address);
+          },
+        ),
+      ),
     );
   }
 }

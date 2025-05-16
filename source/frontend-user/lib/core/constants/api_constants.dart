@@ -32,6 +32,17 @@ class ApiConstants {
     }
   }
 
+  // Thêm getter cho WebSocket URL
+  static String get websocketUrl {
+    String httpBase = baseApiUrl; // Lấy base URL HTTP (ví dụ: http://localhost:8080)
+    // Chuyển đổi http:// thành ws:// hoặc https:// thành wss://
+    if (httpBase.startsWith('https')) {
+      return httpBase.replaceFirst('https', 'wss') + '/ws';
+    } else {
+      return httpBase.replaceFirst('http', 'ws') + '/ws';
+    }
+  }
+
   // Thêm getter cho baseUrl để tương thích với code hiện tại
   static String get baseUrl {
     return baseApiUrl + '/api';

@@ -6,8 +6,6 @@ import com.example.ecommerceproject.model.OrderStatus;
 import com.example.ecommerceproject.repository.OrderRepository;
 import com.example.ecommerceproject.service.CartService;
 import com.example.ecommerceproject.singleton.AppLogger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

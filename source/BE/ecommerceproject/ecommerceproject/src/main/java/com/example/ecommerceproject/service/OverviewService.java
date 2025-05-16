@@ -88,11 +88,11 @@ public class OverviewService
         return totalProfit;
     }
 
-    // Lấy dữ liệu doanh thu và lợi nhuận theo thời gian (mặc định 7 ngày gần nhất)
-    public List<TimeBasedChartData> getRevenueAndProfitTimeSeriesData(int days) {
+    // Lấy dữ liệu doanh thu và lợi nhuận 7 ngày gần nhất
+    public List<TimeBasedChartData> getRevenueAndProfitOverview() {
         List<TimeBasedChartData> result = new ArrayList<>();
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusDays(days - 1);
+        LocalDate startDate = endDate.minusDays(7 - 1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // Duyệt qua các ngày trong khoảng thời gian
@@ -110,11 +110,11 @@ public class OverviewService
         return result;
     }
 
-    // Lấy dữ liệu số lượng bán theo thời gian (mặc định 7 ngày gần nhất)
-    public List<TimeBasedChartData> getQuantitySoldTimeSeriesData(int days) {
+    // Lấy dữ liệu số lượng bán trong 7 ngày gần nhất
+    public List<TimeBasedChartData> getQuantitySoldOverview() {
         List<TimeBasedChartData> result = new ArrayList<>();
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusDays(days - 1);
+        LocalDate startDate = endDate.minusDays(7 - 1);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // Duyệt qua các ngày trong khoảng thời gian
@@ -131,10 +131,10 @@ public class OverviewService
         return result;
     }
 
-    // Lấy dữ liệu bán theo danh mục sản phẩm
-    public List<CategorySalesData> getCategorySalesData(int days) {
+    // Lấy dữ liệu bán theo danh mục sản phẩm trong 7 ngày gần nhất
+    public List<CategorySalesData> getCategorySalesOverview() {
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusDays(days - 1);
+        LocalDate startDate = endDate.minusDays(7 - 1);
 
         List<CategorySalesData> result = new ArrayList<>();
 
@@ -143,20 +143,17 @@ public class OverviewService
 
         // Duyệt qua các danh mục và lấy số lượng bán cho mỗi danh mục
         for (String category : categories) {
-            // Get all orders in the date range
             List<Order> ordersInRange = orderService.getOrdersCreatedBetweenDates(startDate, endDate)
                     .stream()
                     .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
                     .toList();
 
-            // Calculate total quantity sold and revenue for this category
             int quantitySold = 0;
             double revenue = 0;
 
             for (Order order : ordersInRange) {
                 for (OrderItem item : order.getItems()) {
                     Product product = productService.getProductById(item.getProductId());
-                    // Check if this product belongs to the current category
                     if (product.getProductType().getName().equals(category)) {
                         quantitySold += item.getQuantity();
                         revenue += item.getPrice() * item.getQuantity();
@@ -173,13 +170,8 @@ public class OverviewService
         return result;
     }
 
-    // Lấy dữ liệu tổng quan cho dashboard trong khoảng thời gian mặc định (7 ngày gần nhất)
+    // Lấy dữ liệu tổng quan
     public OverviewData getOverview() {
-        return getOverviewForPeriod(7);
-    }
-
-    // Lấy dữ liệu tổng quan cho dashboard trong khoảng thời gian tùy chỉnh
-    public OverviewData getOverviewForPeriod(int days) {
         // Lấy các chỉ số tổng
         long totalUsers = getTotalUsers();
         long totalOrders = getTotalOrders();
@@ -191,15 +183,11 @@ public class OverviewService
         long totalProfit = getTotalProfit();
 
         // Lấy dữ liệu theo thời gian
-        List<TimeBasedChartData> timeSeriesRevenueProfitData = getRevenueAndProfitTimeSeriesData(days);
-        List<TimeBasedChartData> timeSeriesQuantityData = getQuantitySoldTimeSeriesData(days);
+        List<TimeBasedChartData> timeSeriesRevenueProfitData = getRevenueAndProfitOverview();
+        List<TimeBasedChartData> timeSeriesQuantityData = getQuantitySoldOverview();
 
         // Lấy dữ liệu bán theo danh mục
-        List<CategorySalesData> categorySalesRatio = getCategorySalesData(days);
-
-//        for (CategorySalesData categorySalesData : categorySalesRatio) {
-//            System.out.println(categorySalesData);
-//        }
+        List<CategorySalesData> categorySalesRatio = getCategorySalesOverview();
 
         // Tạo và trả về đối tượng DashboardData đầy đủ
         return new OverviewData(

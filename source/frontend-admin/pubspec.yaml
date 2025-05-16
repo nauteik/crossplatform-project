@@ -56,6 +56,9 @@ dependencies:
 
   fl_chart: ^1.0.0
 
+  stomp_dart_client: ^2.0.0
+  web_socket_channel: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

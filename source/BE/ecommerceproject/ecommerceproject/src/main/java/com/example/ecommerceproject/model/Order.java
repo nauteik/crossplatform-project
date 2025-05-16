@@ -22,13 +22,13 @@ public class Order {
     private double totalAmount;
     private OrderStatus status;
     private String paymentMethod;  // e.g., "CREDIT_CARD", "COD"
-    private String shippingAddress;
+    private Address shippingAddress;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     // Constructor that initializes dates
     public Order(String userId, List<OrderItem> items, double totalAmount, 
-                OrderStatus status, String paymentMethod, String shippingAddress) {
+                OrderStatus status, String paymentMethod, Address shippingAddress) {
         this.userId = userId;
         this.items = items;
         this.totalAmount = totalAmount;

@@ -48,8 +48,9 @@ class AdminSidebar extends StatelessWidget {
               ListTile(
                 leading: const Icon(FontAwesomeIcons.rightFromBracket,
                     color: Colors.white),
-                title: const Text('Log out',
-                    style: TextStyle(color: Colors.white)),
+                title: extended 
+                    ? const Text('Log out', style: TextStyle(color: Colors.white))
+                    : null,
                 onTap: () async {
                   await authProvider.logout();
                   if (context.mounted) {
@@ -68,6 +69,7 @@ class AdminSidebar extends StatelessWidget {
         SidebarXItem(icon: FontAwesomeIcons.users, label: 'Users Management'),
         SidebarXItem(icon: FontAwesomeIcons.truckRampBox, label: 'Orders Management'),
         SidebarXItem(icon: FontAwesomeIcons.tag, label: 'Coupon Management'),
+        SidebarXItem(icon: FontAwesomeIcons.headset, label: 'Hỗ trợ khách hàng'),
       ],
     );
   }

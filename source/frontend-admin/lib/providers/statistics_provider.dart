@@ -1,12 +1,12 @@
 import 'package:admin_interface/core/utils/chart_filter_type.dart';
-import 'package:admin_interface/models/dashboard/category_sales_data.dart';
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
-import 'package:admin_interface/repository/dashboard_repository.dart';
+import 'package:admin_interface/models/category_sales_data.dart';
+import 'package:admin_interface/models/time_based_chart_data.dart';
+import 'package:admin_interface/models/statistics_model.dart';
+import 'package:admin_interface/repository/statistics_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:admin_interface/models/dashboard/dashboard_data.dart';
 
 class StatisticsProvider with ChangeNotifier {
-  final DashboardRepository _repository = DashboardRepository();
+  final StatisticsRepository _repository = StatisticsRepository();
 
   // Các trường dữ liệu cho biểu đồ theo thời gian, sử dụng model chung
   // Backend sẽ gửi về các list riêng cho từng loại biểu đồ
@@ -20,8 +20,8 @@ class StatisticsProvider with ChangeNotifier {
   List<CategorySalesData>? _filteredCategorySalesRatio;
   List<CategorySalesData>? get filteredCategorySalesRatio => _filteredCategorySalesRatio;
 
-  DashboardData? _dashboardData;
-  DashboardData? get dashboardData => _dashboardData;
+  StatisticsData? _statisticsData;
+  StatisticsData? get statisticsData => _statisticsData;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -41,6 +41,9 @@ class StatisticsProvider with ChangeNotifier {
   int? _selectedMonth;
   int? get selectedMonth => _selectedMonth;
 
+  int? _selectedQuarter;
+  int? get selectedQuarter => _selectedQuarter;
+
   int? _selectedYear;
   int? get selectedYear => _selectedYear;
 
@@ -56,12 +59,14 @@ class StatisticsProvider with ChangeNotifier {
     DateTime? endDate,
     int? selectedMonth,
     int? selectedYear,
+    int? selectedQuarter,  // Add this parameter
   }) {
     _currentFilterType = filterType;
     _startDate = startDate;
     _endDate = endDate;
     _selectedMonth = selectedMonth;
     _selectedYear = selectedYear;
+    _selectedQuarter = selectedQuarter;  // Set the quarter
 
     // Reset dữ liệu cũ
     _timeSeriesRevenueProfitData = null;
@@ -85,18 +90,19 @@ class StatisticsProvider with ChangeNotifier {
           if (_startDate != null) 'startDate': _startDate!.toIso8601String().split('T').first, // YYYY-MM-DD
           if (_endDate != null) 'endDate': _endDate!.toIso8601String().split('T').first, // YYYY-MM-DD
           if (_selectedMonth != null) 'month': _selectedMonth.toString(),
+          if (_selectedQuarter != null) 'quarter': _selectedQuarter.toString(),
           if (_selectedYear != null) 'year': _selectedYear.toString(),
        };
        // Gọi repository với tham số lọc
        final data = await _repository.fetchFilteredDashboardData(filterParams);
 
        // Chuyển đổi response thành DashboardData
-       _dashboardData = DashboardData.fromJson(data);
+       _statisticsData = StatisticsData.fromJson(data);
        _errorMessage = null;
 
     } catch (e) {
       _errorMessage = e.toString();
-      _dashboardData = null;
+      _statisticsData = null;
     } finally {
       _isLoading = false;
       notifyListeners(); // Thông báo kết thúc loading và dữ liệu đã cập nhật

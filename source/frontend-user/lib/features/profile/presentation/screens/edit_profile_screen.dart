@@ -22,14 +22,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _name = '';
   String _email = '';
   String _phone = '';
-  String _address = '';
   String _rank = '';
 
   // Controllers for text fields
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _addressController = TextEditingController();
 
   // Thêm repository vào class
   final UserRepository _userRepository = UserRepository();
@@ -45,7 +43,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -68,13 +65,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _name = data['name'] ?? 'Chưa cập nhật';
           _email = data['email'] ?? 'Chưa cập nhật';
           _phone = data['phone'] ?? 'Chưa cập nhật';
-          _address = data['address'] ?? 'Chưa cập nhật';
           _rank = data['rank'] ?? 'Bronze';
 
           _nameController.text = _name != 'Chưa cập nhật' ? _name : '';
           _emailController.text = _email != 'example@email.com' ? _email : '';
           _phoneController.text = _phone != 'Chưa cập nhật' ? _phone : '';
-          _addressController.text = _address != 'Chưa cập nhật' ? _address : '';
         });
       }
 
@@ -107,14 +102,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _name = userDetails['name'] ?? 'Chưa cập nhật';
           _email = userDetails['email'] ?? 'Chưa cập nhật';
           _phone = userDetails['phone'] ?? 'Chưa cập nhật';
-          _address = userDetails['address'] ?? 'Chưa cập nhật';
           _rank = userDetails['rank'] ?? 'Bronze';
 
           // Chỉ cập nhật controllers khi có giá trị thực sự
           if (_name != 'Chưa cập nhật') _nameController.text = _name;
           if (_email != 'Chưa cập nhật') _emailController.text = _email;
           if (_phone != 'Chưa cập nhật') _phoneController.text = _phone;
-          if (_address != 'Chưa cập nhật') _addressController.text = _address;
         });
 
         // Cập nhật SharedPreferences với xử lý UTF-8 đúng cách
@@ -126,7 +119,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           data['name'] = _name;
           data['email'] = _email;
           data['phone'] = _phone;
-          data['address'] = _address;
           data['rank'] = _rank;
 
           // Encode với UTF-8
@@ -152,7 +144,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'name': _nameController.text,
         'email': _emailController.text,
         'phone': _phoneController.text,
-        'address': _addressController.text,
       };
 
       // Gọi API để cập nhật thông qua repository
@@ -168,7 +159,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           data['name'] = _nameController.text;
           data['email'] = _emailController.text;
           data['phone'] = _phoneController.text;
-          data['address'] = _addressController.text;
 
           // Encode với UTF-8
           final encodedJson = jsonEncode(data);
@@ -179,7 +169,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _name = _nameController.text;
           _email = _emailController.text;
           _phone = _phoneController.text;
-          _address = _addressController.text;
         });
 
         if (!mounted) return;
@@ -323,14 +312,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         }
                         return null;
                       },
-                    ),
-
-                    // Address
-                    _buildTextField(
-                      controller: _addressController,
-                      label: 'Địa chỉ',
-                      icon: Icons.home,
-                      maxLines: 2,
                     ),
 
                     const SizedBox(height: 24),

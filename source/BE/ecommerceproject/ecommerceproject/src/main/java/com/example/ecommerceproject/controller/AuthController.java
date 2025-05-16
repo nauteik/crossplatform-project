@@ -7,19 +7,13 @@ import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.LoginRequest;
 import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.response.ApiResponse;
-import com.example.ecommerceproject.security.JwtUtil;
 import com.example.ecommerceproject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -34,8 +28,8 @@ public class AuthController {
     private AuthenticationServiceManager authManager;
 
 
-    @Autowired
-    private JwtUtil jwtUtil; // Inject JwtUtil
+    // @Autowired
+    // private JwtUtil jwtUtil; // Inject JwtUtil
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<?>> registerUser(@RequestBody User user) {
         try {

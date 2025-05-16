@@ -1,7 +1,6 @@
 package com.example.ecommerceproject.auth;
 
 import com.example.ecommerceproject.exception.ApiStatus;
-import com.example.ecommerceproject.model.LoginRequest;
 import com.example.ecommerceproject.model.LoginResponse;
 import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.response.ApiResponse;
@@ -48,6 +47,10 @@ public class LocalAuthenticationService implements AuthenticationService {
                 authenticatedUser.getUsername(),
                 authenticatedUser.getRole()
             );
+            
+            // Thêm thông tin email và name nếu có
+            loginResponse.setEmail(authenticatedUser.getEmail());
+            loginResponse.setName(authenticatedUser.getName());
             
             return ResponseEntity.ok(new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),

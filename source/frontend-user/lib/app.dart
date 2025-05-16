@@ -8,6 +8,7 @@ import 'features/product/providers/product_type_provider.dart';
 import 'features/navigation/providers/navigation_provider.dart';
 import 'features/payment/payment_feature.dart'; // Import PaymentFeature
 import 'features/support/presentation/providers/message_provider.dart'; // Thêm import MessageProvider
+import 'features/profile/data/repositories/address_provider.dart'; // Import AddressProvider
 import 'widgets/main_layout.dart';
 import 'core/routes/app_router.dart';
 import 'package:frontend_user/features/build_pc/providers/pc_provider.dart';
@@ -31,7 +32,11 @@ class MyApp extends StatelessWidget {
         // Add PaymentProvider using the static method from PaymentFeature
         ...PaymentFeature.getProviders(),
         ChangeNotifierProvider(create: (context) => PCProvider()),
-        ChangeNotifierProvider(create: (context) => MessageProvider()), // Thêm MessageProvider
+        ChangeNotifierProvider(create: (context) => AddressProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, MessageProvider>(
+          create: (context) => MessageProvider(context.read<AuthProvider>()),
+          update: (context, auth, previousMessages) => MessageProvider(auth),
+        ),
       ],
       child: MaterialApp(
         title: 'Personal Computer Shop',

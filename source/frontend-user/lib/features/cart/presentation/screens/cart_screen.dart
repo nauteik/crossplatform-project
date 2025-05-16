@@ -292,16 +292,38 @@ class _CartScreenState extends State<CartScreen> {
                         onPressed: cart.selectedItems.isEmpty
                             ? null
                             : () {
+                                // Đối với người dùng chưa đăng nhập, hiển thị dialog giải thích
                                 if (!isAuthenticated) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Vui lòng đăng nhập để thanh toán'),
-                                      duration: Duration(seconds: 2),
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      title: const Text('Thanh toán không cần đăng nhập'),
+                                      content: const Text(
+                                          'Bạn có thể thanh toán mà không cần đăng nhập. Hệ thống sẽ tự động tạo tài khoản dựa trên email của bạn và gửi thông tin đăng nhập qua email.'),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text('Hủy'),
+                                          onPressed: () => Navigator.of(ctx).pop(),
+                                        ),
+                                        TextButton(
+                                          child: const Text('Tiếp tục thanh toán'),
+                                          onPressed: () {
+                                            Navigator.of(ctx).pop();
+                                            PaymentFeature.navigateToCheckout(
+                                              context: context,
+                                              userId: null, // Guest checkout
+                                              cartItems: cart.selectedItems,
+                                              totalAmount: cart.selectedItemsTotalPrice,
+                                            );
+                                          },
+                                        ),
+                                      ],
                                     ),
                                   );
                                   return;
                                 }
                                 
+                                // Người dùng đã đăng nhập
                                 PaymentFeature.navigateToCheckout(
                                   context: context,
                                   userId: authProvider.userId!,
@@ -320,7 +342,9 @@ class _CartScreenState extends State<CartScreen> {
                         child: Text(
                           cart.selectedItems.isEmpty
                               ? 'CHỌN SẢN PHẨM'
-                              : 'THANH TOÁN (${cart.selectedItems.length} sản phẩm)',
+                              : isAuthenticated 
+                                ? 'THANH TOÁN (${cart.selectedItems.length} sản phẩm)'
+                                : 'THANH TOÁN KHÔNG CẦN ĐĂNG NHẬP',
                           style: const TextStyle(fontSize: 18),
                         ),
                       ),

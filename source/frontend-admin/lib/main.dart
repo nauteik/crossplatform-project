@@ -5,7 +5,6 @@ import 'package:admin_interface/providers/coupon_provider.dart';
 import 'package:admin_interface/providers/overview_provider.dart';
 import 'package:admin_interface/providers/statistics_provider.dart';
 import 'package:admin_interface/providers/user_provider.dart';
-import 'package:admin_interface/repository/coupon_repository.dart';
 import 'package:admin_interface/repository/user_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:sidebarx/sidebarx.dart';
@@ -14,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:admin_interface/providers/product_provider.dart';
 import 'package:admin_interface/providers/brand_provider.dart';
 import 'package:admin_interface/providers/product_type_provider.dart';
+import 'package:admin_interface/providers/message_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,6 +50,12 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => OverviewProvider(),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, MessageProvider>(
+          create: (context) => MessageProvider(context.read<AuthProvider>()),
+          update: (context, auth, previousMessages) {
+            return MessageProvider(auth);
+          },
         ),
       ],
       child: MaterialApp(
