@@ -64,19 +64,6 @@ class ProfileMenu extends StatelessWidget {
           Divider(height: 1, color: Colors.grey.shade200),
           _buildMenuItem(
             context,
-            icon: Icons.favorite,
-            title: 'Sản phẩm yêu thích',
-            subtitle: 'Xem danh sách sản phẩm đã lưu',
-            onTap: () {
-              // TODO: Điều hướng đến màn hình yêu thích khi được tạo
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng đang phát triển!')),
-              );
-            },
-          ),
-          Divider(height: 1, color: Colors.grey.shade200),
-          _buildMenuItem(
-            context,
             icon: Icons.location_on,
             title: 'Địa chỉ của tôi',
             subtitle: 'Quản lý địa chỉ giao hàng',
@@ -90,32 +77,6 @@ class ProfileMenu extends StatelessWidget {
               }
             },
           ),
-          Divider(height: 1, color: Colors.grey.shade200),
-          _buildMenuItem(
-            context,
-            icon: Icons.support_agent,
-            title: 'Hỗ trợ khách hàng',
-            subtitle: 'Liên hệ với chúng tôi khi bạn cần giúp đỡ',
-            onTap: () {
-              // TODO: Điều hướng đến màn hình hỗ trợ
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng đang phát triển!')),
-              );
-            },
-          ),
-          Divider(height: 1, color: Colors.grey.shade200),
-          _buildMenuItem(context,
-              icon: Icons.settings,
-              title: 'Cài đặt tài khoản',
-              subtitle: 'Thay đổi mật khẩu, thông tin cá nhân',
-              onTap: () => {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingScreen(),
-                      ),
-                    )
-                  }),
         ],
       ),
     );

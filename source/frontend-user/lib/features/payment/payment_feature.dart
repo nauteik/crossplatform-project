@@ -13,12 +13,12 @@ class PaymentFeature {
   /// Navigate to checkout screen
   /// 
   /// [context] BuildContext
-  /// [userId] The user ID making the purchase
+  /// [userId] The user ID making the purchase, null for guest checkout
   /// [cartItems] List of items in the cart
   /// [totalAmount] Total amount to be paid
   static void navigateToCheckout({
     required BuildContext context,
-    required String userId,
+    String? userId,
     required List<CartItemModel> cartItems,
     required double totalAmount,
   }) {

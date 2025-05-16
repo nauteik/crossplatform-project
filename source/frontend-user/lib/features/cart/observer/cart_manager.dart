@@ -23,6 +23,8 @@ class CartManager implements CartSubject {
     if (!_observers.contains(observer)) {
       _observers.add(observer);
     }
+    // Update observer with current state
+    observer.update(_items);
   }
 
   @override

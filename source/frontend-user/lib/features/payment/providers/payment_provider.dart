@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../data/model/order_model.dart';
 import '../../../data/respository/order_repository.dart';
 import '../models/payment_request.dart';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../../core/constants/api_constants.dart';
 
 enum PaymentProcessState {
   initial,
@@ -16,27 +20,40 @@ class PaymentProvider extends ChangeNotifier {
   final OrderRepository _orderRepository = OrderRepository();
   
   PaymentProcessState _state = PaymentProcessState.initial;
-  String _selectedPaymentMethod = 'CREDIT_CARD'; // Default selection
-  List<String> _availablePaymentMethods = ['CREDIT_CARD', 'COD', 'BANK_TRANSFER', 'MOMO']; // Default options with new methods
-  OrderModel? _currentOrder;
+  String _selectedPaymentMethod = 'COD';
+  List<String> _availablePaymentMethods = ['COD'];
+  Map<String, dynamic>? _currentOrder;
   String _errorMessage = '';
-  CreditCardModel _creditCardData = CreditCardModel();
-  BankTransferModel _bankTransferData = BankTransferModel(); // New model for bank transfers
-  MomoPaymentModel _momoPaymentData = MomoPaymentModel(); // New model for MoMo payments
+  Map<String, dynamic>? _guestUserInfo;
+  Map<String, dynamic>? _guestAddressInfo;
+  String? _newUserToken;
+  String? _newUserId;
+  Map<String, String> _creditCardData = {
+    'cardNumber': '',
+    'cardHolderName': '',
+    'expiryDate': '',
+    'cvv': '',
+  };
+  Map<String, String> _bankTransferData = {
+    'bankName': '',
+    'accountNumber': '',
+    'transferCode': '',
+  };
+  Map<String, String> _momoPaymentData = {
+    'phoneNumber': '',
+    'transactionId': '',
+  };
   String _shippingAddress = '';
-  List<String> _selectedItemIds = []; // Field to store selected item IDs
+  List<String> _selectedItemIds = [];
   
   // Getters
   PaymentProcessState get state => _state;
   String get selectedPaymentMethod => _selectedPaymentMethod;
   List<String> get availablePaymentMethods => _availablePaymentMethods;
-  OrderModel? get currentOrder => _currentOrder;
+  Map<String, dynamic>? get currentOrder => _currentOrder;
   String get errorMessage => _errorMessage;
-  CreditCardModel get creditCardData => _creditCardData;
-  BankTransferModel get bankTransferData => _bankTransferData; // Getter for bank transfer data
-  MomoPaymentModel get momoPaymentData => _momoPaymentData; // Getter for MoMo payment data
-  String get shippingAddress => _shippingAddress;
-  List<String> get selectedItemIds => _selectedItemIds;
+  String? get newUserToken => _newUserToken;
+  String? get newUserId => _newUserId;
   bool get isLoading => _state == PaymentProcessState.creatingOrder || 
                         _state == PaymentProcessState.processing;
   
@@ -52,7 +69,12 @@ class PaymentProvider extends ChangeNotifier {
   }
   
   void setSelectedItemIds(List<String> itemIds) {
-    _selectedItemIds = itemIds;
+    _selectedItemIds = List.from(itemIds);
+  }
+  
+  void setGuestCheckoutInfo(Map<String, dynamic> userInfo, Map<String, dynamic> addressInfo) {
+    _guestUserInfo = userInfo;
+    _guestAddressInfo = addressInfo;
   }
   
   void updateCreditCardData({
@@ -61,215 +83,224 @@ class PaymentProvider extends ChangeNotifier {
     String? expiryDate,
     String? cvv,
   }) {
-    if (cardNumber != null) _creditCardData.cardNumber = cardNumber;
-    if (cardHolderName != null) _creditCardData.cardHolderName = cardHolderName;
-    if (expiryDate != null) _creditCardData.expiryDate = expiryDate;
-    if (cvv != null) _creditCardData.cvv = cvv;
-    
-    _creditCardData.validate();
-    notifyListeners();
+    if (cardNumber != null) _creditCardData['cardNumber'] = cardNumber;
+    if (cardHolderName != null) _creditCardData['cardHolderName'] = cardHolderName;
+    if (expiryDate != null) _creditCardData['expiryDate'] = expiryDate;
+    if (cvv != null) _creditCardData['cvv'] = cvv;
   }
   
-  // New method to update bank transfer data
   void updateBankTransferData({
-    String? accountNumber,
     String? bankName,
+    String? accountNumber,
     String? transferCode,
   }) {
-    if (accountNumber != null) _bankTransferData.accountNumber = accountNumber;
-    if (bankName != null) _bankTransferData.bankName = bankName;
-    if (transferCode != null) _bankTransferData.transferCode = transferCode;
-    
-    _bankTransferData.validate();
-    notifyListeners();
+    if (bankName != null) _bankTransferData['bankName'] = bankName;
+    if (accountNumber != null) _bankTransferData['accountNumber'] = accountNumber;
+    if (transferCode != null) _bankTransferData['transferCode'] = transferCode;
   }
   
-  // New method to update MoMo payment data
   void updateMomoPaymentData({
     String? phoneNumber,
     String? transactionId,
   }) {
-    if (phoneNumber != null) _momoPaymentData.phoneNumber = phoneNumber;
-    if (transactionId != null) _momoPaymentData.transactionId = transactionId;
-    
-    _momoPaymentData.validate();
-    notifyListeners();
+    if (phoneNumber != null) _momoPaymentData['phoneNumber'] = phoneNumber;
+    if (transactionId != null) _momoPaymentData['transactionId'] = transactionId;
   }
   
-  // Load available payment methods from the API
-  Future<void> loadPaymentMethods() async {
-    try {
-      final response = await _orderRepository.getSupportedPaymentMethods();
-      _availablePaymentMethods = response.data ?? ['CREDIT_CARD', 'COD', 'BANK_TRANSFER', 'MOMO'];
-      
-      // Default to first available method if current selection is not available
-      if (!_availablePaymentMethods.contains(_selectedPaymentMethod) && 
-          _availablePaymentMethods.isNotEmpty) {
-        _selectedPaymentMethod = _availablePaymentMethods.first;
-      }
-      
-      notifyListeners();
-    } catch (e) {
-      // If API fails, use default values
-      _errorMessage = e.toString();
-      notifyListeners();
-    }
-  }
-  
-  // Reset the payment process
   void reset() {
     _state = PaymentProcessState.initial;
+    _selectedPaymentMethod = 'COD';
     _currentOrder = null;
     _errorMessage = '';
-    _creditCardData = CreditCardModel();
-    _bankTransferData = BankTransferModel(); // Reset bank transfer data
-    _momoPaymentData = MomoPaymentModel(); // Reset MoMo payment data
-    _selectedItemIds = []; // Reset selected items
+    _guestUserInfo = null;
+    _guestAddressInfo = null;
+    _newUserToken = null;
+    _newUserId = null;
+    _creditCardData = {
+      'cardNumber': '',
+      'cardHolderName': '',
+      'expiryDate': '',
+      'cvv': '',
+    };
+    _bankTransferData = {
+      'bankName': '',
+      'accountNumber': '',
+      'transferCode': '',
+    };
+    _momoPaymentData = {
+      'phoneNumber': '',
+      'transactionId': '',
+    };
+    _shippingAddress = '';
+    _selectedItemIds = [];
     notifyListeners();
   }
   
-  // Start checkout process - create order
-  Future<bool> createOrder(String userId) async {
-    if (_shippingAddress.isEmpty) {
-      _errorMessage = 'Please enter a shipping address';
-      notifyListeners();
-      return false;
-    }
-    
-    if (_selectedItemIds.isEmpty) {
-      _errorMessage = 'No items selected for checkout';
-      notifyListeners();
-      return false;
-    }
-    
+  Future<void> loadPaymentMethods() async {
     try {
-      _state = PaymentProcessState.creatingOrder;
-      _errorMessage = '';
-      notifyListeners();
-      
-      final response = await _orderRepository.createOrder(
-        userId: userId,
-        shippingAddress: _shippingAddress,
-        paymentMethod: _selectedPaymentMethod,
-        selectedItemIds: _selectedItemIds,
+      final response = await http.get(
+        Uri.parse('${ApiConstants.baseUrl}/orders/payment-methods'),
       );
       
-      _currentOrder = response.data;
-      _state = PaymentProcessState.orderCreated;
-      notifyListeners();
-      return true;
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        
+        if (jsonData['status'] == 200 && jsonData['data'] != null) {
+          _availablePaymentMethods = List<String>.from(jsonData['data']);
+          
+          if (_availablePaymentMethods.contains('COD')) {
+            _selectedPaymentMethod = 'COD';
+          } else if (_availablePaymentMethods.isNotEmpty) {
+            _selectedPaymentMethod = _availablePaymentMethods[0];
+          }
+          
+          notifyListeners();
+        }
+      }
     } catch (e) {
-      _state = PaymentProcessState.failed;
-      _errorMessage = e.toString();
-      notifyListeners();
+      print('Error loading payment methods: $e');
+    }
+  }
+  
+  Future<bool> createOrder(String userId) async {
+    try {
+      Map<String, dynamic> orderData = {
+        'userId': userId,
+        'paymentMethod': _selectedPaymentMethod,
+        'selectedItemIds': _selectedItemIds,
+      };
+      
+      if (_shippingAddress.isNotEmpty) {
+        orderData['shippingAddress'] = _shippingAddress;
+      }
+      
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/orders/create'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(orderData),
+      );
+      
+      if (response.statusCode == 201) {
+        final jsonData = json.decode(response.body);
+        
+        if (jsonData['status'] == 200 && jsonData['data'] != null) {
+          _currentOrder = jsonData['data']['order'];
+          return true;
+        } else {
+          _errorMessage = jsonData['message'] ?? 'Unknown error';
+        }
+      } else {
+        _errorMessage = 'Server error: ${response.statusCode}';
+      }
+      
+      return false;
+    } catch (e) {
+      _errorMessage = 'Error creating order: $e';
       return false;
     }
   }
   
-  // Process payment for the created order
-  Future<bool> processPayment() async {
-    if (_currentOrder == null) {
-      _errorMessage = 'No order has been created yet';
-      notifyListeners();
+  Future<bool> createGuestOrder() async {
+    if (_guestUserInfo == null || _guestAddressInfo == null) {
+      _errorMessage = 'Missing guest information';
       return false;
     }
     
     try {
-      _state = PaymentProcessState.processing;
-      _errorMessage = '';
-      notifyListeners();
+      Map<String, dynamic> orderData = {
+        'paymentMethod': _selectedPaymentMethod,
+        'selectedItemIds': _selectedItemIds,
+        'userInfo': _guestUserInfo,
+        'addressInfo': _guestAddressInfo,
+      };
       
-      // Create payment request based on selected method
-      PaymentRequest paymentRequest;
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/orders/create'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(orderData),
+      );
+      
+      if (response.statusCode == 201) {
+        final jsonData = json.decode(response.body);
+        
+        if (jsonData['status'] == 200 && jsonData['data'] != null) {
+          _currentOrder = jsonData['data']['order'];
+          
+          if (jsonData['data']['token'] != null) {
+            _newUserToken = jsonData['data']['token'];
+          }
+          
+          if (jsonData['data']['userId'] != null) {
+            _newUserId = jsonData['data']['userId'];
+          }
+          
+          return true;
+        } else {
+          _errorMessage = jsonData['message'] ?? 'Unknown error';
+        }
+      } else {
+        _errorMessage = 'Server error: ${response.statusCode}';
+      }
+      
+      return false;
+    } catch (e) {
+      _errorMessage = 'Error creating order: $e';
+      return false;
+    }
+  }
+  
+  Future<bool> processPayment() async {
+    if (_currentOrder == null) {
+      _errorMessage = 'No active order to process';
+      return false;
+    }
+    
+    try {
+      String orderId = _currentOrder!['id'];
+      
+      Map<String, dynamic> paymentData = {};
       
       switch (_selectedPaymentMethod) {
         case 'CREDIT_CARD':
-          // Validate credit card data
-          _creditCardData.validate();
-          if (!_creditCardData.isValid) {
-            _errorMessage = 'Invalid credit card information';
-            _state = PaymentProcessState.orderCreated;
-            notifyListeners();
-            return false;
-          }
-          
-          paymentRequest = PaymentRequest.creditCard(
-            cardNumber: _creditCardData.cardNumber,
-            cardName: _creditCardData.cardHolderName,
-            expiryDate: _creditCardData.expiryDate,
-            cvv: _creditCardData.cvv,
-          );
+          paymentData = {..._creditCardData};
           break;
-          
         case 'BANK_TRANSFER':
-          // Validate bank transfer data
-          _bankTransferData.validate();
-          if (!_bankTransferData.isValid) {
-            _errorMessage = 'Invalid bank transfer information';
-            _state = PaymentProcessState.orderCreated;
-            notifyListeners();
-            return false;
-          }
-          
-          paymentRequest = PaymentRequest.bankTransfer(
-            accountNumber: _bankTransferData.accountNumber,
-            bankName: _bankTransferData.bankName,
-            transferCode: _bankTransferData.transferCode,
-          );
+          paymentData = {..._bankTransferData};
           break;
-          
         case 'MOMO':
-          // Validate MoMo payment data
-          _momoPaymentData.validate();
-          if (!_momoPaymentData.isValid) {
-            _errorMessage = 'Invalid MoMo payment information';
-            _state = PaymentProcessState.orderCreated;
-            notifyListeners();
-            return false;
-          }
-          
-          paymentRequest = PaymentRequest.momo(
-            phoneNumber: _momoPaymentData.phoneNumber,
-            transactionId: _momoPaymentData.transactionId,
-          );
+          paymentData = {..._momoPaymentData};
           break;
-          
         case 'COD':
-          paymentRequest = PaymentRequest.cod();
+          paymentData = {'confirmed': true};
           break;
-          
-        default:
-          throw Exception('Unsupported payment method: $_selectedPaymentMethod');
       }
       
-      // Process payment
-      final response = await _orderRepository.processPayment(
-        orderId: _currentOrder!.id,
-        paymentDetails: paymentRequest.paymentDetails,
+      final response = await http.post(
+        Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/pay'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(paymentData),
       );
       
-      _currentOrder = response.data;
-      
-      if (_currentOrder?.status.name == 'PAID') {
-        _state = PaymentProcessState.success;
-        notifyListeners();
-        return true;
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        
+        if (jsonData['status'] == 200) {
+          _currentOrder = jsonData['data'];
+          return true;
+        } else {
+          _errorMessage = jsonData['message'] ?? 'Payment processing failed';
+        }
       } else {
-        _state = PaymentProcessState.failed;
-        _errorMessage = 'Payment failed';
-        notifyListeners();
-        return false;
+        _errorMessage = 'Server error: ${response.statusCode}';
       }
       
+      return false;
     } catch (e) {
-      _state = PaymentProcessState.failed;
-      _errorMessage = e.toString();
-      notifyListeners();
+      _errorMessage = 'Error processing payment: $e';
       return false;
     }
   }
   
-  // Fetch user's order history
   Future<List<OrderModel>> getOrderHistory(String userId) async {
     try {
       final response = await _orderRepository.getOrdersByUser(userId);

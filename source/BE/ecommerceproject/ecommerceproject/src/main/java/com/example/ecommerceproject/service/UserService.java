@@ -3,6 +3,9 @@ package com.example.ecommerceproject.service;
 import com.example.ecommerceproject.model.Address;
 import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.repository.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,16 +17,19 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.List;
+import java.security.Key;
 
 @Service
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
@@ -179,30 +185,25 @@ public class UserService implements UserDetailsService {
      * @return User đã cập nhật
      */
     public User addAddress(String userId, Address address) {
-        User user = getUserById(userId);
+        Optional<User> userOptional = userRepository.findById(userId);
         
-        // Kiểm tra số lượng địa chỉ
-        if (user.getAddresses() != null && user.getAddresses().size() >= 2) {
-            throw new RuntimeException("Người dùng chỉ được phép có tối đa 2 địa chỉ");
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User not found with id: " + userId);
         }
         
-        // Tạo ID mới cho địa chỉ
-        address.setId(UUID.randomUUID().toString());
+        User user = userOptional.get();
         
-        // Nếu là địa chỉ đầu tiên hoặc được đánh dấu là mặc định
-        if (user.getAddresses() == null || user.getAddresses().isEmpty() || address.isDefault()) {
-            // Đặt tất cả địa chỉ khác thành không mặc định
-            if (user.getAddresses() != null) {
-                user.getAddresses().forEach(a -> a.setDefault(false));
-            } else {
-                user.setAddresses(new ArrayList<>());
-            }
+        // Nếu là địa chỉ mặc định, cập nhật các địa chỉ khác không còn là mặc định
+        if (address.isDefault()) {
+            user.getAddresses().forEach(a -> a.setDefault(false));
+        }
+        
+        // Nếu đây là địa chỉ đầu tiên, đặt nó làm mặc định
+        if (user.getAddresses().isEmpty()) {
             address.setDefault(true);
         }
         
         user.getAddresses().add(address);
-        
-        
         return userRepository.save(user);
     }
     
@@ -342,6 +343,55 @@ public class UserService implements UserDetailsService {
     public List<Address> getUserAddresses(String userId) {
         User user = getUserById(userId);
         return user.getAddresses() != null ? user.getAddresses() : new ArrayList<>();
+    }
+
+    // Tìm người dùng theo email
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
+    
+    // Tạo người dùng mới
+    public User createUser(String email, String password, String fullName) {
+        User user = new User();
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setName(fullName);
+        user.setUsername(email); // Sử dụng email làm username mặc định
+        user.setCreatedAt(LocalDateTime.now());
+        user.setRole(0); // Role mặc định là 0 (user thường)
+        user.setRank("Bronze"); // Rank mặc định là Bronze
+        user.setTotalSpend(0);
+        
+        return userRepository.save(user);
+    }
+    
+    // Lấy địa chỉ theo ID
+    public Address getAddressById(String userId, String addressId) {
+        Optional<User> userOptional = userRepository.findById(userId);
+        
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User not found with id: " + userId);
+        }
+        
+        User user = userOptional.get();
+        
+        return user.getAddresses().stream()
+                .filter(address -> address.getId().equals(addressId))
+                .findFirst()
+                .orElse(null);
+    }
+    
+    // Tạo JWT token xác thực
+    public String generateAuthToken(String userId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + 86400000); // 24 giờ
+
+        return Jwts.builder()
+                .setSubject(userId)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(secretKey)
+                .compact();
     }
 }
 
