@@ -23,8 +23,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
-import java.time.LocalDateTime;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -475,7 +473,7 @@ public class DataLoader implements CommandLineRunner {
         admin.setRole(1); // 1 là admin
         admin.setAvatar("Chưa cập nhật");
         admin.setPhone("Chưa cập nhật");
-        admin.setAddress("Chưa cập nhật");
+        admin.setAddresses(new ArrayList<>());
         admin.setGender("Chưa cập nhật");
         admin = userRepository.save(admin);
 
@@ -488,7 +486,7 @@ public class DataLoader implements CommandLineRunner {
         user.setRole(0); // 0 là user thường
         user.setAvatar("Chưa cập nhật");
         user.setPhone("Chưa cập nhật");
-        user.setAddress("Chưa cập nhật");
+        user.setAddresses(new ArrayList<>());
         user.setGender("Chưa cập nhật");
         user = userRepository.save(user);
 

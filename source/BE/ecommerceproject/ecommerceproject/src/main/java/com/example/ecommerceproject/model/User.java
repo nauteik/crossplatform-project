@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -28,7 +30,6 @@ public class User {
     private String name;
     private String username;
     private String phone;
-    private String address;
     private String gender;
     private Date birthday;
 
@@ -36,6 +37,6 @@ public class User {
     private int totalSpend;
 
     private int role;
-
-
+    
+    private List<Address> addresses = new ArrayList<>();
 }

@@ -79,25 +79,72 @@ public class MessageController {
     public ResponseEntity<ApiResponse<List<Message>>> getConversation(
             @RequestParam("userId") String userId,
             @RequestParam("adminId") String adminId) {
-        List<Message> conversation = messageService.getConversationBetweenUserAndAdmin(userId, adminId);
-        ApiResponse<List<Message>> response = new ApiResponse<>(
-                ApiStatus.SUCCESS.getCode(),
-                ApiStatus.SUCCESS.getMessage(),
-                conversation
-        );
-        return ResponseEntity.ok(response);
+        try {
+            System.out.println("Lấy cuộc hội thoại giữa user: " + userId + " và admin: " + adminId);
+            
+            if (userId == null || userId.isEmpty() || adminId == null || adminId.isEmpty()) {
+                System.out.println("User ID hoặc Admin ID không hợp lệ!");
+                ApiResponse<List<Message>> response = new ApiResponse<>(
+                        ApiStatus.BAD_REQUEST.getCode(),
+                        "User ID và Admin ID không được để trống"
+                );
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            List<Message> conversation = messageService.getConversationBetweenUserAndAdmin(userId, adminId);
+            System.out.println("Tìm thấy " + conversation.size() + " tin nhắn");
+            
+            ApiResponse<List<Message>> response = new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    ApiStatus.SUCCESS.getMessage(),
+                    conversation
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.out.println("Lỗi khi lấy cuộc hội thoại: " + e.getMessage());
+            e.printStackTrace();
+            
+            ApiResponse<List<Message>> response = new ApiResponse<>(
+                    ApiStatus.SERVER_ERROR.getCode(),
+                    "Lỗi server: " + e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     // Lấy danh sách users đã gửi tin nhắn cho admin
     @GetMapping("/admin/{adminId}/users")
     public ResponseEntity<ApiResponse<List<User>>> getUsersWithMessages(@PathVariable String adminId) {
-        List<User> users = messageService.getUsersWithMessages(adminId);
-        ApiResponse<List<User>> response = new ApiResponse<>(
-                ApiStatus.SUCCESS.getCode(),
-                ApiStatus.SUCCESS.getMessage(),
-                users
-        );
-        return ResponseEntity.ok(response);
+        try {
+            System.out.println("Lấy danh sách người dùng đã gửi tin nhắn cho admin: " + adminId);
+            if (adminId == null || adminId.isEmpty()) {
+                System.out.println("Admin ID không hợp lệ!");
+                ApiResponse<List<User>> response = new ApiResponse<>(
+                        ApiStatus.BAD_REQUEST.getCode(),
+                        "Admin ID không được để trống"
+                );
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            List<User> users = messageService.getUsersWithMessages(adminId);
+            System.out.println("Tìm thấy " + users.size() + " người dùng");
+            
+            ApiResponse<List<User>> response = new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    ApiStatus.SUCCESS.getMessage(),
+                    users
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.out.println("Lỗi khi lấy danh sách người dùng: " + e.getMessage());
+            e.printStackTrace();
+            
+            ApiResponse<List<User>> response = new ApiResponse<>(
+                    ApiStatus.SERVER_ERROR.getCode(),
+                    "Lỗi server: " + e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     // Đánh dấu tin nhắn đã đọc

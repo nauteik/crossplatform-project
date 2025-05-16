@@ -10,6 +10,7 @@ import '../../../../core/models/message_model.dart';
 import '../../../../features/auth/providers/auth_provider.dart';
 import '../providers/message_provider.dart';
 import '../../../../core/utils/image_helper.dart';
+import '../../../../core/services/websocket_service.dart';
 
 class ChatSupportScreen extends StatefulWidget {
   const ChatSupportScreen({Key? key}) : super(key: key);
@@ -23,6 +24,8 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
   final ImagePicker _picker = ImagePicker();
   List<dynamic> _selectedImages = []; // Có thể là File (mobile) hoặc XFile (web)
   String? _userId;
+  final WebSocketService _webSocketService = WebSocketService();
+  final ScrollController _scrollController = ScrollController();
   
   @override
   void initState() {
@@ -45,6 +48,7 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
     }
     
     final provider = Provider.of<MessageProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
     // Lấy admin ID từ server
     await provider.fetchDefaultAdminId();
@@ -52,6 +56,27 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
     // Nếu lấy được admin ID, load cuộc hội thoại
     if (provider.adminId != null) {
       await provider.loadConversation(_userId!, provider.adminId!);
+      
+      // Kết nối WebSocket và đăng ký nhận tin nhắn
+      _webSocketService.connect(token: authProvider.token);
+      
+      // Đăng ký nhận tin nhắn
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (_webSocketService.isConnected) {
+          print("ChatSupportScreen: Đăng ký nhận tin nhắn cho user $_userId và admin ${provider.adminId}");
+          _webSocketService.subscribeToUserMessages(
+            _userId!, 
+            provider.adminId!,
+            (message) {
+              print("ChatSupportScreen: Nhận tin nhắn mới, chuyển cho provider xử lý");
+              provider.messages; // Truy cập để đảm bảo provider cập nhật
+              provider.loadConversation(_userId!, provider.adminId!);
+            }
+          );
+        } else {
+          print("ChatSupportScreen: WebSocket không được kết nối, không thể đăng ký");
+        }
+      });
     }
   }
   
@@ -78,6 +103,16 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
     setState(() {
       _selectedImages.removeAt(index);
     });
+  }
+  
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0, 
+        duration: const Duration(milliseconds: 300), 
+        curve: Curves.easeOut
+      );
+    }
   }
   
   Future<void> _sendMessage() async {
@@ -112,6 +147,9 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
         setState(() {
           _selectedImages = [];
         });
+        
+        // Cuộn xuống tin nhắn mới nhất
+        _scrollToBottom();
       }
     }
   }
@@ -232,6 +270,7 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
               }
               
               return ListView.builder(
+                controller: _scrollController,
                 reverse: true,
                 itemCount: provider.messages.length,
                 itemBuilder: (context, index) {
@@ -466,6 +505,7 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 } 

@@ -15,12 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+// import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,8 +29,8 @@ public class OAuth2AuthenticationAdapter implements AuthenticationService {
     
     private static final String GOOGLE_TOKEN_INFO_URL = "https://oauth2.googleapis.com/tokeninfo?id_token=";
     
-    @Autowired
-    private OAuth2AuthorizedClientService clientService;
+    // @Autowired
+    // private OAuth2AuthorizedClientService clientService;
     
     @Autowired
     private UserRepository userRepository;
@@ -137,7 +136,6 @@ public class OAuth2AuthenticationAdapter implements AuthenticationService {
         newUser.setUsername(email.split("@")[0]); // Use part before @ as username
         newUser.setName((String) attributes.getOrDefault("name", email.split("@")[0]));
         newUser.setAvatar((String) attributes.getOrDefault("picture", "https://ui-avatars.com/api/?name=" + email.charAt(0)));
-        newUser.setAddress("Chưa cập nhật");
         newUser.setPhone("Chưa cập nhật");
         newUser.setGender("Chưa cập nhật");
         newUser.setRank("Thành viên đồng");

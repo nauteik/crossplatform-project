@@ -68,6 +68,7 @@ class AdminSidebar extends StatelessWidget {
         SidebarXItem(icon: FontAwesomeIcons.users, label: 'Users Management'),
         SidebarXItem(icon: FontAwesomeIcons.truckRampBox, label: 'Orders Management'),
         SidebarXItem(icon: FontAwesomeIcons.tag, label: 'Coupon Management'),
+        SidebarXItem(icon: FontAwesomeIcons.headset, label: 'Hỗ trợ khách hàng'),
       ],
     );
   }

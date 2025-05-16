@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:admin_interface/providers/product_provider.dart';
 import 'package:admin_interface/providers/brand_provider.dart';
 import 'package:admin_interface/providers/product_type_provider.dart';
+import 'package:admin_interface/providers/message_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -47,8 +48,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => DashboardProvider(),
         ),
-        ChangeNotifierProvider(
-          create: (context) => DashboardProvider(),
+        ChangeNotifierProxyProvider<AuthProvider, MessageProvider>(
+          create: (context) => MessageProvider(context.read<AuthProvider>()),
+          update: (context, auth, previousMessages) {
+            return MessageProvider(auth);
+          },
         ),
       ],
       child: MaterialApp(

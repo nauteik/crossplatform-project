@@ -81,10 +81,13 @@ class ProfileMenu extends StatelessWidget {
             title: 'Địa chỉ của tôi',
             subtitle: 'Quản lý địa chỉ giao hàng',
             onTap: () {
-              // TODO: Điều hướng đến màn hình địa chỉ
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tính năng đang phát triển!')),
-              );
+              if (authProvider.isAuthenticated) {
+                NavigationHelper.navigateToAddressManagement(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Vui lòng đăng nhập để quản lý địa chỉ')),
+                );
+              }
             },
           ),
           Divider(height: 1, color: Colors.grey.shade200),

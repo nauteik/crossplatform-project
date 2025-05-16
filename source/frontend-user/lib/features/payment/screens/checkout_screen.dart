@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/api_constants.dart';
+import '../../../core/models/address_model.dart';
+import '../../../core/utils/navigation_helper.dart';
 import '../../../data/model/cart_item_model.dart';
 import '../../../utils/route_transitions.dart';
 import '../../../features/cart/providers/cart_provider.dart';
+import '../../../features/auth/providers/auth_provider.dart';
+import '../../../features/profile/data/repositories/address_provider.dart';
 import '../models/payment_request.dart';
 import '../providers/payment_provider.dart';
 import 'order_confirmation_screen.dart';
-
+import '../../../core/utils/image_helper.dart';
 class CheckoutScreen extends StatefulWidget {
   final String userId;
   final List<CartItemModel> cartItems;
@@ -28,6 +32,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _addressController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isProcessing = false;
+  AddressModel? _selectedAddress;
 
   @override
   void initState() {
@@ -40,7 +45,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Set the selected item IDs in the payment provider
       final List<String> itemIds = widget.cartItems.map((item) => item.id).toList();
       paymentProvider.setSelectedItemIds(itemIds);
+      
+      // Load user addresses
+      _loadUserAddresses();
     });
+  }
+
+  Future<void> _loadUserAddresses() async {
+    final authProvider = context.read<AuthProvider>();
+    final addressProvider = context.read<AddressProvider>();
+    
+    if (authProvider.isAuthenticated && authProvider.token != null) {
+      await addressProvider.fetchUserAddresses(
+        widget.userId,
+        authProvider.token!,
+      );
+      
+      // Set default address if available
+      if (addressProvider.defaultAddress != null) {
+        setState(() {
+          _selectedAddress = addressProvider.defaultAddress;
+          _addressController.text = _selectedAddress!.fullAddress;
+        });
+      }
+    }
   }
 
   @override
@@ -55,6 +83,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _isProcessing = true);
 
     final paymentProvider = context.read<PaymentProvider>();
+    
+    // Set shipping address from selected address or text input
+    if (_selectedAddress != null) {
+      paymentProvider.setShippingAddress(_selectedAddress!.fullAddress);
+    } else {
+      paymentProvider.setShippingAddress(_addressController.text);
+    }
     
     // Step 1: Create Order
     final orderCreated = await paymentProvider.createOrder(widget.userId);
@@ -182,9 +217,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: Image.network(
-                      item.imageUrl.startsWith('http')
-                          ? item.imageUrl
-                          : '${ApiConstants.baseApiUrl}/${item.imageUrl}',
+                      ImageHelper.getImage(item.imageUrl),
                       width: 50,
                       height: 50,
                       fit: BoxFit.cover,
@@ -245,34 +278,104 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildShippingAddressSection(PaymentProvider paymentProvider) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Shipping Address',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _addressController,
-          decoration: const InputDecoration(
-            hintText: 'Enter your shipping address',
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-          ),
-          maxLines: 3,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your shipping address';
-            }
-            return null;
-          },
-          onChanged: (value) {
-            paymentProvider.setShippingAddress(value);
-          },
-        ),
-      ],
+    return Consumer<AddressProvider>(
+      builder: (context, addressProvider, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Shipping Address',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            
+            // Hiển thị địa chỉ đã chọn nếu có
+            if (_selectedAddress != null)
+              Card(
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.blue.shade200),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _selectedAddress!.fullName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _selectAddress,
+                            child: const Text('Thay đổi'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(_selectedAddress!.phoneNumber),
+                      const SizedBox(height: 4),
+                      Text(_selectedAddress!.fullAddress),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Column(
+                children: [
+                  // Nhập địa chỉ mới nếu chưa có địa chỉ đã chọn
+                  TextFormField(
+                    controller: _addressController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter your shipping address',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    ),
+                    maxLines: 3,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your shipping address';
+                      }
+                      return null;
+                    },
+                    onChanged: (value) {
+                      paymentProvider.setShippingAddress(value);
+                    },
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Nút chọn địa chỉ từ danh sách đã lưu
+                  OutlinedButton.icon(
+                    onPressed: _selectAddress,
+                    icon: const Icon(Icons.location_on),
+                    label: const Text('Chọn từ địa chỉ đã lưu'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        );
+      },
     );
+  }
+
+  Future<void> _selectAddress() async {
+    final address = await NavigationHelper.navigateToAddressSelection(context);
+    if (address != null) {
+      setState(() {
+        _selectedAddress = address;
+        _addressController.text = address.fullAddress;
+      });
+    }
   }
 
   Widget _buildPaymentMethodSelection(PaymentProvider paymentProvider) {
