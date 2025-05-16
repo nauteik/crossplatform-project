@@ -140,4 +140,64 @@ public class EmailService {
             // Consider proper error handling/logging here
         }
     }
-} 
+
+    @Async
+    public void sendPasswordResetEmail(Map<String, Object> emailData) {
+        String to = (String) emailData.get("to");
+        String username = (String) emailData.get("username");
+        String newPassword = (String) emailData.get("newPassword");
+        
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            
+            helper.setTo(to);
+            helper.setSubject("Mật khẩu mới cho tài khoản của bạn");
+            
+            // HTML email template với CSS styling
+            String htmlContent = 
+                "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset=\"UTF-8\">" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" +
+                "    <title>Mật khẩu mới của bạn</title>" +
+                "    <style>" +
+                "        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }" +
+                "        .header { background-color: #e74c3c; color: white; padding: 15px; text-align: center; border-radius: 5px 5px 0 0; }" +
+                "        .content { background-color: #f9f9f9; padding: 20px; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }" +
+                "        .footer { background-color: #f1f1f1; padding: 15px; text-align: center; font-size: 0.8em; color: #777; border-radius: 0 0 5px 5px; border: 1px solid #ddd; }" +
+                "        .credentials { background-color: #fff; border: 1px solid #ddd; padding: 15px; margin: 15px 0; border-radius: 4px; }" +
+                "        .button { display: inline-block; background-color: #e74c3c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; margin-top: 15px; }" +
+                "        .warning { color: #D8000C; background-color: #FFBABA; padding: 10px; border-radius: 4px; margin-top: 15px; }" +
+                "        .note { font-style: italic; margin-top: 10px; }" +
+                "    </style>" +
+                "</head>" +
+                "<body>" +
+                "    <div class=\"header\">" +
+                "        <h1>Đặt lại mật khẩu</h1>" +
+                "    </div>" +
+                "    <div class=\"content\">" +
+                "        <p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản của mình. Dưới đây là thông tin đăng nhập đầy đủ của bạn:</p>" +
+                "        <div class=\"credentials\">" +
+                "            <p><strong>Tên đăng nhập:</strong> " + username + "</p>" +
+                "            <p><strong>Mật khẩu mới:</strong> " + newPassword + "</p>" +
+                "        </div>" +
+                "        <p class=\"note\">Bạn có thể đăng nhập với mật khẩu mới.</p>" +
+                "        <p class=\"warning\">Vui lòng thay đổi mật khẩu ngay sau khi đăng nhập để đảm bảo an toàn cho tài khoản của bạn.</p>" +
+                "    </div>" +
+                "    <div class=\"footer\">" +
+                "        <p>Đây là email tự động, vui lòng không trả lời.</p>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
+    
+            helper.setText(htmlContent, true);
+            mailSender.send(mimeMessage);
+            
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            // Consider proper error handling/logging here
+        }
+    }
+}

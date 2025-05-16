@@ -8,6 +8,7 @@ import com.example.ecommerceproject.model.LoginRequest;
 import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.service.UserService;
+import com.example.ecommerceproject.model.ForgotPasswordRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -96,5 +97,41 @@ public ResponseEntity<ApiResponse<?>> googleLogin(@RequestBody Map<String, Strin
             "OAuth2 login successful", 
             principal.getAttributes()
         ));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<?>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        try {
+            String email = request.getEmail();
+            
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(new ApiResponse<>(
+                            ApiStatus.BAD_REQUEST.getCode(),
+                            "Email không được để trống",
+                            null));
+            }
+            
+            boolean success = userService.resetPassword(email);
+            
+            if (success) {
+                return ResponseEntity.ok(new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    "Mật khẩu mới đã được gửi đến email của bạn",
+                    null));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(
+                            ApiStatus.NOT_FOUND.getCode(),
+                            "Không tìm thấy tài khoản với email này",
+                            null));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(
+                        ApiStatus.SERVER_ERROR.getCode(),
+                        "Đặt lại mật khẩu thất bại: " + e.getMessage(),
+                        null));
+        }
     }
 }
