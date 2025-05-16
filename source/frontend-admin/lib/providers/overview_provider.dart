@@ -1,6 +1,6 @@
 import 'package:admin_interface/core/utils/chart_filter_type.dart';
-import 'package:admin_interface/models/dashboard/category_sales_data.dart';
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
+import 'package:admin_interface/models/category_sales_data.dart';
+import 'package:admin_interface/models/time_based_chart_data.dart';
 import 'package:admin_interface/models/overview_model.dart';
 import 'package:admin_interface/repository/overview_repository.dart';
 import 'package:flutter/material.dart';

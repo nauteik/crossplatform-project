@@ -1,7 +1,6 @@
 import 'package:admin_interface/models/user_model.dart';
 import 'package:admin_interface/repository/user_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class UserManagementProvider extends ChangeNotifier {
   final UserManagementRepository _repository;
@@ -37,23 +36,23 @@ class UserManagementProvider extends ChangeNotifier {
 
   // Thêm người dùng mới
   Future<bool> addUser(Map<String, dynamic> userData) async {
-     _setLoading(true);
-     _setErrorMessage(null);
+    _setLoading(true);
+    _setErrorMessage(null);
 
-     final response = await _repository.addUser(userData);
+    final response = await _repository.addUser(userData);
 
-     if (response.isSuccess && response.data != null) {
-       _users.add(response.data!);
-       _setErrorMessage(null);
-       _setLoading(false);
-       notifyListeners();
-       return true;
-     } else {
-       _setErrorMessage(response.message.isNotEmpty ? response.message : 'Thêm người dùng thất bại.');
-       _setLoading(false);
-       notifyListeners();
-       return false;
-     }
+    if (response.isSuccess && response.data != null) {
+      _setErrorMessage(null);
+      _setLoading(false);
+      await Future.delayed(const Duration(milliseconds: 500));
+      await fetchUsers();
+      return true;
+    } else {
+      _setErrorMessage(response.message.isNotEmpty ? response.message : 'Thêm người dùng thất bại.');
+      _setLoading(false);
+      notifyListeners();
+      return false;
+    }
   }
 
   // Cập nhật thông tin người dùng
@@ -71,16 +70,16 @@ class UserManagementProvider extends ChangeNotifier {
       _setErrorMessage(null);
       _setLoading(false);
       notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 500));
+      await fetchUsers();
       return true;
     } else {
-       _setErrorMessage(response.message.isNotEmpty ? response.message : 'Cập nhật người dùng thất bại.');
-       _setLoading(false);
-       notifyListeners();
-       return false;
+      notifyListeners();
+      return false;
     }
   }
 
-  // Xóa người dùng (giữ nguyên logic)
+  // Xóa người dùng
   Future<bool> deleteUser(String userId) async {
     _setLoading(true);
     _setErrorMessage(null);
@@ -92,6 +91,8 @@ class UserManagementProvider extends ChangeNotifier {
       _setErrorMessage(null);
       _setLoading(false);
       notifyListeners();
+      await Future.delayed(const Duration(milliseconds: 500));
+      await fetchUsers();
       return true;
     } else {
       _setErrorMessage(response.message.isNotEmpty ? response.message : 'Xóa người dùng thất bại.');

@@ -9,13 +9,10 @@ class CouponRepository {
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json; charset=UTF-8',
-        // Thêm header xác thực nếu API yêu cầu (ví dụ: 'Authorization': 'Bearer your_auth_token')
       };
 
-  // Lấy danh sách coupon từ endpoint GET /api/coupon/coupons
-  @override // Thêm @override nếu bạn dùng abstract class cho Repository
   Future<List<Coupon>> fetchCoupons() async {
-    final uri = Uri.parse('$_baseUrl/coupons'); // <-- Đã sửa thành /api/coupon/coupons
+    final uri = Uri.parse('$_baseUrl/coupons');
 
     try {
       final response = await http.get(uri, headers: _headers);
@@ -45,9 +42,6 @@ class CouponRepository {
     }
   }
 
-  // Thêm một coupon mới vào endpoint POST /api/coupon
-  // Nhận các trường cần thiết từ Provider, tạo đối tượng Coupon tạm thời để dùng toJsonForCreation
-  @override // Thêm @override nếu bạn dùng abstract class cho Repository
   Future<Coupon> addCoupon(String code, int value, int maxUses) async {
     final uri = Uri.parse(_baseUrl); // <-- Đã sửa thành /api/coupon
 

@@ -10,7 +10,7 @@ class ProxyScreenAccess implements ScreenAccessInterface {
 
   // List of screen indices that require admin permission
   final List<int> _adminOnlyScreens = [
-    4
+    // 4
   ]; // UsersManagementScreen is at index 4
 
   @override

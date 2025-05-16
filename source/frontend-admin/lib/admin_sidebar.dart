@@ -48,8 +48,9 @@ class AdminSidebar extends StatelessWidget {
               ListTile(
                 leading: const Icon(FontAwesomeIcons.rightFromBracket,
                     color: Colors.white),
-                title: const Text('Log out',
-                    style: TextStyle(color: Colors.white)),
+                title: extended 
+                    ? const Text('Log out', style: TextStyle(color: Colors.white))
+                    : null,
                 onTap: () async {
                   await authProvider.logout();
                   if (context.mounted) {

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:admin_interface/constants/api_constants.dart';
-import 'package:admin_interface/models/dashboard/dashboard_data.dart';
 import 'package:http/http.dart' as http;
 
 class OverviewRepository {

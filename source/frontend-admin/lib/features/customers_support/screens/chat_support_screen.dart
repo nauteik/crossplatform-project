@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/message_model.dart';
-import '../../../models/user_model.dart';
 import '../../../providers/message_provider.dart';
 import '../../../providers/auth_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
