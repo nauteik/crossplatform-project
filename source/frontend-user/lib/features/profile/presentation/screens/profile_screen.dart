@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/profile_menu.dart';
-import '../widgets/profile_header.dart';
 import '../widgets/login_button.dart';
 import '../widgets/logout_button.dart';
 
