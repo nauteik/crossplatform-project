@@ -21,7 +21,7 @@ class ProfileScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 16),
               if (isAuthenticated) ...[ // Đã đăng nhập -> Hiện ProfileHeader
-                ProfileHeader(authProvider: authProvider),
+              //  ProfileHeader(authProvider: authProvider),
                 const SizedBox(height: 16),
               ] else ...[               // Không đăng nhập -> Hiện nút Login
                 const LoginButton(),

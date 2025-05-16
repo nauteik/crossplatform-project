@@ -11,7 +11,7 @@ class ProfileMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -51,12 +51,15 @@ class ProfileMenu extends StatelessWidget {
                   NavigationHelper.navigateToOrderHistory(context, userId);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Không thể xác định người dùng. Vui lòng đăng nhập lại.')),
+                    const SnackBar(
+                        content: Text(
+                            'Không thể xác định người dùng. Vui lòng đăng nhập lại.')),
                   );
                 }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Vui lòng đăng nhập để xem đơn hàng')),
+                  const SnackBar(
+                      content: Text('Vui lòng đăng nhập để xem đơn hàng')),
                 );
               }
             },
@@ -72,7 +75,30 @@ class ProfileMenu extends StatelessWidget {
                 NavigationHelper.navigateToAddressManagement(context);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Vui lòng đăng nhập để quản lý địa chỉ')),
+                  const SnackBar(
+                      content: Text('Vui lòng đăng nhập để quản lý địa chỉ')),
+                );
+              }
+            },
+          ),
+          Divider(height: 1, color: Colors.grey.shade200),
+          _buildMenuItem(
+            context,
+            icon: Icons.settings,
+            title: 'Cài đặt tài khoản',
+            subtitle: 'Bảo mật và thông tin cá nhân',
+            onTap: () {
+              if (authProvider.isAuthenticated) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingScreen(),
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Vui lòng đăng nhập để truy cập cài đặt')),
                 );
               }
             },

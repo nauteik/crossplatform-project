@@ -8,13 +8,16 @@ import 'package:provider/provider.dart';
 class ProxyScreenAccess implements ScreenAccessInterface {
   final RealScreenAccess _realScreenAccess = RealScreenAccess();
 
-  // List of screen indices that require admin permission
+  // List of screen indices that require admin permission - now empty
   final List<int> _adminOnlyScreens = [
-    // 4
-  ]; // UsersManagementScreen is at index 4
+
+    // 4 - removing restriction for UsersManagementScreen
+  ];
+
 
   @override
   Widget getScreen(int index, BuildContext context) {
+    // Kiểm tra không còn cần thiết nhưng giữ lại cấu trúc code để dễ thêm lại sau này nếu cần
     if (_adminOnlyScreens.contains(index)) {
       // Get auth provider to check role
       final authProvider = Provider.of<AuthProvider>(context);
@@ -37,18 +40,11 @@ class ProxyScreenAccess implements ScreenAccessInterface {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.no_accounts,
-              size: 80,
-              color: Colors.red,
-            ),
+            const Icon(Icons.no_accounts, size: 80, color: Colors.red),
             const SizedBox(height: 24),
             const Text(
               'Quyền truy cập bị từ chối',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             const Text(

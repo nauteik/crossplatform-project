@@ -4,9 +4,8 @@ import 'package:frontend_user/core/constants/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String USER_ID_KEY = 'user_id';
-  static const String USER_DATA_KEY = 'user_data';
-  static const String TOKEN_KEY = 'auth_token';
+  static const String _tokenKey = 'auth_token';
+  static const String _userIdKey = 'user_id';
 
   final String baseUrl = "${ApiConstants.baseApiUrl}/api/auth";
 
@@ -15,7 +14,7 @@ class AuthService {
     // Đọc từ SharedPreferences (cần đảm bảo đã lưu ID khi đăng nhập)
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
-      return prefs.getString(USER_ID_KEY);
+      return prefs.getString(_userIdKey);
     } catch (e) {
       print("Error getting current user ID from SharedPreferences: $e");
       // Return null or throw an exception if the ID cannot be retrieved
@@ -23,17 +22,36 @@ class AuthService {
     }
   }
 
-  // Phương thức lưu thông tin người dùng sau khi đăng nhập
-  Future<void> saveUserData(
-      String userId, Map<String, dynamic> userData, String token) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(USER_ID_KEY, userId);
-      await prefs.setString(USER_DATA_KEY, jsonEncode(userData));
-      await prefs.setString(TOKEN_KEY, token);
-    } catch (e) {
-      print("Error saving user data: $e");
-    }
+  // Lưu token và userId
+  static Future<void> saveAuthInfo(String token, String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+    await prefs.setString(_userIdKey, userId);
+  }
+
+  // Lấy token
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+
+  // Lấy userId
+  static Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userIdKey);
+  }
+
+  // Xóa token và userId (đăng xuất)
+  static Future<void> clearAuthInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_userIdKey);
+  }
+
+  // Kiểm tra xem người dùng đã đăng nhập chưa
+  static Future<bool> isAuthenticated() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
   }
 
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -59,7 +77,7 @@ class AuthService {
 
         // Lưu thông tin người dùng khi đăng nhập thành công
         if (userData != null && userData['id'] != null) {
-          await saveUserData(userData['id'], userData, token ?? "");
+          await saveAuthInfo(token ?? "", userData['id']);
         }
 
         print("Token extracted: ${token != null ? 'Success' : 'Null'}");
@@ -117,14 +135,13 @@ class AuthService {
       };
     }
   }
-  
+
   // Phương thức đăng xuất
   Future<void> logout() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(USER_ID_KEY);
-      await prefs.remove(USER_DATA_KEY);
-      await prefs.remove(TOKEN_KEY);
+      await prefs.remove(_userIdKey);
+      await prefs.remove(_tokenKey);
     } catch (e) {
       print("Error during logout: $e");
     }

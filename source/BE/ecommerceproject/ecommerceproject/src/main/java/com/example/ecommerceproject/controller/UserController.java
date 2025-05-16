@@ -2,6 +2,7 @@ package com.example.ecommerceproject.controller;
 
 import java.util.List;
 
+import com.example.ecommerceproject.model.ChangePasswordRequest;
 import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.repository.UserRepository;
@@ -276,6 +277,91 @@ public class UserController {
                 ApiStatus.NOT_FOUND.getMessage()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    /**
+     * Thay đổi mật khẩu người dùng
+     * @param userId ID của người dùng cần đổi mật khẩu
+     * @param request Yêu cầu đổi mật khẩu bao gồm mật khẩu cũ và mới
+     * @param httpRequest HttpServletRequest để xác thực người dùng từ token JWT
+     * @return ResponseEntity với ApiResponse thông báo kết quả đổi mật khẩu
+     */
+    @PutMapping("/change-password/{userId}")
+    public ResponseEntity<ApiResponse<?>> changePassword(
+            @PathVariable String userId,
+            @RequestBody ChangePasswordRequest request,
+            HttpServletRequest httpRequest) {
+        try {
+            // Xác thực người dùng từ token JWT
+            String authHeader = httpRequest.getHeader("Authorization");
+            
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(
+                            401,
+                            "Authorization token is required",
+                            null
+                        ));
+            }
+            
+            String token = authHeader.substring(7);
+            String username = jwtUtil.extractUsername(token);
+            
+            // Kiểm tra người dùng hiện tại
+            User currentUser = userService.getUserByUsername(username);
+            
+            // Chỉ admin (role = 1) hoặc chính người dùng đó mới có thể đổi mật khẩu
+            if (currentUser.getRole() != 1 && !currentUser.getId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse<>(
+                            403,
+                            "You don't have permission to change this user's password",
+                            null
+                        ));
+            }
+            
+            // Tiến hành đổi mật khẩu nếu có quyền
+            User updated = userService.changePassword(userId, request.getOldPassword(), request.getNewPassword());
+            
+            // Không trả về mật khẩu đã mã hóa
+            updated.setPassword(null);
+            
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                "Password changed successfully",
+                updated
+            ));
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("User not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(
+                            ApiStatus.NOT_FOUND.getCode(),
+                            e.getMessage(),
+                            null
+                        ));
+            } else if (e.getMessage().contains("Current password is incorrect")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(
+                            ApiStatus.BAD_REQUEST.getCode(),
+                            e.getMessage(),
+                            null
+                        ));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse<>(
+                            ApiStatus.SERVER_ERROR.getCode(),
+                            "Change password failed: " + e.getMessage(),
+                            null
+                        ));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(
+                        ApiStatus.SERVER_ERROR.getCode(),
+                        "Failed to change password: " + e.getMessage(),
+                        null
+                    ));
+        }
     }
 }
 
