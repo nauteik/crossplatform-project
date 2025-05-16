@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'change_password_screen.dart';
+import 'edit_profile_screen.dart'; // Thêm import này
 
 class SettingScreen extends StatelessWidget {
   const SettingScreen({super.key});
@@ -20,7 +22,25 @@ class SettingScreen extends StatelessWidget {
             title: 'Thông tin tài khoản',
             subtitle: 'Xem và cập nhật thông tin cá nhân',
             onTap: () {
-              // TODO: Điều hướng đến màn hình thông tin tài khoản
+              // Điều hướng đến màn hình chỉnh sửa hồ sơ
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditProfileScreen(),
+                ),
+              ).then((value) {
+                // Nếu có cập nhật profile, có thể làm mới màn hình Settings
+                if (value == true) {
+                  // Nếu muốn làm mới dữ liệu sau khi cập nhật profile
+                  // Có thể thêm logic refresh ở đây
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Thông tin cá nhân đã được cập nhật'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              });
             },
           ),
           _buildSettingItem(
@@ -29,7 +49,12 @@ class SettingScreen extends StatelessWidget {
             title: 'Đổi mật khẩu',
             subtitle: 'Cập nhật mật khẩu của bạn',
             onTap: () {
-              // TODO: Điều hướng đến màn hình đổi mật khẩu
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChangePasswordScreen(),
+                ),
+              );
             },
           ),
           _buildSettingItem(
@@ -41,7 +66,6 @@ class SettingScreen extends StatelessWidget {
               // TODO: Điều hướng đến màn hình quản lý địa chỉ
             },
           ),
-          
           _buildSectionHeader('Bảo mật'),
           _buildSettingItem(
             context,
@@ -64,7 +88,6 @@ class SettingScreen extends StatelessWidget {
               // TODO: Điều hướng đến màn hình quyền riêng tư
             },
           ),
-          
           _buildSectionHeader('Thông báo'),
           _buildSettingItem(
             context,
@@ -90,7 +113,6 @@ class SettingScreen extends StatelessWidget {
               },
             ),
           ),
-          
           _buildSectionHeader('Khác'),
           _buildSettingItem(
             context,
@@ -109,36 +131,7 @@ class SettingScreen extends StatelessWidget {
             onTap: () {
               // TODO: Hiển thị thông tin về ứng dụng
             },
-          ),
-          _buildSettingItem(
-            context,
-            icon: Icons.logout,
-            title: 'Đăng xuất',
-            titleColor: Colors.red,
-            onTap: () {
-              // TODO: Xử lý đăng xuất
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Đăng xuất'),
-                  content: const Text('Bạn có chắc chắn muốn đăng xuất?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Hủy'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // TODO: Xử lý đăng xuất
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+          ),   
         ],
       ),
     );
@@ -181,4 +174,4 @@ class SettingScreen extends StatelessWidget {
       onTap: onTap,
     );
   }
-} 
+}

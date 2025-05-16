@@ -109,7 +109,12 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth2 -> oauth2
                 .defaultSuccessUrl("/api/auth/oauth2-success", true)
-            )
+                .authorizationEndpoint(endpoint -> 
+                    endpoint.baseUri("/oauth2/authorization")
+                )
+                // Xác định các URL public không yêu cầu xác thực
+                .permitAll()
+)
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )

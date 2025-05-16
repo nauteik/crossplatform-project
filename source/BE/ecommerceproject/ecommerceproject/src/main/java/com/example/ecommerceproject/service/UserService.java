@@ -170,5 +170,28 @@ public class UserService implements UserDetailsService {
         // Filter users from the repository by creation date
         return userRepository.findByCreatedAtBetween(startOfDay, endOfDay);
     }
+
+    /**
+     * Thay đổi mật khẩu người dùng
+     * @param userId ID của người dùng
+     * @param oldPassword Mật khẩu cũ
+     * @param newPassword Mật khẩu mới
+     * @return User đã cập nhật
+     * @throws RuntimeException nếu mật khẩu cũ không đúng hoặc người dùng không tồn tại
+     */
+    public User changePassword(String userId, String oldPassword, String newPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        // Kiểm tra mật khẩu cũ
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+        
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(newPassword));
+        
+        return userRepository.save(user);
+    }
 }
 
