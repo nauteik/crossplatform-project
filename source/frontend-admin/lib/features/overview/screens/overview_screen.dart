@@ -5,8 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
-import 'package:admin_interface/models/dashboard/category_sales_data.dart';
+import 'package:admin_interface/models/time_based_chart_data.dart';
+import 'package:admin_interface/models/category_sales_data.dart';
 
 class OverviewScreen extends StatelessWidget {
   const OverviewScreen({Key? key}) : super(key: key);

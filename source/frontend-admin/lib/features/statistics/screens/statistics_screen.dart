@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
-import 'package:admin_interface/models/dashboard/category_sales_data.dart';
+import 'package:admin_interface/models/time_based_chart_data.dart';
+import 'package:admin_interface/models/category_sales_data.dart';
 import 'package:admin_interface/providers/statistics_provider.dart';
 
 class StatisticsScreen extends StatelessWidget {
@@ -121,44 +121,6 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  // Helper method to build a metric card (giữ nguyên như file bạn gửi)
-  Widget _buildMetricCard(
-      BuildContext context, String title, String value, IconData icon) {
-    return Card(
-      elevation: 4.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon,
-                size: 30,
-                color:
-                    Theme.of(context).primaryColor), // Kích thước icon nhỏ hơn
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20, // Kích thước font nhỏ hơn
-                  ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // Helper method to build a card container for charts (giữ nguyên như file bạn gửi)
   Widget _buildChartCard(BuildContext context, String title, Widget chartWidget,
       {double height = 250}) {
@@ -183,13 +145,6 @@ class StatisticsScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  // Helper method to format currency (assuming VND) (giữ nguyên như file bạn gửi)
-  String _formatCurrency(double amount) {
-    final formatter =
-        NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
-    return formatter.format(amount);
   }
 
   // --- Helper Methods cho UI Chọn Bộ Lọc (Thêm vào) ---

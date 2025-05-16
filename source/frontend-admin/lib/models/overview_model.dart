@@ -1,5 +1,5 @@
-import 'package:admin_interface/models/dashboard/category_sales_data.dart';
-import 'package:admin_interface/models/dashboard/time_based_chart_data.dart';
+import 'package:admin_interface/models/category_sales_data.dart';
+import 'package:admin_interface/models/time_based_chart_data.dart';
 
 class OverviewData {
   final int totalUsers;
