@@ -64,70 +64,70 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
     }
   }
 
-  Future<void> _pickImages() async {
-    try {
-      final List<XFile> pickedImages = await _imagePicker.pickMultiImage(
-        maxWidth: 1080,
-        maxHeight: 1080,
-        imageQuality: 85,
-      );
+  // Future<void> _pickImages() async {
+  //   try {
+  //     final List<XFile> pickedImages = await _imagePicker.pickMultiImage(
+  //       maxWidth: 1080,
+  //       maxHeight: 1080,
+  //       imageQuality: 85,
+  //     );
 
-      if (pickedImages.isNotEmpty) {
-        // Giới hạn tổng số lượng ảnh tối đa là 5
-        if (_selectedImages.length + pickedImages.length > 5) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Bạn chỉ có thể tải lên tối đa 5 ảnh')),
-          );
-          if (_selectedImages.length < 5) {
-            setState(() {
-              _selectedImages
-                  .addAll(pickedImages.take(5 - _selectedImages.length));
-            });
-          }
-        } else {
-          setState(() {
-            _selectedImages.addAll(pickedImages);
-          });
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi chọn ảnh: $e')),
-      );
-    }
-  }
+  //     if (pickedImages.isNotEmpty) {
+  //       // Giới hạn tổng số lượng ảnh tối đa là 5
+  //       if (_selectedImages.length + pickedImages.length > 5) {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(
+  //               content: Text('Bạn chỉ có thể tải lên tối đa 5 ảnh')),
+  //         );
+  //         if (_selectedImages.length < 5) {
+  //           setState(() {
+  //             _selectedImages
+  //                 .addAll(pickedImages.take(5 - _selectedImages.length));
+  //           });
+  //         }
+  //       } else {
+  //         setState(() {
+  //           _selectedImages.addAll(pickedImages);
+  //         });
+  //       }
+  //     }
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Lỗi khi chọn ảnh: $e')),
+  //     );
+  //   }
+  // }
 
-  Future<void> _pickVideo() async {
-    try {
-      final XFile? pickedVideo = await _imagePicker.pickVideo(
-        source: ImageSource.gallery,
-        maxDuration: const Duration(seconds: 30),
-      );
+  // Future<void> _pickVideo() async {
+  //   try {
+  //     final XFile? pickedVideo = await _imagePicker.pickVideo(
+  //       source: ImageSource.gallery,
+  //       maxDuration: const Duration(seconds: 30),
+  //     );
 
-      if (pickedVideo != null) {
-        setState(() {
-          _selectedVideo = pickedVideo;
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi chọn video: $e')),
-      );
-    }
-  }
+  //     if (pickedVideo != null) {
+  //       setState(() {
+  //         _selectedVideo = pickedVideo;
+  //       });
+  //     }
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Lỗi khi chọn video: $e')),
+  //     );
+  //   }
+  // }
 
-  void _removeImage(int index) {
-    setState(() {
-      _selectedImages.removeAt(index);
-    });
-  }
+  // void _removeImage(int index) {
+  //   setState(() {
+  //     _selectedImages.removeAt(index);
+  //   });
+  // }
 
-  void _removeVideo() {
-    setState(() {
-      _selectedVideo = null;
-    });
-  }
+  // void _removeVideo() {
+  //   setState(() {
+  //     _selectedVideo = null;
+  //   });
+  // }
 
   Future<void> _submitReview() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -163,7 +163,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
         request.fields['userId'] = userId;
         request.fields['rating'] = _rating.toString();
         request.fields['comment'] = _commentController.text;
-
+        /**? 
         // Add images
         for (var i = 0; i < _selectedImages.length; i++) {
           final image = _selectedImages[i];
@@ -188,7 +188,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
             filename: filename,
           ));
         }
-
+        */
         // Send the request
         var streamedResponse = await request.send();
         var response = await http.Response.fromStream(streamedResponse);
@@ -436,6 +436,7 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
               const SizedBox(height: 24),
 
               // Media upload section
+              /*
               const Text(
                 'Thêm hình ảnh hoặc video',
                 style: TextStyle(
@@ -479,130 +480,131 @@ class _ProductReviewScreenState extends State<ProductReviewScreen> {
                   ),
                 ],
               ),
+              */
 
-              // Selected images preview
-              if (_selectedImages.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                const Text(
-                  'Hình ảnh đã chọn',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 100,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _selectedImages.length,
-                    itemBuilder: (context, index) {
-                      return Stack(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(
-                                right: 8, top: 8, left: 2),
-                            width: 100,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade300),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(7),
-                              child: Image.file(
-                                File(_selectedImages[index].path),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: () => _removeImage(index),
-                              child: Container(
-                                padding: const EdgeInsets.all(2),
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
+              // // Selected images preview
+              // if (_selectedImages.isNotEmpty) ...[
+              //   const SizedBox(height: 16),
+              //   const Text(
+              //     'Hình ảnh đã chọn',
+              //     style: TextStyle(
+              //       fontWeight: FontWeight.bold,
+              //     ),
+              //   ),
+              //   const SizedBox(height: 8),
+              //   SizedBox(
+              //     height: 100,
+              //     child: ListView.builder(
+              //       scrollDirection: Axis.horizontal,
+              //       itemCount: _selectedImages.length,
+              //       itemBuilder: (context, index) {
+              //         return Stack(
+              //           children: [
+              //             Container(
+              //               margin: const EdgeInsets.only(
+              //                   right: 8, top: 8, left: 2),
+              //               width: 100,
+              //               decoration: BoxDecoration(
+              //                 border: Border.all(color: Colors.grey.shade300),
+              //                 borderRadius: BorderRadius.circular(8),
+              //               ),
+              //               child: ClipRRect(
+              //                 borderRadius: BorderRadius.circular(7),
+              //                 child: Image.file(
+              //                   File(_selectedImages[index].path),
+              //                   fit: BoxFit.cover,
+              //                 ),
+              //               ),
+              //             ),
+              //             Positioned(
+              //               top: 0,
+              //               right: 0,
+              //               child: GestureDetector(
+              //                 onTap: () => _removeImage(index),
+              //                 child: Container(
+              //                   padding: const EdgeInsets.all(2),
+              //                   decoration: const BoxDecoration(
+              //                     color: Colors.red,
+              //                     shape: BoxShape.circle,
+              //                   ),
+              //                   child: const Icon(
+              //                     Icons.close,
+              //                     size: 16,
+              //                     color: Colors.white,
+              //                   ),
+              //                 ),
+              //               ),
+              //             ),
+              //           ],
+              //         );
+              //       },
+              //     ),
+              //   ),
+              // ],
 
-              // Selected video preview
-              if (_selectedVideo != null) ...[
-                const SizedBox(height: 16),
-                const Text(
-                  'Video đã chọn',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.videocam,
-                            size: 40,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${_selectedVideo!.name}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: _removeVideo,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              // // Selected video preview
+              // if (_selectedVideo != null) ...[
+              //   const SizedBox(height: 16),
+              //   const Text(
+              //     'Video đã chọn',
+              //     style: TextStyle(
+              //       fontWeight: FontWeight.bold,
+              //     ),
+              //   ),
+              //   const SizedBox(height: 8),
+              //   Stack(
+              //     children: [
+              //       Container(
+              //         width: double.infinity,
+              //         height: 120,
+              //         decoration: BoxDecoration(
+              //           color: Colors.black.withOpacity(0.1),
+              //           borderRadius: BorderRadius.circular(8),
+              //           border: Border.all(color: Colors.grey.shade300),
+              //         ),
+              //         child: Column(
+              //           mainAxisAlignment: MainAxisAlignment.center,
+              //           children: [
+              //             const Icon(
+              //               Icons.videocam,
+              //               size: 40,
+              //               color: Colors.grey,
+              //             ),
+              //             const SizedBox(height: 8),
+              //             Text(
+              //               '${_selectedVideo!.name}',
+              //               style: const TextStyle(
+              //                 fontSize: 14,
+              //                 color: Colors.grey,
+              //               ),
+              //               maxLines: 1,
+              //               overflow: TextOverflow.ellipsis,
+              //             ),
+              //           ],
+              //         ),
+              //       ),
+              //       Positioned(
+              //         top: 8,
+              //         right: 8,
+              //         child: GestureDetector(
+              //           onTap: _removeVideo,
+              //           child: Container(
+              //             padding: const EdgeInsets.all(4),
+              //             decoration: const BoxDecoration(
+              //               color: Colors.red,
+              //               shape: BoxShape.circle,
+              //             ),
+              //             child: const Icon(
+              //               Icons.close,
+              //               size: 16,
+              //               color: Colors.white,
+              //             ),
+              //           ),
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ],
 
               const SizedBox(height: 24),
 

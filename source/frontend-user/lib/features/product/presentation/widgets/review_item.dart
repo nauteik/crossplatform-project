@@ -4,6 +4,7 @@ import '../../../../core/models/review_model.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/constants/api_constants.dart';
 import 'dart:math' as Math;
+import '../../../../core/utils/image_helper.dart';
 
 class ReviewItem extends StatelessWidget {
   final ReviewModel review;
@@ -94,6 +95,42 @@ class ReviewItem extends StatelessWidget {
         );
       }
     }
+  }
+
+  void _openFullScreenImage(String mediaUrl, BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: Center(
+            child: InteractiveViewer(
+              child: Image.network(
+                mediaUrl,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  print('Error in fullscreen: $error');
+                  print('URL: $mediaUrl');
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(Icons.error, color: Colors.red, size: 48),
+                      SizedBox(height: 16),
+                      Text('Không thể tải hình ảnh',
+                          style: TextStyle(color: Colors.white)),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -220,26 +257,69 @@ class ReviewItem extends StatelessWidget {
                           // Check if it's an image or video based on type
                           final isVideo = media.type == 'video';
 
-                          return Container(
-                            width: 80,
-                            height: 80,
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.grey.shade300),
-                              image: isVideo
-                                  ? null
-                                  : DecorationImage(
-                                      image: NetworkImage(media.url),
-                                      fit: BoxFit.cover,
+                          // Chuyển đổi URL tương đối thành URL đầy đủ
+                          final mediaUrl = ImageHelper.getMediaUrl(media.url);
+                          print(
+                              'Displaying media: $mediaUrl (type: ${media.type})');
+
+                          return GestureDetector(
+                            onTap: () {
+                              // Mở ảnh toàn màn hình khi nhấp vào
+                              if (!isVideo) {
+                                _openFullScreenImage(mediaUrl, context);
+                              }
+                            },
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              margin: const EdgeInsets.only(right: 8),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: isVideo
+                                  ? const Center(
+                                      child: Icon(Icons.play_circle,
+                                          size: 32, color: Colors.grey),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(3),
+                                      child: Image.network(
+                                        mediaUrl,
+                                        fit: BoxFit.cover,
+                                        // Thêm error builder để hiển thị khi lỗi
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          print('Error loading image: $error');
+                                          print('URL: $mediaUrl');
+                                          return Container(
+                                            color: Colors.grey.shade200,
+                                            child: const Icon(
+                                                Icons.broken_image,
+                                                color: Colors.red),
+                                          );
+                                        },
+                                        // Thêm loading builder
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                          if (loadingProgress == null)
+                                            return child;
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              value: loadingProgress
+                                                          .expectedTotalBytes !=
+                                                      null
+                                                  ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      loadingProgress
+                                                          .expectedTotalBytes!
+                                                  : null,
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
                             ),
-                            child: isVideo
-                                ? const Center(
-                                    child: Icon(Icons.play_circle,
-                                        size: 32, color: Colors.white),
-                                  )
-                                : null,
                           );
                         },
                       ),

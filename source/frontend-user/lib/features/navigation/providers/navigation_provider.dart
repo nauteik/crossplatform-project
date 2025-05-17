@@ -3,60 +3,63 @@ import '../../home/presentation/screens/home_screen.dart';
 import '../../build_pc/presentation/screens/build_configuration_screen.dart';
 import '../../product/presentation/screens/product_category_screen.dart';
 import '../../profile/presentation/screens/profile_screen.dart';
-import '../../support/presentation/screens/chat_support_screen.dart';
+// Thay đổi import để sử dụng màn hình lựa chọn
+import '../../support/presentation/screens/support_options_screen.dart';
 
 class NavigationProvider extends ChangeNotifier {
   Widget _currentScreen;
   int _currentIndex = 0;
   List<Widget> _screens = [];
   final List<Widget> _navigationHistory = [];
-  
-  NavigationProvider({Widget? initialScreen}) 
+
+  NavigationProvider({Widget? initialScreen})
       : _currentScreen = initialScreen ?? const HomeScreen() {
     _initScreens();
     _navigationHistory.add(_currentScreen);
   }
-  
+
   void _initScreens() {
     _screens = [
       const HomeScreen(),
       const ProductCategoryScreen(),
       const BuildConfigurationScreen(),
-      const ChatSupportScreen(),
+      // Thay thế ChatSupportScreen bằng SupportOptionsScreen
+      const SupportOptionsScreen(),
       const ProfileScreen(),
     ];
     _currentScreen = _screens[0];
   }
-  
+
   void updateChatUserId(String userId) {
     // Không cần cập nhật màn hình nữa vì ChatSupportScreen lấy userId từ AuthProvider
-    
+
     if (_currentIndex == 4) {
       notifyListeners();
     }
   }
-  
+
   Widget get currentScreen => _currentScreen;
   int get currentIndex => _currentIndex;
-  
+
   /// Dùng để điều hướng giữa các tab chính trong bottom navigation
   void setBottomNavIndex(int index) {
     if (index >= 0 && index < _screens.length) {
       _currentIndex = index;
       _currentScreen = _screens[index];
-      
+
       // Thêm màn hình vào lịch sử
       _navigationHistory.add(_currentScreen);
-      
-      print("NavigationProvider: Chuyển đến tab $index, màn hình: ${_currentScreen.runtimeType}");
+
+      print(
+          "NavigationProvider: Chuyển đến tab $index, màn hình: ${_currentScreen.runtimeType}");
       notifyListeners();
     }
   }
-  
+
   /// Dùng để điều hướng đến các màn hình không nằm trong bottom navigation
   void navigateTo(Widget screen) {
     print("NavigationProvider: Điều hướng đến màn hình ${screen.runtimeType}");
-    
+
     // Kiểm tra nếu màn hình mới là một trong các tab chính
     for (int i = 0; i < _screens.length; i++) {
       if (_screens[i].runtimeType == screen.runtimeType) {
@@ -67,13 +70,13 @@ class NavigationProvider extends ChangeNotifier {
         return;
       }
     }
-    
+
     // Nếu không phải tab chính, chỉ cập nhật màn hình hiện tại
     _currentScreen = screen;
     _navigationHistory.add(_currentScreen);
     notifyListeners();
   }
-  
+
   /// Reset về trang chủ (tab 0) - Hữu ích khi đăng xuất
   void resetToHome() {
     _currentIndex = 0;
@@ -83,13 +86,13 @@ class NavigationProvider extends ChangeNotifier {
     print("NavigationProvider: Reset về trang chủ");
     notifyListeners();
   }
-  
+
   /// Quay lại màn hình trước đó nếu có
   bool goBack() {
     if (_navigationHistory.length > 1) {
       _navigationHistory.removeLast();
       final previousScreen = _navigationHistory.last;
-      
+
       // Cập nhật currentIndex nếu màn hình trước đó là tab chính
       for (int i = 0; i < _screens.length; i++) {
         if (_screens[i].runtimeType == previousScreen.runtimeType) {
@@ -99,7 +102,7 @@ class NavigationProvider extends ChangeNotifier {
           return true;
         }
       }
-      
+
       _currentScreen = previousScreen;
       notifyListeners();
       return true;
