@@ -5,14 +5,15 @@ import '../../../data/model/order_model.dart';
 import '../../../data/model/order_status.dart';
 import '../providers/payment_provider.dart';
 import 'order_confirmation_screen.dart';
+import 'package:frontend_user/core/utils/format_currency.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   final String userId;
 
   const OrderHistoryScreen({
-    Key? key,
+    super.key,
     required this.userId,
-  }) : super(key: key);
+  });
 
   @override
   State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
@@ -201,7 +202,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                 children: [
                   _buildStatusBadge(order.status),
                   Text(
-                    '\$${order.totalAmount.toStringAsFixed(2)}',
+                    formatCurrency(order.totalAmount),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -214,7 +215,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
               
               // Items summary
               Text(
-                '$totalItems ${totalItems == 1 ? 'item' : 'items'}',
+                '$totalItems ${totalItems == 1 ? 'sản phẩm' : 'sản phẩm'}',
                 style: TextStyle(color: Colors.grey[700]),
               ),
               

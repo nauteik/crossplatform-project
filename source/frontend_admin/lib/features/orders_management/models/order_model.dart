@@ -1,6 +1,47 @@
-
-
 import 'package:frontend_admin/features/orders_management/models/order_item_model.dart';
+
+class Address {
+  final String id;
+  final String userId;
+  final String fullName;
+  final String phoneNumber;
+  final String addressLine;
+  final String city;
+  final String district;
+  final String ward;
+  final bool isDefault;
+
+  Address({
+    required this.id,
+    required this.userId,
+    required this.fullName,
+    required this.phoneNumber,
+    required this.addressLine,
+    required this.city,
+    required this.district,
+    required this.ward,
+    required this.isDefault,
+  });
+
+  factory Address.fromJson(Map<String, dynamic> json) {
+    return Address(
+      id: json['id'] ?? '',
+      userId: json['userId'] ?? '',
+      fullName: json['fullName'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
+      addressLine: json['addressLine'] ?? '',
+      city: json['city'] ?? '',
+      district: json['district'] ?? '',
+      ward: json['ward'] ?? '',
+      isDefault: json['isDefault'] ?? false,
+    );
+  }
+
+  @override
+  String toString() {
+    return '$fullName, $addressLine, $ward, $district, $city';
+  }
+}
 
 class Order {
   final String id;
@@ -10,9 +51,10 @@ class Order {
   final double total;
   final String status;
   final String paymentMethod;
-  final String shippingAddress;
+  final Address shippingAddress;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final Map<String, dynamic> additionalInfo;
 
   Order({
     required this.id,
@@ -25,7 +67,11 @@ class Order {
     required this.shippingAddress,
     required this.createdAt,
     required this.updatedAt,
-  });
+    Map<String, dynamic>? additionalInfo,
+  }) : this.additionalInfo = additionalInfo ?? {};
+
+  String get userEmail => additionalInfo['userEmail'] as String? ?? '';
+  String get username => additionalInfo['username'] as String? ?? userName;
 
   factory Order.fromJson(Map<String, dynamic> json) {
     List<OrderItem> orderItems = [];
@@ -33,6 +79,26 @@ class Order {
       orderItems = List<OrderItem>.from(
         (json['items'] as List).map((item) => OrderItem.fromJson(item)),
       );
+    }
+
+    // Xử lý địa chỉ giao hàng
+    Address parseAddress(dynamic addressData) {
+      if (addressData is Map<String, dynamic>) {
+        return Address.fromJson(addressData);
+      } else {
+        // Trường hợp địa chỉ là string hoặc null
+        return Address(
+          id: '',
+          userId: '',
+          fullName: '',
+          phoneNumber: '',
+          addressLine: addressData?.toString() ?? 'No address provided',
+          city: '',
+          district: '',
+          ward: '',
+          isDefault: false,
+        );
+      }
     }
 
     // Handle date arrays from the API - [year, month, day, hour, minute, second, nanoseconds]
@@ -64,17 +130,24 @@ class Order {
       }
     }
 
+    // Lấy additionalInfo từ json nếu có
+    Map<String, dynamic>? additionalInfo;
+    if (json['additionalInfo'] != null) {
+      additionalInfo = Map<String, dynamic>.from(json['additionalInfo']);
+    }
+
     return Order(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
-      userName: json['userName'] ?? 'Unknown Customer', // This might need to be fetched separately
+      userName: json['userName'] ?? 'Unknown Customer',
       items: orderItems,
       total: json['totalAmount']?.toDouble() ?? 0.0,
       status: json['status'] ?? 'PENDING',
       paymentMethod: json['paymentMethod'] ?? '',
-      shippingAddress: json['shippingAddress'] ?? '',
+      shippingAddress: parseAddress(json['shippingAddress']),
       createdAt: parseDateArray(json['createdAt']),
       updatedAt: parseDateArray(json['updatedAt']),
+      additionalInfo: additionalInfo,
     );
   }
 
@@ -82,19 +155,19 @@ class Order {
   static String getStatusDescription(String status) {
     switch (status) {
       case 'PENDING':
-        return 'Payment Pending';
+        return 'Chờ thanh toán';
       case 'PAID':
-        return 'Paid, Awaiting Shipment';
-      case 'SHIPPED':
-        return 'Shipped, In Transit';
+        return 'Đã thanh toán, chờ vận chuyển';
+      case 'SHIPPING':
+        return 'Đang vận chuyển';
       case 'DELIVERED':
-        return 'Delivered';
+        return 'Đã giao hàng';
       case 'CANCELLED':
-        return 'Cancelled';
+        return 'Đã hủy';
       case 'FAILED':
-        return 'Payment Failed';
+        return 'Thanh toán thất bại';
       default:
-        return 'Unknown Status';
+        return 'Trạng thái không xác định';
     }
   }
 }

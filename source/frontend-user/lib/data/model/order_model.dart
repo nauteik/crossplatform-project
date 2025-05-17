@@ -1,5 +1,6 @@
 import 'order_item_model.dart';
 import 'order_status.dart';
+import '../../core/models/address_model.dart';
 
 class OrderModel {
   final String id;
@@ -8,7 +9,7 @@ class OrderModel {
   final double totalAmount;
   final OrderStatus status;
   final String paymentMethod;
-  final String shippingAddress;
+  final AddressModel shippingAddress;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -37,6 +38,35 @@ class OrderModel {
         return DateTime.now();
       }
     }
+    
+    // Xử lý shippingAddress có thể là chuỗi (legacy) hoặc object
+    AddressModel parseAddress(dynamic addressData) {
+      if (addressData is String) {
+        // Nếu là chuỗi (format cũ), tạo AddressModel với fullAddress
+        return AddressModel(
+          fullName: '',
+          phoneNumber: '',
+          addressLine: addressData,
+          city: '',
+          district: '',
+          ward: '',
+        );
+      } else if (addressData is Map<String, dynamic>) {
+        // Nếu là object, parse thành AddressModel
+        return AddressModel.fromJson(addressData);
+      } else {
+        // Fallback nếu không có thông tin địa chỉ
+        return AddressModel(
+          fullName: '',
+          phoneNumber: '',
+          addressLine: '',
+          city: '',
+          district: '',
+          ward: '',
+        );
+      }
+    }
+    
     return OrderModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
@@ -46,7 +76,7 @@ class OrderModel {
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
       status: OrderStatus.fromString(json['status'] ?? 'PENDING'),
       paymentMethod: json['paymentMethod'] ?? '',
-      shippingAddress: json['shippingAddress'] ?? '',
+      shippingAddress: parseAddress(json['shippingAddress']),
       createdAt: parseDate(json['createdAt']),
       updatedAt: parseDate(json['updatedAt']),
     );
@@ -60,7 +90,7 @@ class OrderModel {
       'totalAmount': totalAmount,
       'status': status.name,
       'paymentMethod': paymentMethod,
-      'shippingAddress': shippingAddress,
+      'shippingAddress': shippingAddress.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -78,5 +108,10 @@ class OrderModel {
   // Helper method for formatting date
   String get formattedCreatedDate {
     return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
+  }
+  
+  // Helper method to get formatted address
+  String get formattedAddress {
+    return shippingAddress.fullAddress;
   }
 }

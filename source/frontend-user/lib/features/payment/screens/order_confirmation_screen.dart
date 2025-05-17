@@ -4,22 +4,28 @@ import '../../../core/constants/api_constants.dart';
 import '../../../data/model/order_model.dart';
 import '../../../data/model/order_status.dart';
 import '../payment_feature.dart';
+import 'package:frontend_user/core/utils/image_helper.dart';
+import 'package:frontend_user/core/utils/format_currency.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
   final OrderModel order;
 
   const OrderConfirmationScreen({
-    Key? key,
+    super.key,
     required this.order,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order Confirmation'),
-        // Prevent going back to checkout
+        title: const Text('Xác nhận đơn hàng'),
+        // Cho phép pop về màn hình chính
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.home),
+          onPressed: () => _continueShopping(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -52,7 +58,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                       backgroundColor: Colors.blue,
                     ),
                     onPressed: () => _viewOrderHistory(context),
-                    child: const Text('View Order History', style: TextStyle(fontSize: 16)),
+                    child: const Text('Xem lịch sử đơn hàng', style: TextStyle(fontSize: 16)),
                   ),
                 ),
                 
@@ -65,7 +71,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     onPressed: () => _continueShopping(context),
-                    child: const Text('Continue Shopping', style: TextStyle(fontSize: 16)),
+                    child: const Text('Tiếp tục mua hàng', style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -91,7 +97,7 @@ class OrderConfirmationScreen extends StatelessWidget {
         // Thank you text
         const Center(
           child: Text(
-            'Thank you for your order!',
+            'Cảm ơn bạn đã đặt hàng!',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -127,7 +133,7 @@ class OrderConfirmationScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Order Details',
+              'Chi tiết đơn hàng',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -137,13 +143,13 @@ class OrderConfirmationScreen extends StatelessWidget {
             const SizedBox(height: 16),
             
             // Order date
-            _buildDetailRow('Order Date', formattedDate),
+            _buildDetailRow('Ngày đặt hàng', formattedDate),
             
             const Divider(),
             
             // Payment method
             _buildDetailRow(
-              'Payment Method', 
+              'Phương thức thanh toán', 
               _formatPaymentMethod(order.paymentMethod),
             ),
             
@@ -151,7 +157,7 @@ class OrderConfirmationScreen extends StatelessWidget {
             
             // Order status
             _buildDetailRow(
-              'Order Status',
+              'Trạng thái đơn hàng',
               order.status.displayName,
               valueColor: _getStatusColor(order.status),
             ),
@@ -159,14 +165,14 @@ class OrderConfirmationScreen extends StatelessWidget {
             const Divider(),
             
             // Shipping address
-            _buildDetailRow('Shipping Address', order.shippingAddress, isMultiLine: true),
+            _buildDetailRow('Địa chỉ giao hàng', order.formattedAddress, isMultiLine: true),
             
             const Divider(),
             
             // Total amount
             _buildDetailRow(
-              'Total Amount',
-              '\$${order.totalAmount.toStringAsFixed(2)}',
+              'Tổng số tiền',
+              formatCurrency(order.totalAmount),
               valueStyle: const TextStyle(
                 fontWeight: FontWeight.bold, 
                 fontSize: 16,
@@ -187,7 +193,7 @@ class OrderConfirmationScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Order Items',
+              'Sản phẩm đơn hàng',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -205,7 +211,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: Image.network(
-                        '${ApiConstants.baseApiUrl}${item.imageUrl}',
+                        ImageHelper.getImage(item.imageUrl),
                         width: 60,
                         height: 60,
                         fit: BoxFit.cover,
@@ -232,12 +238,12 @@ class OrderConfirmationScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Quantity: ${item.quantity}',
+                            'Số lượng: ${item.quantity}',
                             style: TextStyle(color: Colors.grey[700]),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Price: \$${item.price.toStringAsFixed(2)}',
+                            'Giá: ${formatCurrency(item.price)}',
                             style: TextStyle(color: Colors.grey[700]),
                           ),
                         ],
@@ -246,7 +252,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                     
                     // Item total
                     Text(
-                      '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+                      formatCurrency(item.price * item.quantity),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
@@ -300,9 +306,9 @@ class OrderConfirmationScreen extends StatelessWidget {
   String _formatPaymentMethod(String method) {
     switch (method) {
       case 'CREDIT_CARD':
-        return 'Credit Card';
+        return 'Thẻ tín dụng';
       case 'COD':
-        return 'Cash on Delivery';
+        return 'Thanh toán khi nhận hàng';
       default:
         return method;
     }

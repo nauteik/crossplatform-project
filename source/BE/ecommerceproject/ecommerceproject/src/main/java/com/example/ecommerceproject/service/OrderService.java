@@ -4,6 +4,7 @@ import com.example.ecommerceproject.model.*;
 import com.example.ecommerceproject.repository.CartRepository;
 import com.example.ecommerceproject.repository.OrderRepository;
 import com.example.ecommerceproject.repository.ProductRepository;
+import com.example.ecommerceproject.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
  * Service for managing orders
@@ -45,6 +47,9 @@ public class OrderService {
 
     @Autowired
     private PaymentService paymentService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Create a new order from cart items
@@ -142,7 +147,29 @@ public class OrderService {
      * Get all orders (for admin)
      */
     public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+        List<Order> orders = orderRepository.findAll();
+        
+        // Thêm thông tin user (email và username) vào response
+        for (Order order : orders) {
+            try {
+                Optional<User> userOpt = userRepository.findById(order.getUserId());
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    
+                    // Thêm thông tin dưới dạng thuộc tính bổ sung vào order
+                    Map<String, Object> additionalInfo = new HashMap<>();
+                    additionalInfo.put("userEmail", user.getEmail());
+                    additionalInfo.put("username", user.getUsername());
+                    
+                    // Lưu vào order (giả định đã có phương thức setAdditionalInfo trong Order)
+                    order.setAdditionalInfo(additionalInfo);
+                }
+            } catch (Exception e) {
+                logger.error("Error fetching user info for order: {}", order.getId(), e);
+            }
+        }
+        
+        return orders;
     }
 
     /**

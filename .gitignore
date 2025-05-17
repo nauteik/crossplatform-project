@@ -6,3 +6,10 @@ source/frontend-admin/windows/flutter/ephemeral/.plugin_symlinks/file_selector_w
 source/frontend-admin/windows/flutter/ephemeral/.plugin_symlinks/image_picker_windows
 source/frontend-admin/windows/flutter/ephemeral/.plugin_symlinks/path_provider_windows
 source/frontend-admin/windows/flutter/ephemeral/.plugin_symlinks/shared_preferences_windows
+source/frontend_admin/linux/flutter/generated_plugin_registrant.cc
+source/frontend_admin/linux/flutter/generated_plugin_registrant.h
+source/frontend_admin/linux/flutter/generated_plugins.cmake
+source/frontend_admin/macos/Flutter/GeneratedPluginRegistrant.swift
+source/frontend_admin/windows/flutter/generated_plugin_registrant.cc
+source/frontend_admin/windows/flutter/generated_plugin_registrant.h
+source/frontend_admin/windows/flutter/generated_plugins.cmake

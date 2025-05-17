@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/models/address_model.dart';
 import '../../../data/model/order_model.dart';
 import '../../../data/respository/order_repository.dart';
 import '../models/payment_request.dart';
@@ -6,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../core/constants/api_constants.dart';
+import '../../../features/auth/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 enum PaymentProcessState {
   initial,
@@ -28,6 +31,8 @@ class PaymentProvider extends ChangeNotifier {
   Map<String, dynamic>? _guestAddressInfo;
   String? _newUserToken;
   String? _newUserId;
+  String? _newUsername;
+  String? _newPassword;
   Map<String, String> _creditCardData = {
     'cardNumber': '',
     'cardHolderName': '',
@@ -43,7 +48,8 @@ class PaymentProvider extends ChangeNotifier {
     'phoneNumber': '',
     'transactionId': '',
   };
-  String _shippingAddress = '';
+  AddressModel? _selectedAddress;
+  String _manualShippingAddress = '';
   List<String> _selectedItemIds = [];
   
   // Getters
@@ -54,12 +60,21 @@ class PaymentProvider extends ChangeNotifier {
   String get errorMessage => _errorMessage;
   String? get newUserToken => _newUserToken;
   String? get newUserId => _newUserId;
+  String? get newUsername => _newUsername;
+  String? get newPassword => _newPassword;
   bool get isLoading => _state == PaymentProcessState.creatingOrder || 
                         _state == PaymentProcessState.processing;
   
   // Setters
+  void setSelectedAddress(AddressModel address) {
+    _selectedAddress = address;
+    _manualShippingAddress = '';
+    notifyListeners();
+  }
+  
   void setShippingAddress(String address) {
-    _shippingAddress = address;
+    _manualShippingAddress = address;
+    _selectedAddress = null;
     notifyListeners();
   }
   
@@ -116,6 +131,8 @@ class PaymentProvider extends ChangeNotifier {
     _guestAddressInfo = null;
     _newUserToken = null;
     _newUserId = null;
+    _newUsername = null;
+    _newPassword = null;
     _creditCardData = {
       'cardNumber': '',
       'cardHolderName': '',
@@ -131,7 +148,8 @@ class PaymentProvider extends ChangeNotifier {
       'phoneNumber': '',
       'transactionId': '',
     };
-    _shippingAddress = '';
+    _selectedAddress = null;
+    _manualShippingAddress = '';
     _selectedItemIds = [];
     notifyListeners();
   }
@@ -163,6 +181,9 @@ class PaymentProvider extends ChangeNotifier {
   }
   
   Future<bool> createOrder(String userId) async {
+    _state = PaymentProcessState.creatingOrder;
+    notifyListeners();
+    
     try {
       Map<String, dynamic> orderData = {
         'userId': userId,
@@ -170,12 +191,20 @@ class PaymentProvider extends ChangeNotifier {
         'selectedItemIds': _selectedItemIds,
       };
       
-      if (_shippingAddress.isNotEmpty) {
-        orderData['shippingAddress'] = _shippingAddress;
+      // Nếu đã chọn một địa chỉ có sẵn
+      if (_selectedAddress != null && _selectedAddress!.id != null) {
+        orderData['addressId'] = _selectedAddress!.id;
+      } 
+      // Nếu người dùng nhập địa chỉ mới
+      else if (_manualShippingAddress.isNotEmpty) {
+        // Tạo địa chỉ mới từ chuỗi địa chỉ đầy đủ
+        // Ở đây cần xử lý thêm để tách chuỗi thành các phần
+        // Để đơn giản, tạm thời gửi địa chỉ dạng chuỗi
+        orderData['shippingAddress'] = _manualShippingAddress;
       }
       
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/orders/create'),
+        Uri.parse('${ApiConstants.baseUrl}/orders/user/create'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(orderData),
       );
@@ -184,25 +213,38 @@ class PaymentProvider extends ChangeNotifier {
         final jsonData = json.decode(response.body);
         
         if (jsonData['status'] == 200 && jsonData['data'] != null) {
-          _currentOrder = jsonData['data']['order'];
+          _currentOrder = jsonData['data'];
+          _state = PaymentProcessState.orderCreated;
+          notifyListeners();
           return true;
         } else {
           _errorMessage = jsonData['message'] ?? 'Unknown error';
+          _state = PaymentProcessState.failed;
+          notifyListeners();
         }
       } else {
         _errorMessage = 'Server error: ${response.statusCode}';
+        _state = PaymentProcessState.failed;
+        notifyListeners();
       }
       
       return false;
     } catch (e) {
       _errorMessage = 'Error creating order: $e';
+      _state = PaymentProcessState.failed;
+      notifyListeners();
       return false;
     }
   }
   
-  Future<bool> createGuestOrder() async {
+  Future<bool> createGuestOrder(BuildContext context) async {
+    _state = PaymentProcessState.creatingOrder;
+    notifyListeners();
+    
     if (_guestUserInfo == null || _guestAddressInfo == null) {
       _errorMessage = 'Missing guest information';
+      _state = PaymentProcessState.failed;
+      notifyListeners();
       return false;
     }
     
@@ -215,7 +257,7 @@ class PaymentProvider extends ChangeNotifier {
       };
       
       final response = await http.post(
-        Uri.parse('${ApiConstants.baseUrl}/orders/create'),
+        Uri.parse('${ApiConstants.baseUrl}/orders/guest/create'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode(orderData),
       );
@@ -226,26 +268,63 @@ class PaymentProvider extends ChangeNotifier {
         if (jsonData['status'] == 200 && jsonData['data'] != null) {
           _currentOrder = jsonData['data']['order'];
           
-          if (jsonData['data']['token'] != null) {
-            _newUserToken = jsonData['data']['token'];
-          }
-          
           if (jsonData['data']['userId'] != null) {
             _newUserId = jsonData['data']['userId'];
           }
           
+          if (jsonData['data']['username'] != null) {
+            _newUsername = jsonData['data']['username'];
+          }
+          
+          if (jsonData['data']['password'] != null) {
+            _newPassword = jsonData['data']['password'];
+          }
+          
+          // Đăng nhập tự động nếu có username và password
+          if (_newUsername != null && _newPassword != null) {
+            await loginGuestWithCredentials(context, _newUsername!, _newPassword!);
+          }
+          
+          _state = PaymentProcessState.orderCreated;
+          notifyListeners();
           return true;
         } else {
           _errorMessage = jsonData['message'] ?? 'Unknown error';
+          _state = PaymentProcessState.failed;
+          notifyListeners();
         }
       } else {
-        _errorMessage = 'Server error: ${response.statusCode}';
+        final errorJson = json.decode(response.body);
+        _errorMessage = errorJson['message'] ?? 'Server error: ${response.statusCode}';
+        _state = PaymentProcessState.failed;
+        notifyListeners();
       }
       
       return false;
     } catch (e) {
       _errorMessage = 'Error creating order: $e';
+      _state = PaymentProcessState.failed;
+      notifyListeners();
       return false;
+    }
+  }
+  
+  // Phương thức đăng nhập tự động cho guest user
+  Future<void> loginGuestWithCredentials(BuildContext context, String username, String password) async {
+    try {
+      // Lấy AuthProvider từ context
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      // Sử dụng phương thức login từ AuthProvider để đảm bảo logic xử lý đăng nhập thống nhất
+      bool success = await authProvider.login(username, password, context);
+      
+      if (success) {
+        print('Đăng nhập tự động thành công với username: $username');
+      } else {
+        print('Đăng nhập tự động thất bại: ${authProvider.errorMessage}');
+      }
+    } catch (e) {
+      print('Lỗi khi đăng nhập tự động: $e');
     }
   }
   
@@ -254,6 +333,9 @@ class PaymentProvider extends ChangeNotifier {
       _errorMessage = 'No active order to process';
       return false;
     }
+    
+    _state = PaymentProcessState.processing;
+    notifyListeners();
     
     try {
       String orderId = _currentOrder!['id'];
@@ -286,17 +368,25 @@ class PaymentProvider extends ChangeNotifier {
         
         if (jsonData['status'] == 200) {
           _currentOrder = jsonData['data'];
+          _state = PaymentProcessState.success;
+          notifyListeners();
           return true;
         } else {
           _errorMessage = jsonData['message'] ?? 'Payment processing failed';
+          _state = PaymentProcessState.failed;
+          notifyListeners();
         }
       } else {
         _errorMessage = 'Server error: ${response.statusCode}';
+        _state = PaymentProcessState.failed;
+        notifyListeners();
       }
       
       return false;
     } catch (e) {
       _errorMessage = 'Error processing payment: $e';
+      _state = PaymentProcessState.failed;
+      notifyListeners();
       return false;
     }
   }

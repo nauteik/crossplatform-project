@@ -4,11 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -26,6 +29,11 @@ public class Order {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
+    // AdditionalInfo để lưu trữ thông tin Username, Email
+    // @Transient đảm bảo trường này không được lưu vào database
+    @Transient
+    private Map<String, Object> additionalInfo = new HashMap<>();
+    
     // Constructor that initializes dates
     public Order(String userId, List<OrderItem> items, double totalAmount, 
                 OrderStatus status, String paymentMethod, Address shippingAddress) {
@@ -37,11 +45,22 @@ public class Order {
         this.shippingAddress = shippingAddress;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.additionalInfo = new HashMap<>();
     }
     
     // Method to update the order status
     public void updateStatus(OrderStatus newStatus) {
         this.status = newStatus;
         this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Phương thức để thiết lập thông tin bổ sung
+    public void setAdditionalInfo(Map<String, Object> additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
+    
+    // Phương thức để lấy thông tin bổ sung
+    public Map<String, Object> getAdditionalInfo() {
+        return this.additionalInfo;
     }
 }

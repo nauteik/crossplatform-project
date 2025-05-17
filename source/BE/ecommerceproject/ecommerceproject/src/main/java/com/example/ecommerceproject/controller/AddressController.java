@@ -5,6 +5,7 @@ import com.example.ecommerceproject.model.Address;
 import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.security.JwtUtil;
+import com.example.ecommerceproject.service.AddressService;
 import com.example.ecommerceproject.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class AddressController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private AddressService addressService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -64,7 +68,7 @@ public class AddressController {
                         ));
             }
             
-            List<Address> addresses = userService.getUserAddresses(userId);
+            List<Address> addresses = addressService.getUserAddresses(userId);
             
             return ResponseEntity.ok(new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
@@ -122,15 +126,12 @@ public class AddressController {
                         ));
             }
             
-            User updatedUser = userService.addAddress(userId, address);
-            
-            // Bảo mật: Không trả về mật khẩu đã mã hóa cho client
-            updatedUser.setPassword(null);
+            Address newAddress = addressService.addAddress(userId, address);
             
             return ResponseEntity.ok(new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
                 "Thêm địa chỉ thành công",
-                updatedUser
+                newAddress
             ));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -192,15 +193,12 @@ public class AddressController {
                         ));
             }
             
-            User updatedUser = userService.updateAddress(userId, addressId, address);
-            
-            // Bảo mật: Không trả về mật khẩu đã mã hóa cho client
-            updatedUser.setPassword(null);
+            Address updatedAddress = addressService.updateAddress(userId, addressId, address);
             
             return ResponseEntity.ok(new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
                 "Cập nhật địa chỉ thành công",
-                updatedUser
+                updatedAddress
             ));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -260,15 +258,12 @@ public class AddressController {
                         ));
             }
             
-            User updatedUser = userService.deleteAddress(userId, addressId);
-            
-            // Bảo mật: Không trả về mật khẩu đã mã hóa cho client
-            updatedUser.setPassword(null);
+            addressService.deleteAddress(userId, addressId);
             
             return ResponseEntity.ok(new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
                 "Xóa địa chỉ thành công",
-                updatedUser
+                null
             ));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -328,15 +323,12 @@ public class AddressController {
                         ));
             }
             
-            User updatedUser = userService.setDefaultAddress(userId, addressId);
-            
-            // Bảo mật: Không trả về mật khẩu đã mã hóa cho client
-            updatedUser.setPassword(null);
+            Address defaultAddress = addressService.setDefaultAddress(userId, addressId);
             
             return ResponseEntity.ok(new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
                 "Đặt địa chỉ mặc định thành công",
-                updatedUser
+                defaultAddress
             ));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

@@ -14,6 +14,7 @@ import com.example.ecommerceproject.repository.ProductRepository;
 import com.example.ecommerceproject.repository.ProductTypeRepository;
 import com.example.ecommerceproject.repository.UserRepository;
 import com.example.ecommerceproject.repository.TagRepository;
+import com.example.ecommerceproject.service.AddressService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,12 +36,14 @@ public class DataLoader implements CommandLineRunner {
     private final TagRepository tagRepository;
     private final PasswordEncoder passwordEncoder;
     private final CouponRepository couponRepository;
+    private final AddressService addressService;
 
     @Autowired
     public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, 
                       ProductRepository productRepository, UserRepository userRepository, 
                       CartRepository cartRepository, TagRepository tagRepository, 
-                      PasswordEncoder passwordEncoder, CouponRepository couponRepository) {
+                      PasswordEncoder passwordEncoder, CouponRepository couponRepository,
+                      AddressService addressService) {
         this.brandRepository = brandRepository;
         this.productTypeRepository = productTypeRepository;
         this.productRepository = productRepository;
@@ -49,6 +52,7 @@ public class DataLoader implements CommandLineRunner {
         this.tagRepository = tagRepository;
         this.passwordEncoder = passwordEncoder;
         this.couponRepository = couponRepository;
+        this.addressService = addressService;
     }
 
     @Override
@@ -473,7 +477,6 @@ public class DataLoader implements CommandLineRunner {
         admin.setRole(1); // 1 là admin
         admin.setAvatar("Chưa cập nhật");
         admin.setPhone("Chưa cập nhật");
-        admin.setAddresses(new ArrayList<>());
         admin.setGender("Chưa cập nhật");
         admin = userRepository.save(admin);
 
@@ -486,9 +489,41 @@ public class DataLoader implements CommandLineRunner {
         user.setRole(0); // 0 là user thường
         user.setAvatar("Chưa cập nhật");
         user.setPhone("Chưa cập nhật");
-        user.setAddresses(new ArrayList<>());
         user.setGender("Chưa cập nhật");
         user = userRepository.save(user);
+
+        // Tạo địa chỉ cho admin
+        Address adminAddress = new Address();
+        adminAddress.setFullName("Admin User");
+        adminAddress.setPhoneNumber("0987654321");
+        adminAddress.setAddressLine("123 Đường Nguyễn Văn Linh");
+        adminAddress.setCity("TP. Hồ Chí Minh");
+        adminAddress.setDistrict("Quận 7");
+        adminAddress.setWard("Phường Tân Phong");
+        adminAddress.setDefault(true);
+        addressService.addAddress(admin.getId(), adminAddress);
+
+        // Tạo địa chỉ 1 cho user thường
+        Address userAddress1 = new Address();
+        userAddress1.setFullName("Nguyễn Văn A");
+        userAddress1.setPhoneNumber("0123456789");
+        userAddress1.setAddressLine("456 Đường Lê Văn Việt");
+        userAddress1.setCity("TP. Hồ Chí Minh");
+        userAddress1.setDistrict("Quận 9");
+        userAddress1.setWard("Phường Hiệp Phú");
+        userAddress1.setDefault(true);
+        addressService.addAddress(user.getId(), userAddress1);
+
+        // Tạo địa chỉ 2 cho user thường
+        Address userAddress2 = new Address();
+        userAddress2.setFullName("Nguyễn Văn A");
+        userAddress2.setPhoneNumber("0123456789");
+        userAddress2.setAddressLine("789 Đường Quang Trung");
+        userAddress2.setCity("TP. Hồ Chí Minh");
+        userAddress2.setDistrict("Quận Gò Vấp");
+        userAddress2.setWard("Phường 11");
+        userAddress2.setDefault(false);
+        addressService.addAddress(user.getId(), userAddress2);
 
         // Tạo cart cho user
         Cart userCart = new Cart();

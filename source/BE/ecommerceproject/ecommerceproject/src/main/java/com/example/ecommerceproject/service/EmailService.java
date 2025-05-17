@@ -20,6 +20,7 @@ public class EmailService {
     public void sendAccountCreationEmail(Map<String, Object> emailData) {
         String to = (String) emailData.get("to");
         String username = (String) emailData.get("username");
+        String email = (String) emailData.get("email");
         String password = (String) emailData.get("password");
         
         try {
@@ -55,7 +56,8 @@ public class EmailService {
                 "        <p>Cảm ơn bạn đã mua hàng tại cửa hàng của chúng tôi. Tài khoản của bạn đã được tạo tự động.</p>" +
                 "        <p>Dưới đây là thông tin đăng nhập của bạn:</p>" +
                 "        <div class=\"credentials\">" +
-                "            <p><strong>Email:</strong> " + username + "</p>" +
+                "            <p><strong>Tên đăng nhập:</strong> " + username + "</p>" +
+                "            <p><strong>Email:</strong> " + email + "</p>" +
                 "            <p><strong>Mật khẩu:</strong> " + password + "</p>" +
                 "        </div>" +
                 "        <p class=\"warning\">Vui lòng thay đổi mật khẩu của bạn ngay sau khi đăng nhập lần đầu tiên.</p>" +

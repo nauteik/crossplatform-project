@@ -530,15 +530,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             final response = await cartProvider.addItemAndSelect(cartItem);
             
             if (response.status == 1) {
-              // Show success message
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${product.name} đã được thêm vào giỏ hàng'),
-                  duration: const Duration(seconds: 1),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              
+             
               // Navigate to cart screen with transition
               NavigationHelper.navigateToCart(context);
             } else {

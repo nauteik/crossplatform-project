@@ -29,7 +29,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
   @override
   void initState() {
     super.initState();
-    _buildNameController.text = 'My Custom PC';
+    _buildNameController.text = 'PC của tôi';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadProducts();
     });
@@ -94,7 +94,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
     // Validate build name
     if (_buildNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a name for your build')),
+        const SnackBar(content: Text('Vui lòng nhập tên cho PC của bạn')),
       );
       return;
     }
@@ -116,7 +116,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
           pcProvider.selectedMotherboard == null || 
           pcProvider.selectedRam == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('At minimum, CPU, Motherboard and RAM are required for a custom build')),
+          const SnackBar(content: Text('Tối thiểu, CPU, Mainboard và RAM là bắt buộc cho việc tạo PC tùy chỉnh')),
         );
         return;
       }
@@ -133,12 +133,12 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
 
       if (result) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('PC build created successfully!')),
+          const SnackBar(content: Text('PC đã được tạo thành công!')),
         );
         
         // Reset form and selections after successful creation
         pcProvider.resetSelection();
-        _buildNameController.text = 'My Custom PC';
+        _buildNameController.text = 'PC của tôi';
         setState(() {
           _selectedBuildType = PCBuildType.custom;
         });
@@ -172,11 +172,11 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Build Your PC'),
+        title: const Text('Tạo PC của bạn'),
         actions: [
           IconButton(
             icon: const Icon(Icons.history),
-            tooltip: 'View saved builds',
+            tooltip: 'Xem PC đã lưu',
             onPressed: () {
               Navigator.push(
                 context,
@@ -198,7 +198,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     TextField(
                       controller: _buildNameController,
                       decoration: InputDecoration(
-                        labelText: 'Build Name',
+                        labelText: 'Tên PC',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -208,7 +208,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     
                     // Build Type Selection
                     const Text(
-                      'Choose Build Type:',
+                      'Chọn loại PC:',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -225,22 +225,22 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                             context: context,
                             type: PCBuildType.custom,
                             icon: Icons.computer,
-                            label: 'Custom Build',
-                            description: 'Select all components yourself',
+                            label: 'PC tùy chỉnh',
+                            description: 'Chọn tất cả các thành phần',
                           ),
                           _buildTypeButton(
                             context: context,
                             type: PCBuildType.gaming,
                             icon: Icons.gamepad,
                             label: 'Gaming PC',
-                            description: 'Optimized for games',
+                            description: 'Tối ưu cho game',
                           ),
                           _buildTypeButton(
                             context: context,
                             type: PCBuildType.workstation,
                             icon: Icons.work,
-                            label: 'Workstation',
-                            description: 'For professional work',
+                            label: 'Workstation PC',
+                            description: 'Dành cho công việc chuyên nghiệp',
                           ),
                         ],
                       ),
@@ -252,7 +252,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     
                     // Components Selection
                     const Text(
-                      'Select Components:',
+                      'Chọn các thành phần:',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -278,11 +278,11 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     
                     // Motherboard
                     ComponentCard(
-                      componentType: 'Motherboard',
+                      componentType: 'Bo mạch chủ',
                       selectedComponent: pcProvider.selectedMotherboard,
                       onSelectPressed: () => _showComponentSelectionScreen(
                         context, 
-                        'Motherboard', 
+                        'Bo mạch chủ', 
                         pcProvider.suggestedMotherboards.isNotEmpty ? pcProvider.suggestedMotherboards : _availableProducts.where((p) => p.productType['name'] == 'Mainboard').toList(),
                         pcProvider.selectMotherboard,
                       ),
@@ -294,11 +294,11 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     
                     // GPU
                     ComponentCard(
-                      componentType: 'Graphics Card',
+                      componentType: 'Card đồ họa',
                       selectedComponent: pcProvider.selectedGpu,
                       onSelectPressed: () => _showComponentSelectionScreen(
                         context, 
-                        'Graphics Card', 
+                        'Card đồ họa', 
                         pcProvider.suggestedGpus.isNotEmpty ? pcProvider.suggestedGpus : _availableProducts.where((p) => p.productType['name'] == 'GPU').toList(),
                         pcProvider.selectGpu,
                       ),
@@ -326,11 +326,11 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     
                     // Storage
                     ComponentCard(
-                      componentType: 'Storage',
+                      componentType: 'Ổ cứng',
                       selectedComponent: pcProvider.selectedStorage,
                       onSelectPressed: () => _showComponentSelectionScreen(
                         context, 
-                        'Storage', 
+                        'Ổ cứng', 
                         pcProvider.suggestedStorages.isNotEmpty ? pcProvider.suggestedStorages : _availableProducts.where((p) => (p.productType['name'] == 'SSD' || p.productType['name'] == 'HDD')).toList(),
                         pcProvider.selectStorage,
                       ),
@@ -342,11 +342,11 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     
                     // Power Supply
                     ComponentCard(
-                      componentType: 'Power Supply',
+                      componentType: 'Nguồn',
                       selectedComponent: pcProvider.selectedPowerSupply,
                       onSelectPressed: () => _showComponentSelectionScreen(
                         context, 
-                        'Power Supply', 
+                        'Nguồn', 
                         pcProvider.suggestedPowerSupplies.isNotEmpty ? pcProvider.suggestedPowerSupplies : _availableProducts.where((p) => p.productType['name'] == 'PSU').toList(),
                         pcProvider.selectPowerSupply,
                       ),
@@ -358,11 +358,11 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     
                     // Case
                     ComponentCard(
-                      componentType: 'Case',
+                      componentType: 'Case PC',
                       selectedComponent: pcProvider.selectedCase,
                       onSelectPressed: () => _showComponentSelectionScreen(
                         context, 
-                        'Case', 
+                        'Case PC', 
                         pcProvider.suggestedCases.isNotEmpty ? pcProvider.suggestedCases : _availableProducts.where((p) => p.productType['name'] == 'Case').toList(),
                         pcProvider.selectCase,
                       ),
@@ -374,11 +374,11 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                     
                     // Cooling
                     ComponentCard(
-                      componentType: 'Cooling',
+                      componentType: 'Bộ làm mát',
                       selectedComponent: pcProvider.selectedCooling,
                       onSelectPressed: () => _showComponentSelectionScreen(
                         context, 
-                        'Cooling', 
+                        'Bộ làm mát', 
                         pcProvider.suggestedCoolings.isNotEmpty ? pcProvider.suggestedCoolings : _availableProducts.where((p) => p.productType['name'] == 'Cooling').toList(),
                         pcProvider.selectCooling,
                       ),
@@ -419,7 +419,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Estimated Total:',
+                            'Tổng tiền:',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -454,7 +454,7 @@ class _BuildConfigurationScreenState extends State<BuildConfigurationScreen> {
                         child: _isLoading
                             ? const CircularProgressIndicator()
                             : const Text(
-                                'BUILD MY PC',
+                                'TẠO PC',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
