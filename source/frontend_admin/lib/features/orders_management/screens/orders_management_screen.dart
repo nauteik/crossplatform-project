@@ -21,8 +21,20 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   
+  // Thêm biến cho chức năng sắp xếp
+  String _sortBy = 'createdAt';
+  bool _sortAscending = false; // false = giảm dần (mới nhất trước), true = tăng dần
+  
   final List<String> _statusFilters = [
     'ALL', 'PENDING', 'PAID', 'SHIPPING', 'DELIVERED', 'CANCELLED', 'FAILED'
+  ];
+  
+  // Danh sách các trường có thể sắp xếp
+  final List<Map<String, dynamic>> _sortOptions = [
+    {'value': 'createdAt', 'label': 'Ngày đặt hàng'},
+    {'value': 'total', 'label': 'Tổng tiền'},
+    {'value': 'status', 'label': 'Trạng thái'},
+    {'value': 'userName', 'label': 'Tên khách hàng'},
   ];
 
   // Màu sắc cho trạng thái
@@ -83,7 +95,47 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen> {
       ).toList();
     }
     
+    // Sắp xếp theo trường được chọn
+    _sortOrders(filteredOrders);
+    
     return filteredOrders;
+  }
+  
+  // Sắp xếp đơn hàng theo trường và thứ tự đã chọn
+  void _sortOrders(List<Order> orders) {
+    switch (_sortBy) {
+      case 'createdAt':
+        if (_sortAscending) {
+          orders.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        } else {
+          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        }
+        break;
+      case 'total':
+        if (_sortAscending) {
+          orders.sort((a, b) => a.total.compareTo(b.total));
+        } else {
+          orders.sort((a, b) => b.total.compareTo(a.total));
+        }
+        break;
+      case 'status':
+        if (_sortAscending) {
+          orders.sort((a, b) => a.status.compareTo(b.status));
+        } else {
+          orders.sort((a, b) => b.status.compareTo(a.status));
+        }
+        break;
+      case 'userName':
+        if (_sortAscending) {
+          orders.sort((a, b) => a.userName.compareTo(b.userName));
+        } else {
+          orders.sort((a, b) => b.userName.compareTo(a.userName));
+        }
+        break;
+      default:
+        // Mặc định sắp xếp theo ngày tạo
+        orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    }
   }
 
   Future<void> _processOrder(Order order) async {
@@ -206,6 +258,7 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen> {
         child: Column(
           children: [
             _buildFilterBar(),
+            _buildSortBar(),
             Expanded(
               child: _isLoading
                   ? Center(
@@ -338,6 +391,122 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // Widget mới để hiển thị các tùy chọn sắp xếp
+  Widget _buildSortBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.sort, size: 18, color: Colors.indigo[700]),
+          const SizedBox(width: 8),
+          Text(
+            'Sắp xếp theo:',
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(width: 16),
+          
+          // Dropdown cho các tùy chọn sắp xếp
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey[300]!),
+              color: Colors.white,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _sortBy,
+                isDense: true,
+                style: TextStyle(
+                  color: Colors.indigo[800],
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                icon: Icon(Icons.arrow_drop_down, color: Colors.indigo[700]),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _sortBy = value;
+                    });
+                  }
+                },
+                items: _sortOptions.map((option) {
+                  return DropdownMenuItem<String>(
+                    value: option['value'],
+                    child: Text(option['label']),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          
+          const SizedBox(width: 12),
+          
+          // Toggle button để chuyển đổi thứ tự sắp xếp
+          InkWell(
+            onTap: () {
+              setState(() {
+                _sortAscending = !_sortAscending;
+              });
+            },
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.grey[300]!),
+                color: Colors.white,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                    size: 16,
+                    color: Colors.indigo[700],
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _sortAscending ? 'Tăng dần' : 'Giảm dần',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.indigo[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const Spacer(),
+          
+          // Hiển thị thông tin về trường sắp xếp hiện tại
+          Text(
+            'Đang sắp xếp theo ${_sortOptions.firstWhere((option) => option['value'] == _sortBy)['label']} (${_sortAscending ? 'A→Z' : 'Z→A'})',
+            style: TextStyle(
+              fontSize: 13,
+              fontStyle: FontStyle.italic,
+              color: Colors.grey[600],
             ),
           ),
         ],
@@ -601,6 +770,7 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen> {
               DataColumn(label: Text('Ngày Đặt hàng')),
               DataColumn(label: Text('Khách hàng')),
               DataColumn(label: Text('Tổng cộng')),
+              DataColumn(label: Text('Giảm giá')),
               DataColumn(label: Text('Trạng thái')),
               DataColumn(label: Text('Hành động')),
             ],
@@ -674,12 +844,91 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen> {
                     ),
                   ),
                   DataCell(
-                    Text(
-                      formatCurrency(order.total),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          formatCurrency(order.total),
+                          style: TextStyle(
+                            fontWeight: order.couponDiscount > 0 
+                                ? FontWeight.normal 
+                                : FontWeight.bold,
+                            decoration: order.couponDiscount > 0 
+                                ? TextDecoration.lineThrough 
+                                : TextDecoration.none,
+                            decorationColor: Colors.grey[600],
+                            fontSize: order.couponDiscount > 0 ? 13 : 15,
+                          ),
+                        ),
+                        if (order.couponDiscount > 0)
+                          Text(
+                            formatCurrency(order.finalAmount),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.indigo,
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
+                  DataCell(
+                    order.couponDiscount > 0 || order.loyaltyPointsDiscount > 0
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Hiển thị tất cả thông tin giảm giá trên cùng một hàng
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (order.couponDiscount > 0) ...[
+                                    Icon(Icons.discount_outlined, 
+                                      size: 14, 
+                                      color: Colors.green[700],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${order.couponCode ?? ''}: -${formatCurrency(order.couponDiscount)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.green[700],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                  if (order.couponDiscount > 0 && order.loyaltyPointsUsed > 0)
+                                    const SizedBox(width: 8),
+                                  if (order.loyaltyPointsUsed > 0) ...[
+                                    Icon(Icons.stars, 
+                                      size: 14, 
+                                      color: Colors.amber[700],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${order.loyaltyPointsUsed} điểm: -${formatCurrency(order.loyaltyPointsDiscount)}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.amber[700],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              // Hiển thị tổng giảm giá
+                              const SizedBox(height: 4),
+                              Text(
+                                'Tổng giảm: -${formatCurrency(order.couponDiscount + order.loyaltyPointsDiscount)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          )
+                        : const Text('Không áp dụng'),
                   ),
                   DataCell(OrderStatusBadge(status: order.status)),
                   DataCell(

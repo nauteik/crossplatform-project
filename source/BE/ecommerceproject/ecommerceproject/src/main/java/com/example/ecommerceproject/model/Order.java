@@ -23,6 +23,10 @@ public class Order {
     private String userId;
     private List<OrderItem> items = new ArrayList<>();
     private double totalAmount;
+    private String couponCode;
+    private double couponDiscount;
+    private int loyaltyPointsUsed;  // Số điểm loyalty đã sử dụng
+    private double loyaltyPointsDiscount; // Số tiền giảm giá từ điểm loyalty
     private OrderStatus status;
     private String paymentMethod;  // e.g., "CREDIT_CARD", "COD"
     private Address shippingAddress;
@@ -46,6 +50,8 @@ public class Order {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.additionalInfo = new HashMap<>();
+        this.loyaltyPointsUsed = 0;
+        this.loyaltyPointsDiscount = 0;
     }
     
     // Method to update the order status
@@ -62,5 +68,31 @@ public class Order {
     // Phương thức để lấy thông tin bổ sung
     public Map<String, Object> getAdditionalInfo() {
         return this.additionalInfo;
+    }
+    
+    // Phương thức áp dụng coupon
+    public void applyCoupon(String couponCode, double discount) {
+        this.couponCode = couponCode;
+        this.couponDiscount = discount;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Phương thức áp dụng điểm loyalty
+    public void applyLoyaltyPoints(int points, double discount) {
+        this.loyaltyPointsUsed = points;
+        this.loyaltyPointsDiscount = discount;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Phương thức lấy tổng tiền sau khi áp dụng coupon và điểm loyalty
+    public double getFinalAmount() {
+        return this.totalAmount - this.couponDiscount - this.loyaltyPointsDiscount;
+    }
+    
+    // Phương thức tính số điểm loyalty sẽ nhận được (10% của tổng tiền cuối cùng / 1000)
+    // 1 điểm tương đương 1000 VND
+    public int calculateLoyaltyPointsEarned() {
+        double finalAmount = getFinalAmount();
+        return (int)(finalAmount * 0.1 / 1000);
     }
 }

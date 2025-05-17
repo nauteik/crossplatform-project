@@ -48,6 +48,7 @@ public class UserService implements UserDetailsService {
         user.setPhone("Chưa cập nhật");
         user.setGender("Chưa cập nhật");
         user.setRank("Thành viên đồng");
+        user.setLoyaltyPoints(0); // Khởi tạo điểm loyalty
         // Mã hóa mật khẩu trước khi lưu
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
@@ -141,6 +142,11 @@ public class UserService implements UserDetailsService {
         // role is a primitive int, but we still want to be able to update it to 0 (user role)
         // Here we're assuming the role is explicitly set in the updatedUser object
         existingUser.setRole(updatedUser.getRole());
+        
+        // Cập nhật loyalty points nếu được chỉ định
+        if (updatedUser.getLoyaltyPoints() > 0) {
+            existingUser.setLoyaltyPoints(updatedUser.getLoyaltyPoints());
+        }
         
         // Lưu người dùng đã cập nhật
         return userRepository.save(existingUser);
@@ -245,6 +251,7 @@ public class UserService implements UserDetailsService {
         user.setRole(0); // Role mặc định là 0 (user thường)
         user.setRank("Bronze"); // Rank mặc định là Bronze
         user.setTotalSpend(0);
+        user.setLoyaltyPoints(0); // Khởi tạo điểm loyalty
         
         return userRepository.save(user);
     }
@@ -260,6 +267,7 @@ public class UserService implements UserDetailsService {
         user.setRole(0); // Role mặc định là 0 (user thường)
         user.setRank("Bronze"); // Rank mặc định là Bronze
         user.setTotalSpend(0);
+        user.setLoyaltyPoints(0); // Khởi tạo điểm loyalty
         
         return userRepository.save(user);
     }
@@ -333,6 +341,81 @@ public class UserService implements UserDetailsService {
         emailService.sendPasswordResetEmail(emailData);
         
         return true;
+    }
+    
+    /**
+     * Thêm điểm loyalty cho người dùng sau khi hoàn thành đơn hàng
+     * @param userId ID của người dùng
+     * @param totalAmount Tổng giá trị đơn hàng
+     * @return User đã cập nhật
+     */
+    public User addLoyaltyPoints(String userId, double totalAmount) {
+        User user = getUserById(userId);
+        
+        // Tính số điểm loyalty (10% giá trị đơn hàng / 1000)
+        // Mỗi 1000 VND = 1 điểm
+        int pointsToAdd = (int)(totalAmount * 0.1 / 1000);
+        
+        // Cập nhật tổng chi tiêu của người dùng
+        user.setTotalSpend(user.getTotalSpend() + (int)totalAmount);
+        
+        // Cập nhật điểm loyalty
+        user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsToAdd);
+        
+        // Cập nhật rank dựa trên tổng chi tiêu
+        updateUserRank(user);
+        
+        return userRepository.save(user);
+    }
+    
+    /**
+     * Sử dụng điểm loyalty cho một đơn hàng
+     * @param userId ID người dùng
+     * @param pointsToUse Số điểm muốn sử dụng
+     * @return Số tiền giảm giá (1 điểm = 1000 VND)
+     * @throws RuntimeException nếu không đủ điểm
+     */
+    public double useLoyaltyPoints(String userId, int pointsToUse) {
+        User user = getUserById(userId);
+        
+        if (user.getLoyaltyPoints() < pointsToUse) {
+            throw new RuntimeException("Không đủ điểm loyalty");
+        }
+        
+        // Trừ điểm đã sử dụng
+        user.setLoyaltyPoints(user.getLoyaltyPoints() - pointsToUse);
+        userRepository.save(user);
+        
+        // Quy đổi điểm thành tiền (1 điểm = 1000 VND)
+        return pointsToUse * 1000;
+    }
+    
+    /**
+     * Lấy số điểm loyalty của người dùng
+     * @param userId ID người dùng
+     * @return Số điểm loyalty hiện có
+     */
+    public int getLoyaltyPoints(String userId) {
+        User user = getUserById(userId);
+        return user.getLoyaltyPoints();
+    }
+    
+    /**
+     * Cập nhật hạng thành viên của người dùng dựa trên tổng chi tiêu
+     * @param user User cần cập nhật
+     */
+    private void updateUserRank(User user) {
+        int totalSpend = user.getTotalSpend();
+        
+        if (totalSpend >= 10000000) { // 10 triệu VND
+            user.setRank("Thành viên bạch kim");
+        } else if (totalSpend >= 5000000) { // 5 triệu VND
+            user.setRank("Thành viên vàng");
+        } else if (totalSpend >= 2000000) { // 2 triệu VND
+            user.setRank("Thành viên bạc");
+        } else {
+            user.setRank("Thành viên đồng");
+        }
     }
 }
 

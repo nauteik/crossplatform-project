@@ -1,6 +1,8 @@
 package com.example.ecommerceproject.controller;
 
+import com.example.ecommerceproject.exception.ApiStatus;
 import com.example.ecommerceproject.model.Coupon;
+import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.service.CouponService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -8,58 +10,131 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/coupon")
+@RequestMapping("/api/coupons")
+@CrossOrigin("*")
 public class CouponController {
 
-    private final CouponService couponService;
-
     @Autowired
-    public CouponController(CouponService couponService) {
-        this.couponService = couponService;
-    }
+    private CouponService couponService;
 
-    @PostMapping
-    public ResponseEntity<Coupon> createCoupon(@RequestBody Coupon coupon) {
-        Coupon createdCoupon = couponService.createCoupon(new Coupon(coupon.getCode(), coupon.getValue(), coupon.getMaxUses()));
-        return new ResponseEntity<>(createdCoupon, HttpStatus.CREATED);
-    }
-
-    @GetMapping("/coupons")
-    public ResponseEntity<List<Coupon>> getAllCoupons() {
-        List<Coupon> coupons = couponService.getAllCoupons();
-        return new ResponseEntity<>(coupons, HttpStatus.OK);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Coupon> getCouponById(@PathVariable String id) {
-        return couponService.getCouponById(id)
-                .map(coupon -> new ResponseEntity<>(coupon, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @GetMapping("/code/{code}")
-    public ResponseEntity<Coupon> getCouponByCode(@PathVariable String code) {
-        return couponService.getCouponByCode(code)
-                .map(coupon -> new ResponseEntity<>(coupon, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @PostMapping("/apply")
-    public ResponseEntity<String> applyCoupon(@RequestParam String couponCode, @RequestParam String orderId) {
-        boolean applied = couponService.applyCouponToOrder(couponCode, orderId);
-
-        if (applied) {
-            return new ResponseEntity<>("Coupon applied successfully", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Failed to apply coupon", HttpStatus.BAD_REQUEST);
+    // API lấy tất cả coupon
+    @GetMapping
+    public ResponseEntity<ApiResponse<?>> getAllCoupons() {
+        try {
+            List<Coupon> coupons = couponService.getAllCoupons();
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                "Lấy danh sách coupon thành công",
+                coupons
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(
+                    ApiStatus.SERVER_ERROR.getCode(),
+                    "Lỗi khi lấy danh sách coupon: " + e.getMessage(),
+                    null
+                )
+            );
         }
     }
 
+    // API tạo coupon mới
+    @PostMapping
+    public ResponseEntity<ApiResponse<?>> createCoupon(@RequestBody Coupon coupon) {
+        try {
+            Coupon createdCoupon = couponService.updateCoupon(coupon);
+            return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    "Tạo coupon thành công",
+                    createdCoupon
+                )
+            );
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(
+                    ApiStatus.SERVER_ERROR.getCode(),
+                    "Lỗi khi tạo coupon: " + e.getMessage(),
+                    null
+                )
+            );
+        }
+    }
+
+    // API kiểm tra coupon
+    @GetMapping("/check/{code}")
+    public ResponseEntity<ApiResponse<?>> checkCouponCode(@PathVariable String code) {
+        try {
+            Map<String, Object> couponDetails = couponService.getCouponDetails(code);
+            
+            if ((Boolean) couponDetails.get("valid")) {
+                return ResponseEntity.ok(new ApiResponse<>(
+                    ApiStatus.SUCCESS.getCode(),
+                    "Coupon hợp lệ",
+                    couponDetails
+                ));
+            } else {
+                return ResponseEntity.ok(new ApiResponse<>(
+                    ApiStatus.BAD_REQUEST.getCode(),
+                    couponDetails.containsKey("message") ? 
+                        (String) couponDetails.get("message") : "Coupon không hợp lệ",
+                    couponDetails
+                ));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(
+                    ApiStatus.SERVER_ERROR.getCode(),
+                    "Lỗi khi kiểm tra coupon: " + e.getMessage(),
+                    null
+                )
+            );
+        }
+    }
+
+    // API cập nhật coupon
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> updateCoupon(@PathVariable String id, @RequestBody Coupon coupon) {
+        try {
+            coupon.setId(id);
+            Coupon updatedCoupon = couponService.updateCoupon(coupon);
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                "Cập nhật coupon thành công",
+                updatedCoupon
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(
+                    ApiStatus.SERVER_ERROR.getCode(),
+                    "Lỗi khi cập nhật coupon: " + e.getMessage(),
+                    null
+                )
+            );
+        }
+    }
+
+    // API xóa coupon
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCoupon(@PathVariable String id) {
-        couponService.deleteCoupon(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<ApiResponse<?>> deleteCoupon(@PathVariable String id) {
+        try {
+            couponService.deleteCoupon(id);
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                "Xóa coupon thành công",
+                null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(
+                    ApiStatus.SERVER_ERROR.getCode(),
+                    "Lỗi khi xóa coupon: " + e.getMessage(),
+                    null
+                )
+            );
+        }
     }
 }

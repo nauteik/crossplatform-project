@@ -7,6 +7,10 @@ class OrderModel {
   final String userId;
   final List<OrderItemModel> items;
   final double totalAmount;
+  final String? couponCode;
+  final double couponDiscount;
+  final int loyaltyPointsUsed;
+  final double loyaltyPointsDiscount;
   final OrderStatus status;
   final String paymentMethod;
   final AddressModel shippingAddress;
@@ -18,6 +22,10 @@ class OrderModel {
     required this.userId,
     required this.items,
     required this.totalAmount,
+    this.couponCode,
+    this.couponDiscount = 0,
+    this.loyaltyPointsUsed = 0,
+    this.loyaltyPointsDiscount = 0,
     required this.status,
     required this.paymentMethod,
     required this.shippingAddress,
@@ -74,6 +82,10 @@ class OrderModel {
           .map((item) => OrderItemModel.fromJson(item))
           .toList(),
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
+      couponCode: json['couponCode'],
+      couponDiscount: (json['couponDiscount'] ?? 0).toDouble(),
+      loyaltyPointsUsed: json['loyaltyPointsUsed'] ?? 0,
+      loyaltyPointsDiscount: (json['loyaltyPointsDiscount'] ?? 0).toDouble(),
       status: OrderStatus.fromString(json['status'] ?? 'PENDING'),
       paymentMethod: json['paymentMethod'] ?? '',
       shippingAddress: parseAddress(json['shippingAddress']),
@@ -88,6 +100,10 @@ class OrderModel {
       'userId': userId,
       'items': items.map((item) => item.toJson()).toList(),
       'totalAmount': totalAmount,
+      'couponCode': couponCode,
+      'couponDiscount': couponDiscount,
+      'loyaltyPointsUsed': loyaltyPointsUsed,
+      'loyaltyPointsDiscount': loyaltyPointsDiscount,
       'status': status.name,
       'paymentMethod': paymentMethod,
       'shippingAddress': shippingAddress.toJson(),
@@ -114,4 +130,21 @@ class OrderModel {
   String get formattedAddress {
     return shippingAddress.fullAddress;
   }
+  
+  // Helper method to get final amount after all discounts
+  double get finalAmount {
+    return totalAmount - couponDiscount - loyaltyPointsDiscount;
+  }
+  
+  // Helper method to check if coupon was applied
+  bool get hasCoupon => couponCode != null && couponCode!.isNotEmpty;
+  
+  // Helper method to check if loyalty points were used
+  bool get hasLoyaltyPoints => loyaltyPointsUsed > 0;
+  
+  // Helper method to get total discount amount
+  double get totalDiscount => couponDiscount + loyaltyPointsDiscount;
+  
+  // Helper method to calculate loyalty points earned (10% of final amount)
+  int get loyaltyPointsEarned => (finalAmount * 0.1).round();
 }

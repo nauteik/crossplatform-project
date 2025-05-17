@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/models/address_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/profile/data/repositories/address_provider.dart';
+import '../../../features/profile/presentation/screens/address_form_screen.dart';
 
 class AddressSelectionScreen extends StatefulWidget {
   final String userId;
@@ -104,26 +105,61 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Vui lòng thêm địa chỉ trong trang quản lý địa chỉ',
+                          'Hãy thêm địa chỉ mới',
                           style: TextStyle(color: Colors.grey),
                         ),
                         const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Quay lại'),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () => _navigateToAddressForm(context),
+                              icon: const Icon(Icons.add),
+                              label: const Text('Thêm địa chỉ mới'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            OutlinedButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Quay lại'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: addressProvider.addresses.length,
-                  itemBuilder: (context, index) {
-                    final address = addressProvider.addresses[index];
-                    return _buildAddressCard(context, address);
-                  },
+                return Stack(
+                  children: [
+                    ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: addressProvider.addresses.length,
+                      itemBuilder: (context, index) {
+                        final address = addressProvider.addresses[index];
+                        return _buildAddressCard(context, address);
+                      },
+                    ),
+                    Positioned(
+                      bottom: 16,
+                      right: 16,
+                      child: FloatingActionButton(
+                        onPressed: () => _navigateToAddressForm(context),
+                        child: const Icon(Icons.add),
+                      ),
+                    ),
+                  ],
                 );
               },
             ),
@@ -195,5 +231,13 @@ class _AddressSelectionScreenState extends State<AddressSelectionScreen> {
         ),
       ),
     );
+  }
+
+  void _navigateToAddressForm(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AddressFormScreen(),
+      ),
+    ).then((_) => _loadAddresses());
   }
 } 

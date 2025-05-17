@@ -35,6 +35,7 @@ public class User {
 
     private String rank;
     private int totalSpend;
+    private int loyaltyPoints = 0;
 
     private int role;
     

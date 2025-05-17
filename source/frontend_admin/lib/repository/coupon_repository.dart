@@ -5,14 +5,14 @@ import 'package:frontend_admin/models/coupon_model.dart';
 import 'package:http/http.dart' as http;
 
 class CouponRepository {
-  final String _baseUrl = "${ApiConstants.baseApiUrl}/api/coupon";
+  final String _baseUrl = "${ApiConstants.baseApiUrl}/api/coupons";
 
   Map<String, String> get _headers => {
     'Content-Type': 'application/json; charset=UTF-8',
   };
 
   Future<List<Coupon>> fetchCoupons() async {
-    final uri = Uri.parse('$_baseUrl/coupons');
+    final uri = Uri.parse(_baseUrl);
 
     try {
       final response = await http.get(uri, headers: _headers);
@@ -20,13 +20,25 @@ class CouponRepository {
       if (response.statusCode == 200) {
         final String rawResponseBody = utf8.decode(response.bodyBytes);
 
-        // Ensure the response body is indeed a JSON array
+        // Đảm bảo xử lý response đúng cấu trúc API chuẩn
         final dynamic decodedBody = jsonDecode(rawResponseBody);
-        if (decodedBody is List) {
+        
+        // Xử lý cấu trúc ApiResponse
+        if (decodedBody is Map && decodedBody.containsKey('data')) {
+          final dynamic data = decodedBody['data'];
+          if (data is List) {
+            return data.map((json) => Coupon.fromJson(json)).toList();
+          } else {
+            print('Unexpected response data format: Not a List');
+            throw Exception('Dữ liệu mã giảm giá trả về không hợp lệ.');
+          }
+        } 
+        // Trường hợp API trả về trực tiếp List
+        else if (decodedBody is List) {
           return decodedBody.map((json) => Coupon.fromJson(json)).toList();
-        } else {
-          // Handle case where backend returns non-list for /coupons endpoint
-          print('Unexpected response format for /coupons: Not a List');
+        } 
+        else {
+          print('Unexpected response format: Neither ApiResponse nor List');
           throw Exception('Dữ liệu mã giảm giá trả về không hợp lệ.');
         }
       } else {
@@ -38,25 +50,23 @@ class CouponRepository {
       }
     } catch (e) {
       print('Error fetching coupons: $e');
-      // Rethrowing caught exceptions is often better to let the Provider handle them
       rethrow;
     }
   }
 
-  Future<Coupon> addCoupon(String code, int value, int maxUses) async {
-    final uri = Uri.parse(_baseUrl); // <-- Đã sửa thành /api/coupon
+  Future<Coupon> addCoupon(String code, double value, int maxUses) async {
+    final uri = Uri.parse(_baseUrl);
 
     // Tạo đối tượng Coupon tạm thời chỉ để dùng toJsonForCreation
-    // Các trường khác (id, usedCount, creationTime, ordersApplied, valid) không cần thiết ở đây
     final tempCoupon = Coupon(
-      id: '', // Dummy ID
+      id: '', 
       code: code.toUpperCase(),
       value: value,
       maxUses: maxUses,
-      usedCount: 0, // Dummy
-      creationTime: DateTime.now(), // Dummy
-      ordersApplied: [], // Dummy
-      valid: true, // Dummy
+      usedCount: 0,
+      creationTime: DateTime.now(),
+      ordersApplied: [],
+      valid: true,
     );
 
     try {
@@ -65,15 +75,24 @@ class CouponRepository {
         headers: _headers,
         body: jsonEncode(
           tempCoupon.toJsonForCreation(),
-        ), // <-- Sử dụng toJsonForCreation
+        ),
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        final Map<String, dynamic> responseData = jsonDecode(
-          utf8.decode(response.bodyBytes),
-        );
-        // Backend should return the complete created coupon including ID and creationTime
-        return Coupon.fromJson(responseData);
+        final String rawResponseBody = utf8.decode(response.bodyBytes);
+        final dynamic decodedData = jsonDecode(rawResponseBody);
+        
+        // Xử lý cấu trúc ApiResponse
+        if (decodedData is Map && decodedData.containsKey('data')) {
+          return Coupon.fromJson(Map<String, dynamic>.from(decodedData['data']));
+        }
+        // Trường hợp API trả về trực tiếp đối tượng Coupon
+        else if (decodedData is Map) {
+          return Coupon.fromJson(Map<String, dynamic>.from(decodedData));
+        }
+        else {
+          throw Exception('Dữ liệu coupon trả về không hợp lệ');
+        }
       } else {
         print('Failed to add coupon: ${response.statusCode}');
         print('Response body: ${utf8.decode(response.bodyBytes)}');

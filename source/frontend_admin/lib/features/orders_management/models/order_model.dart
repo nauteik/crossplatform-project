@@ -55,6 +55,10 @@ class Order {
   final DateTime createdAt;
   final DateTime updatedAt;
   final Map<String, dynamic> additionalInfo;
+  final String? couponCode;
+  final double couponDiscount;
+  final int loyaltyPointsUsed;
+  final double loyaltyPointsDiscount;
 
   Order({
     required this.id,
@@ -68,10 +72,18 @@ class Order {
     required this.createdAt,
     required this.updatedAt,
     Map<String, dynamic>? additionalInfo,
+    this.couponCode,
+    this.couponDiscount = 0.0,
+    this.loyaltyPointsUsed = 0,
+    this.loyaltyPointsDiscount = 0.0,
   }) : this.additionalInfo = additionalInfo ?? {};
 
   String get userEmail => additionalInfo['userEmail'] as String? ?? '';
   String get username => additionalInfo['username'] as String? ?? userName;
+  
+  double get finalAmount => total - couponDiscount - loyaltyPointsDiscount;
+  double get totalDiscount => couponDiscount + loyaltyPointsDiscount;
+  bool get hasLoyaltyPoints => loyaltyPointsUsed > 0;
 
   factory Order.fromJson(Map<String, dynamic> json) {
     List<OrderItem> orderItems = [];
@@ -136,6 +148,30 @@ class Order {
       additionalInfo = Map<String, dynamic>.from(json['additionalInfo']);
     }
 
+    // Parse coupon values
+    String? couponCode = json['couponCode'];
+    double couponDiscount = 0.0;
+    
+    if (json['couponDiscount'] != null) {
+      if (json['couponDiscount'] is int) {
+        couponDiscount = (json['couponDiscount'] as int).toDouble();
+      } else if (json['couponDiscount'] is double) {
+        couponDiscount = json['couponDiscount'];
+      }
+    }
+    
+    // Parse loyalty points values
+    int loyaltyPointsUsed = json['loyaltyPointsUsed'] ?? 0;
+    double loyaltyPointsDiscount = 0.0;
+    
+    if (json['loyaltyPointsDiscount'] != null) {
+      if (json['loyaltyPointsDiscount'] is int) {
+        loyaltyPointsDiscount = (json['loyaltyPointsDiscount'] as int).toDouble();
+      } else if (json['loyaltyPointsDiscount'] is double) {
+        loyaltyPointsDiscount = json['loyaltyPointsDiscount'];
+      }
+    }
+
     return Order(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
@@ -148,6 +184,10 @@ class Order {
       createdAt: parseDateArray(json['createdAt']),
       updatedAt: parseDateArray(json['updatedAt']),
       additionalInfo: additionalInfo,
+      couponCode: couponCode,
+      couponDiscount: couponDiscount,
+      loyaltyPointsUsed: loyaltyPointsUsed,
+      loyaltyPointsDiscount: loyaltyPointsDiscount,
     );
   }
 

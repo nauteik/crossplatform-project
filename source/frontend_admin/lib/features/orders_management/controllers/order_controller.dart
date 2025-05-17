@@ -24,7 +24,12 @@ class OrderController {
         // Check for success using "status" instead of "code"
         if ((data['status'] == 200 || data['code'] == 200) && data['data'] != null) {
           final List<dynamic> ordersJson = data['data'];
-          return ordersJson.map((json) => Order.fromJson(json)).toList();
+          List<Order> orders = ordersJson.map((json) => Order.fromJson(json)).toList();
+          
+          // Sắp xếp đơn hàng theo thời gian tạo, mới nhất trước
+          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          
+          return orders;
         } else {
           throw Exception(data['message'] ?? 'Failed to load orders');
         }

@@ -23,6 +23,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _email = '';
   String _phone = '';
   String _rank = '';
+  int _loyaltyPoints = 0;
 
   // Controllers for text fields
   final _nameController = TextEditingController();
@@ -66,6 +67,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _email = data['email'] ?? 'Chưa cập nhật';
           _phone = data['phone'] ?? 'Chưa cập nhật';
           _rank = data['rank'] ?? 'Bronze';
+          _loyaltyPoints = data['loyaltyPoints'] ?? 0;
 
           _nameController.text = _name != 'Chưa cập nhật' ? _name : '';
           _emailController.text = _email != 'example@email.com' ? _email : '';
@@ -103,6 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _email = userDetails['email'] ?? 'Chưa cập nhật';
           _phone = userDetails['phone'] ?? 'Chưa cập nhật';
           _rank = userDetails['rank'] ?? 'Bronze';
+          _loyaltyPoints = userDetails['loyaltyPoints'] ?? 0;
 
           // Chỉ cập nhật controllers khi có giá trị thực sự
           if (_name != 'Chưa cập nhật') _nameController.text = _name;
@@ -120,6 +123,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           data['email'] = _email;
           data['phone'] = _phone;
           data['rank'] = _rank;
+          data['loyaltyPoints'] = _loyaltyPoints;
 
           // Encode với UTF-8
           final encodedJson = jsonEncode(data);
@@ -266,6 +270,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         title: const Text('Hạng thành viên'),
                         subtitle: Text(_rank),
                         trailing: _getRankIcon(),
+                      ),
+                    ),
+                    
+                    // Loyalty Points (not editable)
+                    Card(
+                      child: ListTile(
+                        leading: Icon(Icons.loyalty, color: Colors.blue),
+                        title: const Text('Điểm thưởng'),
+                        subtitle: Text('$_loyaltyPoints điểm'),
+                        trailing: Text(
+                          '${(_loyaltyPoints * 1000).toStringAsFixed(0)} VND',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[700],
+                          ),
+                        ),
                       ),
                     ),
 

@@ -60,328 +60,490 @@ class OrderDetailDialog extends StatelessWidget {
             ),
             const Divider(height: 24),
             
-            // Order Summary Box
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.indigo.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.indigo.withOpacity(0.1)),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      _buildInfoItem(
-                        context, 
-                        'Mã Đơn hàng', 
-                        order.id,
-                        icon: Icons.receipt_long,
-                      ),
-                      const SizedBox(width: 24),
-                      _buildInfoItem(
-                        context, 
-                        'Ngày Đặt hàng', 
-                        DateFormat('dd/MM/yyyy').format(order.createdAt),
-                        icon: Icons.calendar_today,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.person,
-                                  size: 16,
-                                  color: Colors.indigo[700],
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Thông tin khách hàng:',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            // Tên khách hàng
-                            const SizedBox(height: 2),
-                            // Username
-                            Row(
-                              children: [
-                                Text(
-                                  'Username: ',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                Text(
-                                  order.username,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            // Email
-                            Row(
-                              children: [
-                                Text(
-                                  'Email: ',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                Text(
-                                  order.userEmail.isNotEmpty
-                                      ? order.userEmail
-                                      : '${order.userName.toLowerCase().replaceAll(' ', '.')}@example.com',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.local_shipping, 
-                                  size: 16, 
-                                  color: Colors.indigo[700],
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Trạng thái:',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            OrderStatusBadge(status: order.status),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            
-            // Shipping & Payment Info
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Shipping Address
-                Expanded(
-                  child: _buildInfoBox(
-                    context,
-                    'Địa chỉ giao hàng',
-                    order.shippingAddress.toString(),
-                    Icons.location_on,
-                    Colors.orange[700]!,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Payment Method
-                Expanded(
-                  child: _buildInfoBox(
-                    context,
-                    'Phương thức thanh toán',
-                    order.paymentMethod,
-                    Icons.payment,
-                    Colors.green[700]!,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            
-            // Items header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Sản phẩm',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[800],
-                  ),
-                ),
-                Text(
-                  '${order.items.length} sản phẩm',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            
-            // Items list
             Expanded(
-              child: order.items.isEmpty
-                  ? Center(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Order Summary Box
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.indigo.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.indigo.withOpacity(0.1)),
+                      ),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.shopping_cart_outlined,
-                            size: 48,
-                            color: Colors.grey[400],
+                          Row(
+                            children: [
+                              _buildInfoItem(
+                                context, 
+                                'Mã Đơn hàng', 
+                                order.id,
+                                icon: Icons.receipt_long,
+                              ),
+                              const SizedBox(width: 24),
+                              _buildInfoItem(
+                                context, 
+                                'Ngày Đặt hàng', 
+                                DateFormat('dd/MM/yyyy').format(order.createdAt),
+                                icon: Icons.calendar_today,
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            'Không có sản phẩm',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.person,
+                                          size: 16,
+                                          color: Colors.indigo[700],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Thông tin khách hàng:',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 14,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    // Tên khách hàng
+                                    const SizedBox(height: 2),
+                                    // Username
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Username: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        Text(
+                                          order.username,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    // Email
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Email: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        Text(
+                                          order.userEmail.isNotEmpty
+                                              ? order.userEmail
+                                              : '${order.userName.toLowerCase().replaceAll(' ', '.')}@example.com',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.local_shipping, 
+                                          size: 16, 
+                                          color: Colors.indigo[700],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Trạng thái:',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 14,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    OrderStatusBadge(status: order.status),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    )
-                  : Container(
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Shipping & Payment Info
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Shipping Address
+                        Expanded(
+                          child: _buildInfoBox(
+                            context,
+                            'Địa chỉ giao hàng',
+                            order.shippingAddress.toString(),
+                            Icons.location_on,
+                            Colors.orange[700]!,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Payment Method
+                        Expanded(
+                          child: _buildInfoBox(
+                            context,
+                            'Phương thức thanh toán',
+                            order.paymentMethod,
+                            Icons.payment,
+                            Colors.green[700]!,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Items header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Sản phẩm',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.indigo[800],
+                          ),
+                        ),
+                        Text(
+                          '${order.items.length} sản phẩm',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Items list
+                    Container(
+                      height: 200, // Đặt chiều cao cố định cho danh sách sản phẩm
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.grey[200]!),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: order.items.length,
-                          separatorBuilder: (_, __) => Divider(color: Colors.grey[200], height: 1),
-                          itemBuilder: (context, index) {
-                            final item = order.items[index];
-                            return ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              leading: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: item.imageUrl.isNotEmpty
-                                    ? Image.network(
-                                        ImageHelper.getProductImage(item.imageUrl),
-                                        width: 60,
-                                        height: 60,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          width: 60,
-                                          height: 60,
-                                          color: Colors.grey[200],
-                                          child: const Icon(Icons.image, color: Colors.grey),
-                                        ),
-                                      )
-                                    : Container(
-                                        width: 60,
-                                        height: 60,
-                                        color: Colors.grey[200],
-                                        child: const Icon(Icons.image, color: Colors.grey),
-                                      ),
+                        child: order.items.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.shopping_cart_outlined,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Không có sản phẩm',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              title: Text(
-                                item.productName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'Số lượng: ${item.quantity}',
-                                style: TextStyle(
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              trailing: Text(
-                                formatCurrency(item.price),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.indigo[700],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
+                            )
+                          : ListView.separated(
+                              shrinkWrap: true,
+                              itemCount: order.items.length,
+                              separatorBuilder: (_, __) => Divider(color: Colors.grey[200], height: 1),
+                              itemBuilder: (context, index) {
+                                final item = order.items[index];
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  leading: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: item.imageUrl.isNotEmpty
+                                        ? Image.network(
+                                            ImageHelper.getProductImage(item.imageUrl),
+                                            width: 60,
+                                            height: 60,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) => Container(
+                                              width: 60,
+                                              height: 60,
+                                              color: Colors.grey[200],
+                                              child: const Icon(Icons.image, color: Colors.grey),
+                                            ),
+                                          )
+                                        : Container(
+                                            width: 60,
+                                            height: 60,
+                                            color: Colors.grey[200],
+                                            child: const Icon(Icons.image, color: Colors.grey),
+                                          ),
+                                  ),
+                                  title: Text(
+                                    item.productName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    'Số lượng: ${item.quantity}',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  trailing: Text(
+                                    formatCurrency(item.price),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.indigo[700],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                       ),
                     ),
-            ),
-            
-            // Total
-            Container(
-              margin: const EdgeInsets.only(top: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.indigo[50],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Cập nhật lần cuối:',
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontSize: 13,
-                        ),
+                    
+                    // Coupon and Total
+                    Container(
+                      margin: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.indigo[50],
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat('dd/MM/yyyy HH:mm').format(order.updatedAt),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
+                      child: Column(
+                        children: [
+                          // Coupon information (if applied)
+                          if (order.couponCode != null && order.couponCode!.isNotEmpty) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.discount, size: 20, color: Colors.green[700]),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Mã giảm giá:',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 15,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[50],
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.green[100]!),
+                                  ),
+                                  child: Text(
+                                    order.couponCode!,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: Colors.green[700],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Giảm:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                    color: Colors.grey[800],
+                                  ),
+                                ),
+                                Text(
+                                  '- ${formatCurrency(order.couponDiscount)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Colors.green[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 16),
+                          ],
+                          
+                          // Loyalty points information (if used)
+                          if (order.loyaltyPointsUsed > 0) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.stars, size: 20, color: Colors.amber[700]),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Điểm thưởng sử dụng:',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 15,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber[50],
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: Colors.amber[100]!),
+                                  ),
+                                  child: Text(
+                                    '${order.loyaltyPointsUsed} điểm',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: Colors.amber[700],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Giảm từ điểm thưởng:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 15,
+                                    color: Colors.grey[800],
+                                  ),
+                                ),
+                                Text(
+                                  '- ${formatCurrency(order.loyaltyPointsDiscount)}',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Colors.amber[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 16),
+                          ],
+                          
+                          // Updated timestamp and total
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Cập nhật lần cuối:',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    DateFormat('dd/MM/yyyy HH:mm').format(order.updatedAt),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  if (order.couponDiscount > 0 || order.loyaltyPointsDiscount > 0) ...[
+                                    Text(
+                                      'Tổng tiền hàng:',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                    Text(
+                                      formatCurrency(order.total),
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.grey[800],
+                                        decoration: TextDecoration.lineThrough,
+                                        decorationColor: Colors.grey[600],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                  ],
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Tổng thanh toán:',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey[800],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        formatCurrency(order.finalAmount),
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.indigo[800],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        'Tổng cộng:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey[800],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        formatCurrency(order.total),
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.indigo[800],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

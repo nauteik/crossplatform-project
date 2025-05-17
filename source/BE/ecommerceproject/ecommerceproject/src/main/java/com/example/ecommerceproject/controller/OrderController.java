@@ -58,6 +58,13 @@ public class OrderController {
             String userId = (String) orderRequest.get("userId");
             String paymentMethod = (String) orderRequest.get("paymentMethod");
             List<String> selectedItemIds = (List<String>) orderRequest.get("selectedItemIds");
+            String couponCode = (String) orderRequest.get("couponCode");
+            
+            // Lấy số điểm loyalty sử dụng (nếu có)
+            Integer loyaltyPointsToUse = 0;
+            if (orderRequest.containsKey("loyaltyPointsToUse")) {
+                loyaltyPointsToUse = (Integer) orderRequest.get("loyaltyPointsToUse");
+            }
             
             if (userId == null || paymentMethod == null) {
                 return ResponseEntity.badRequest().body(
@@ -80,8 +87,25 @@ public class OrderController {
                 }
             }
             
-            // Tạo đơn hàng cho user
-            Order order = orderService.createOrder(userId, shippingAddress, paymentMethod, selectedItemIds);
+            // Tạo đơn hàng với coupon và/hoặc loyalty points
+            Order order;
+            
+            if (couponCode != null && !couponCode.isEmpty() && loyaltyPointsToUse > 0) {
+                // Cả coupon và loyalty points
+                order = orderService.createOrderWithCouponAndLoyaltyPoints(userId, shippingAddress, paymentMethod, 
+                                                selectedItemIds, couponCode, loyaltyPointsToUse);
+            } else if (couponCode != null && !couponCode.isEmpty()) {
+                // Chỉ có coupon
+                order = orderService.createOrderWithCoupon(userId, shippingAddress, paymentMethod, 
+                                                selectedItemIds, couponCode);
+            } else if (loyaltyPointsToUse > 0) {
+                // Chỉ có loyalty points
+                order = orderService.createOrderWithLoyaltyPoints(userId, shippingAddress, paymentMethod, 
+                                                selectedItemIds, loyaltyPointsToUse);
+            } else {
+                // Không có giảm giá
+                order = orderService.createOrder(userId, shippingAddress, paymentMethod, selectedItemIds);
+            }
             
             return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(ApiStatus.SUCCESS.getCode(),
@@ -158,35 +182,20 @@ public class OrderController {
             // Lưu địa chỉ vào thông tin người dùng
             userService.addAddress(userId, newAddress);
             
-            // Lấy phương thức thanh toán
+            // Lấy phương thức thanh toán và mã coupon (nếu có)
             String paymentMethod = (String) orderRequest.get("paymentMethod");
+            String couponCode = (String) orderRequest.get("couponCode");
             
             // Lấy danh sách sản phẩm
             List<String> selectedItemIds = (List<String>) orderRequest.get("selectedItemIds");
             
-            // Tạo giỏ hàng mới và thêm sản phẩm vào giỏ hàng
-            if (selectedItemIds != null && !selectedItemIds.isEmpty()) {
-                // Tạo cart mới cho user
-                Cart cart = cartService.getCartByUserId(userId);
-                
-                // Thêm từng sản phẩm vào giỏ hàng
-                for (String productId : selectedItemIds) {
-                    Product product = productService.getProductById(productId);
-                    if (product != null) {
-                        CartItem cartItem = new CartItem();
-                        cartItem.setProductId(productId);
-                        cartItem.setProductName(product.getName());
-                        cartItem.setQuantity(1); // Mặc định số lượng là 1
-                        cartItem.setPrice(product.getPrice());
-                        cartItem.setImageUrl(product.getPrimaryImageUrl());
-                        
-                        cartService.addItemToCart(userId, cartItem);
-                    }
-                }
+            // Tạo đơn hàng mới với userId đã tạo và áp dụng coupon nếu có
+            Order order;
+            if (couponCode != null && !couponCode.isEmpty()) {
+                order = orderService.createOrderWithCoupon(userId, newAddress, paymentMethod, selectedItemIds, couponCode);
+            } else {
+                order = orderService.createOrder(userId, newAddress, paymentMethod, selectedItemIds);
             }
-
-            // Tạo đơn hàng mới với userId đã tạo
-            Order order = orderService.createOrder(userId, newAddress, paymentMethod, selectedItemIds);
             
             // Tạo token cho người dùng mới
             String token = userService.generateAuthToken(userId);
@@ -403,6 +412,101 @@ public class OrderController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
                             "Error retrieving orders: " + e.getMessage(), null));
+        }
+    }
+
+    /**
+     * Apply coupon to an existing order
+     */
+    @PostMapping("/{orderId}/apply-coupon")
+    public ResponseEntity<ApiResponse<?>> applyCoupon(
+            @PathVariable String orderId,
+            @RequestBody Map<String, String> couponRequest) {
+        try {
+            String couponCode = couponRequest.get("couponCode");
+            
+            if (couponCode == null || couponCode.isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                    new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(),
+                        "Missing coupon code", null));
+            }
+            
+            Order updatedOrder = orderService.applyCouponToOrder(orderId, couponCode);
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                "Coupon applied successfully", updatedOrder));
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(), e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
+                    "Error applying coupon: " + e.getMessage(), null));
+        }
+    }
+
+    /**
+     * Lấy số điểm loyalty của người dùng
+     */
+    @GetMapping("/user/{userId}/loyalty-points")
+    public ResponseEntity<ApiResponse<?>> getUserLoyaltyPoints(@PathVariable String userId) {
+        try {
+            int loyaltyPoints = userService.getLoyaltyPoints(userId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("userId", userId);
+            response.put("loyaltyPoints", loyaltyPoints);
+            response.put("equivalentAmount", loyaltyPoints * 1000); // 1 điểm = 1000 VND
+            
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                "Loyalty points retrieved successfully",
+                response
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
+                    "Error retrieving loyalty points: " + e.getMessage(), null));
+        }
+    }
+
+    /**
+     * Áp dụng điểm loyalty vào đơn hàng
+     */
+    @PostMapping("/{orderId}/apply-loyalty-points")
+    public ResponseEntity<ApiResponse<?>> applyLoyaltyPoints(
+            @PathVariable String orderId,
+            @RequestBody Map<String, Integer> request) {
+        try {
+            if (!request.containsKey("points")) {
+                return ResponseEntity.badRequest().body(
+                    new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(),
+                        "Missing points parameter", null));
+            }
+            
+            int pointsToUse = request.get("points");
+            
+            if (pointsToUse <= 0) {
+                return ResponseEntity.badRequest().body(
+                    new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(),
+                        "Points must be greater than 0", null));
+            }
+            
+            Order updatedOrder = orderService.applyLoyaltyPointsToOrder(orderId, pointsToUse);
+            
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                String.format("Successfully applied %d loyalty points to order", pointsToUse),
+                updatedOrder
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(
+                new ApiResponse<>(ApiStatus.BAD_REQUEST.getCode(), e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
+                    "Error applying loyalty points: " + e.getMessage(), null));
         }
     }
 }

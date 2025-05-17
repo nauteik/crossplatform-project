@@ -478,6 +478,7 @@ public class DataLoader implements CommandLineRunner {
         admin.setAvatar("Chưa cập nhật");
         admin.setPhone("Chưa cập nhật");
         admin.setGender("Chưa cập nhật");
+        admin.setLoyaltyPoints(0);
         admin = userRepository.save(admin);
 
         // Tạo user thường
@@ -490,6 +491,7 @@ public class DataLoader implements CommandLineRunner {
         user.setAvatar("Chưa cập nhật");
         user.setPhone("Chưa cập nhật");
         user.setGender("Chưa cập nhật");
+        user.setLoyaltyPoints(0);
         user = userRepository.save(user);
 
         // Tạo địa chỉ cho admin
@@ -538,67 +540,51 @@ public class DataLoader implements CommandLineRunner {
         if (couponRepository.count() == 0) {
             List<Coupon> coupons = new ArrayList<>();
 
-            // Coupon giảm giá 10% cho người dùng mới
             Coupon welcome = new Coupon();
-            welcome.setCode("WELCOME10");
-            welcome.setValue(10);
+            welcome.setCode("VIP50");
+            welcome.setValue(50000);
             welcome.setMaxUses(100);
             welcome.setUsedCount(0);
             welcome.setCreationTime(LocalDateTime.now());
             welcome.setOrdersApplied(new ArrayList<>());
             coupons.add(welcome);
 
-            // Coupon giảm giá 20% cho mùa hè
             Coupon summer = new Coupon();
-            summer.setCode("SUMMER20");
-            summer.setValue(20);
+            summer.setCode("VP100");
+            summer.setValue(100000);
             summer.setMaxUses(50);
             summer.setUsedCount(0);
             summer.setCreationTime(LocalDateTime.now());
             summer.setOrdersApplied(new ArrayList<>());
             coupons.add(summer);
 
-            // Coupon giảm giá 30% cho VIP
-            Coupon vip = new Coupon();
-            vip.setCode("VIP30");
-            vip.setValue(30);
-            vip.setMaxUses(20);
-            vip.setUsedCount(0);
-            vip.setCreationTime(LocalDateTime.now());
-            vip.setOrdersApplied(new ArrayList<>());
-            coupons.add(vip);
-
-            // Coupon giảm giá 15% cho ngày lễ
             Coupon holiday = new Coupon();
-            holiday.setCode("HOLIDAY15");
-            holiday.setValue(15);
+            holiday.setCode("HOL20");
+            holiday.setValue(20000);
             holiday.setMaxUses(75);
             holiday.setUsedCount(0);
             holiday.setCreationTime(LocalDateTime.now());
             holiday.setOrdersApplied(new ArrayList<>());
             coupons.add(holiday);
 
-            // Coupon giảm giá 25% cho Black Friday
             Coupon blackFriday = new Coupon();
-            blackFriday.setCode("BLACK25");
-            blackFriday.setValue(25);
+            blackFriday.setCode("BF100");
+            blackFriday.setValue(100000);
             blackFriday.setMaxUses(30);
             blackFriday.setUsedCount(0);
             blackFriday.setCreationTime(LocalDateTime.now());
             blackFriday.setOrdersApplied(new ArrayList<>());
             coupons.add(blackFriday);
 
-            // Coupon giảm giá 50% cho đơn hàng đầu tiên
             Coupon firstOrder = new Coupon();
-            firstOrder.setCode("FIRST50");
-            firstOrder.setValue(50);
+            firstOrder.setCode("FIRST");
+            firstOrder.setValue(10000);
             firstOrder.setMaxUses(10);
             firstOrder.setUsedCount(0);
             firstOrder.setCreationTime(LocalDateTime.now());
             firstOrder.setOrdersApplied(new ArrayList<>());
             coupons.add(firstOrder);
 
-            // Lưu tất cả coupons vào database
             couponRepository.saveAll(coupons);
 
             System.out.println("Created " + coupons.size() + " coupons successfully!");

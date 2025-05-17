@@ -39,6 +39,7 @@ class _GuestCheckoutScreenState extends State<GuestCheckoutScreen> {
   final _cityController = TextEditingController();
   final _districtController = TextEditingController();
   final _wardController = TextEditingController();
+  final _couponController = TextEditingController();
 
   @override
   void initState() {
@@ -65,6 +66,7 @@ class _GuestCheckoutScreenState extends State<GuestCheckoutScreen> {
     _cityController.dispose();
     _districtController.dispose();
     _wardController.dispose();
+    _couponController.dispose();
     super.dispose();
   }
   
@@ -159,6 +161,30 @@ class _GuestCheckoutScreenState extends State<GuestCheckoutScreen> {
     }
   }
   
+  // Kiểm tra coupon
+  Future<void> _checkCoupon() async {
+    final paymentProvider = context.read<PaymentProvider>();
+    String couponCode = _couponController.text.trim();
+    
+    if (couponCode.isEmpty) {
+      _showErrorSnackbar('Vui lòng nhập mã giảm giá');
+      return;
+    }
+    
+    final isValid = await paymentProvider.checkCoupon(couponCode);
+    
+    if (isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Mã giảm giá hợp lệ'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      _showErrorSnackbar(paymentProvider.errorMessage);
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,6 +200,11 @@ class _GuestCheckoutScreenState extends State<GuestCheckoutScreen> {
               children: [
                 // Order Summary
                 _buildOrderSummary(),
+                
+                const SizedBox(height: 24),
+                
+                // Coupon Field
+                _buildCouponSection(paymentProvider),
                 
                 const SizedBox(height: 24),
                 
@@ -219,6 +250,140 @@ class _GuestCheckoutScreenState extends State<GuestCheckoutScreen> {
           );
         },
       ),
+    );
+  }
+  
+  Widget _buildCouponSection(PaymentProvider paymentProvider) {
+    // Tính toán số tiền sau khi áp dụng coupon
+    double finalAmount = widget.totalAmount;
+    double couponValue = 0;
+    
+    if (paymentProvider.isCouponValid && paymentProvider.couponDetails != null) {
+      // Xử lý value có thể là int hoặc double
+      final dynamic rawValue = paymentProvider.couponDetails!['value'];
+      if (rawValue is int) {
+        couponValue = rawValue.toDouble();
+      } else if (rawValue is double) {
+        couponValue = rawValue;
+      }
+      finalAmount = widget.totalAmount - couponValue;
+      if (finalAmount < 0) finalAmount = 0;
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Mã giảm giá',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _couponController,
+                decoration: const InputDecoration(
+                  hintText: 'Nhập mã giảm giá',
+                  border: OutlineInputBorder(),
+                ),
+                enabled: !paymentProvider.isCheckingCoupon && !paymentProvider.isCouponValid,
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 56,
+              child: ElevatedButton(
+                onPressed: paymentProvider.isCheckingCoupon || paymentProvider.isCouponValid 
+                  ? null 
+                  : _checkCoupon,
+                child: paymentProvider.isCheckingCoupon 
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : paymentProvider.isCouponValid
+                    ? const Icon(Icons.check)
+                    : const Text('Áp dụng'),
+              ),
+            ),
+          ],
+        ),
+        
+        if (paymentProvider.isCouponValid && paymentProvider.couponDetails != null) ...[
+          const SizedBox(height: 8),
+          Card(
+            color: Colors.green.shade50,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: Colors.green.shade200),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Mã giảm giá: ${paymentProvider.couponCode}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () {
+                          paymentProvider.setCouponCode('');
+                          _couponController.clear();
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Giảm giá: ${PaymentMethodWidgets.formatCurrency(couponValue)}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  Text(
+                    'Số lần sử dụng còn lại: ${paymentProvider.couponDetails!['remainingUses']}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Tổng cộng sau giảm giá:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                PaymentMethodWidgets.formatCurrency(finalAmount),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 

@@ -169,13 +169,59 @@ class OrderConfirmationScreen extends StatelessWidget {
             
             const Divider(),
             
-            // Total amount
+            // Display coupon information if available
+            if (order.hasCoupon) ...[
+              _buildDetailRow(
+                'Mã giảm giá',
+                order.couponCode ?? '',
+                valueColor: Colors.green,
+              ),
+              
+              const Divider(),
+              
+              _buildDetailRow(
+                'Giảm giá',
+                formatCurrency(order.couponDiscount),
+                valueColor: Colors.green,
+              ),
+              
+              const Divider(),
+            ],
+            
+            // Display loyalty points information if used
+            if (order.hasLoyaltyPoints) ...[
+              _buildDetailRow(
+                'Điểm thưởng sử dụng',
+                '${order.loyaltyPointsUsed} điểm',
+                valueColor: Colors.amber[700],
+              ),
+              
+              const Divider(),
+              
+              _buildDetailRow(
+                'Giảm giá từ điểm thưởng',
+                formatCurrency(order.loyaltyPointsDiscount),
+                valueColor: Colors.amber[700],
+              ),
+              
+              const Divider(),
+            ],
+            
+            // Subtotal amount (if coupon is applied)
+            if (order.hasCoupon || order.hasLoyaltyPoints) 
+              _buildDetailRow(
+                'Tổng tiền hàng',
+                formatCurrency(order.totalAmount),
+              ),
+              
+            // Final amount
             _buildDetailRow(
-              'Tổng số tiền',
-              formatCurrency(order.totalAmount),
+              order.hasCoupon ? 'Tổng tiền thanh toán' : 'Tổng số tiền',
+              formatCurrency(order.hasCoupon ? order.finalAmount : order.totalAmount),
               valueStyle: const TextStyle(
                 fontWeight: FontWeight.bold, 
                 fontSize: 16,
+                color: Colors.red,
               ),
             ),
           ],

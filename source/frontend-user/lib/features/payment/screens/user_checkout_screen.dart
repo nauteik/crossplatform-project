@@ -11,6 +11,7 @@ import '../../../features/cart/providers/cart_provider.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/profile/data/repositories/address_provider.dart';
 import '../../../features/profile/presentation/screens/address_screen.dart';
+import '../../../features/profile/presentation/screens/address_form_screen.dart';
 import '../models/payment_request.dart';
 import '../providers/payment_provider.dart';
 import 'order_confirmation_screen.dart';
@@ -40,6 +41,11 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
   
   // Controller cho thông tin địa chỉ
   final _addressController = TextEditingController();
+  final _couponController = TextEditingController();
+  
+  // Controller cho loyalty points
+  TextEditingController _loyaltyPointsController = TextEditingController();
+  bool _useLoyaltyPoints = false;
 
   @override
   void initState() {
@@ -56,6 +62,9 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
       
       // Load user addresses
       _loadUserAddresses();
+      
+      // Load user loyalty points
+      _loadUserLoyaltyPoints();
     });
   }
 
@@ -79,9 +88,26 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
     }
   }
 
+  Future<void> _loadUserLoyaltyPoints() async {
+    final authProvider = context.read<AuthProvider>();
+    final paymentProvider = context.read<PaymentProvider>();
+    
+    if (authProvider.token != null) {
+      await paymentProvider.loadUserLoyaltyPoints(
+        widget.userId,
+        authProvider.token,
+      );
+      
+      // Khởi tạo controller với giá trị 0
+      _loyaltyPointsController.text = "0";
+    }
+  }
+
   @override
   void dispose() {
     _addressController.dispose();
+    _couponController.dispose();
+    _loyaltyPointsController.dispose();
     super.dispose();
   }
   
@@ -93,11 +119,16 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
     final paymentProvider = context.read<PaymentProvider>();
     
     try {
-      // Đã đăng nhập - sử dụng địa chỉ đã chọn hoặc đã nhập
+      // Kiểm tra xem đã có địa chỉ giao hàng chưa
+      if (_selectedAddress == null) {
+        _showErrorSnackbar("Vui lòng chọn hoặc thêm địa chỉ giao hàng trước khi đặt hàng");
+        setState(() => _isProcessing = false);
+        return;
+      }
+      
+      // Đã đăng nhập - sử dụng địa chỉ đã chọn
       if (_selectedAddress != null) {
         paymentProvider.setSelectedAddress(_selectedAddress!);
-      } else {
-        paymentProvider.setShippingAddress(_addressController.text);
       }
       
       // Tạo đơn hàng với userId hiện tại
@@ -170,6 +201,61 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
     }
   }
   
+  // Thêm địa chỉ mới
+  Future<void> _addNewAddress() async {
+    final authProvider = context.read<AuthProvider>();
+    
+    if (!authProvider.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng đăng nhập để thêm địa chỉ'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    final result = await Navigator.of(context).push<AddressModel>(
+      MaterialPageRoute(
+        builder: (context) => const AddressFormScreen(),
+      ),
+    );
+    
+    if (result != null) {
+      setState(() {
+        _selectedAddress = result;
+        _addressController.text = result.fullAddress;
+      });
+      
+      // Refresh danh sách địa chỉ
+      _loadUserAddresses();
+    }
+  }
+  
+  // Kiểm tra coupon
+  Future<void> _checkCoupon() async {
+    final paymentProvider = context.read<PaymentProvider>();
+    String couponCode = _couponController.text.trim();
+    
+    if (couponCode.isEmpty) {
+      _showErrorSnackbar('Vui lòng nhập mã giảm giá');
+      return;
+    }
+    
+    final isValid = await paymentProvider.checkCoupon(couponCode);
+    
+    if (isValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Mã giảm giá hợp lệ'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      _showErrorSnackbar(paymentProvider.errorMessage);
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -185,6 +271,16 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
               children: [
                 // Order Summary
                 _buildOrderSummary(),
+                
+                const SizedBox(height: 24),
+                
+                // Coupon Field
+                _buildCouponSection(paymentProvider),
+                
+                const SizedBox(height: 24),
+                
+                // Loyalty Points Section
+                _buildLoyaltyPointsSection(paymentProvider),
                 
                 const SizedBox(height: 24),
                 
@@ -225,6 +321,140 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
           );
         },
       ),
+    );
+  }
+  
+  Widget _buildCouponSection(PaymentProvider paymentProvider) {
+    // Tính toán số tiền sau khi áp dụng coupon
+    double finalAmount = widget.totalAmount;
+    double couponValue = 0;
+    
+    if (paymentProvider.isCouponValid && paymentProvider.couponDetails != null) {
+      // Xử lý value có thể là int hoặc double
+      final dynamic rawValue = paymentProvider.couponDetails!['value'];
+      if (rawValue is int) {
+        couponValue = rawValue.toDouble();
+      } else if (rawValue is double) {
+        couponValue = rawValue;
+      }
+      finalAmount = widget.totalAmount - couponValue;
+      if (finalAmount < 0) finalAmount = 0;
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Mã giảm giá',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _couponController,
+                decoration: const InputDecoration(
+                  hintText: 'Nhập mã giảm giá',
+                  border: OutlineInputBorder(),
+                ),
+                enabled: !paymentProvider.isCheckingCoupon && !paymentProvider.isCouponValid,
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              height: 56,
+              child: ElevatedButton(
+                onPressed: paymentProvider.isCheckingCoupon || paymentProvider.isCouponValid 
+                  ? null 
+                  : _checkCoupon,
+                child: paymentProvider.isCheckingCoupon 
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : paymentProvider.isCouponValid
+                    ? const Icon(Icons.check)
+                    : const Text('Áp dụng'),
+              ),
+            ),
+          ],
+        ),
+        
+        if (paymentProvider.isCouponValid && paymentProvider.couponDetails != null) ...[
+          const SizedBox(height: 8),
+          Card(
+            color: Colors.green.shade50,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: Colors.green.shade200),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Mã giảm giá: ${paymentProvider.couponCode}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () {
+                          paymentProvider.setCouponCode('');
+                          _couponController.clear();
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Giảm giá: ${PaymentMethodWidgets.formatCurrency(couponValue)}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  Text(
+                    'Số lần sử dụng còn lại: ${paymentProvider.couponDetails!['remainingUses']}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Tổng cộng sau giảm giá:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                PaymentMethodWidgets.formatCurrency(finalAmount),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
   
@@ -356,35 +586,52 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
               // Người dùng chưa chọn địa chỉ
               Column(
                 children: [
-                  // Nhập địa chỉ mới
-                  TextFormField(
-                    controller: _addressController,
-                    decoration: const InputDecoration(
-                      hintText: 'Nhập địa chỉ giao hàng của bạn',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(color: Colors.grey.shade300),
                     ),
-                    maxLines: 3,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Vui lòng nhập địa chỉ giao hàng của bạn';
-                      }
-                      return null;
-                    },
-                    onChanged: (value) {
-                      // No need to update provider, will be done at checkout
-                    },
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Nút chọn địa chỉ từ danh sách đã lưu
-                  OutlinedButton.icon(
-                    onPressed: _selectAddress,
-                    icon: const Icon(Icons.location_on),
-                    label: const Text('Chọn từ địa chỉ đã lưu'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Bạn chưa có địa chỉ giao hàng',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Các nút hành động
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: _selectAddress,
+                                  icon: const Icon(Icons.location_on),
+                                  label: const Text('Chọn địa chỉ'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: _addNewAddress,
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('Thêm mới'),
+                                  style: ElevatedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -392,6 +639,204 @@ class _UserCheckoutScreenState extends State<UserCheckoutScreen> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildLoyaltyPointsSection(PaymentProvider paymentProvider) {
+    if (paymentProvider.userLoyaltyPoints <= 0) {
+      return const SizedBox.shrink(); // Ẩn nếu không có điểm
+    }
+    
+    // Tính toán số tiền giảm giá khi sử dụng điểm
+    double loyaltyDiscount = paymentProvider.loyaltyPointsDiscount;
+    
+    // Tính tổng giá trị sau khi áp dụng tất cả giảm giá
+    double couponValue = 0;
+    if (paymentProvider.isCouponValid && paymentProvider.couponDetails != null) {
+      final dynamic rawValue = paymentProvider.couponDetails!['value'];
+      if (rawValue is int) {
+        couponValue = rawValue.toDouble();
+      } else if (rawValue is double) {
+        couponValue = rawValue;
+      }
+    }
+    
+    double finalAmount = widget.totalAmount - couponValue - loyaltyDiscount;
+    if (finalAmount < 0) finalAmount = 0;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Điểm thưởng',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: Colors.blue.shade200),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Hiển thị số điểm hiện có
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Điểm hiện có: ${paymentProvider.userLoyaltyPoints}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      'Giá trị: ${PaymentMethodWidgets.formatCurrency(paymentProvider.userLoyaltyPoints * 1000)}',
+                      style: TextStyle(
+                        color: Colors.blue[800],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Switch để bật/tắt sử dụng điểm
+                Row(
+                  children: [
+                    Switch(
+                      value: _useLoyaltyPoints,
+                      onChanged: (value) {
+                        setState(() {
+                          _useLoyaltyPoints = value;
+                          if (!value) {
+                            // Nếu tắt sử dụng điểm, reset về 0
+                            _loyaltyPointsController.text = "0";
+                            paymentProvider.setLoyaltyPointsToUse(0);
+                          }
+                        });
+                      },
+                    ),
+                    const Text(
+                      'Sử dụng điểm thưởng',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+                
+                if (_useLoyaltyPoints) ...[
+                  const SizedBox(height: 16),
+                  
+                  // Nhập số điểm muốn sử dụng
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _loyaltyPointsController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Số điểm muốn sử dụng',
+                            hintText: 'Tối đa ${paymentProvider.userLoyaltyPoints} điểm',
+                            border: const OutlineInputBorder(),
+                            suffixText: 'điểm',
+                          ),
+                          onChanged: (value) {
+                            int points = 0;
+                            try {
+                              points = int.parse(value);
+                            } catch (e) {
+                              points = 0;
+                            }
+                            
+                            // Không cho phép sử dụng quá số điểm hiện có
+                            if (points > paymentProvider.userLoyaltyPoints) {
+                              points = paymentProvider.userLoyaltyPoints;
+                              _loyaltyPointsController.text = points.toString();
+                            }
+                            
+                            paymentProvider.setLoyaltyPointsToUse(points);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Sử dụng tối đa điểm
+                          setState(() {
+                            int maxPoints = paymentProvider.userLoyaltyPoints;
+                            _loyaltyPointsController.text = maxPoints.toString();
+                            paymentProvider.setLoyaltyPointsToUse(maxPoints);
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                        ),
+                        child: const Text('Tối đa'),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Hiển thị số tiền sẽ được giảm
+                  if (paymentProvider.loyaltyPointsToUse > 0)
+                    Text(
+                      'Giảm giá: ${PaymentMethodWidgets.formatCurrency(loyaltyDiscount)}',
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                ],
+                
+                const SizedBox(height: 8),
+                const Divider(),
+                
+                // Hiển thị tổng sau khi giảm giá (nếu có sử dụng điểm)
+                if (paymentProvider.loyaltyPointsToUse > 0)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Tổng đơn hàng sau giảm giá:',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        PaymentMethodWidgets.formatCurrency(finalAmount),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                
+                // Hiển thị điểm sẽ nhận được
+                const SizedBox(height: 8),
+                Text(
+                  'Điểm thưởng nhận được sau đơn hàng: ${(finalAmount * 0.1 / 1000).floor()} điểm',
+                  style: TextStyle(
+                    color: Colors.blue[700],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 } 

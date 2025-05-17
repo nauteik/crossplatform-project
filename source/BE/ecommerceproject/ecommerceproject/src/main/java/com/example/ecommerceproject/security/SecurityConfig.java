@@ -100,6 +100,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/reviews/**").permitAll()
                 // Coupon API paths
                 .requestMatchers("/api/coupon/**").permitAll()
+                .requestMatchers("/api/coupons/**").permitAll()
                 // Dashboard API paths
                 .requestMatchers("/api/dashboard/**").permitAll()
                 // Overview API paths
