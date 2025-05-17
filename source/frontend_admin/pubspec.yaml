@@ -56,6 +56,8 @@ dependencies:
 
   stomp_dart_client: ^2.0.0
   web_socket_channel: ^3.0.0
+  http_parser: ^4.1.2
+  universal_io: ^2.2.2
 
 dev_dependencies:
   flutter_test:

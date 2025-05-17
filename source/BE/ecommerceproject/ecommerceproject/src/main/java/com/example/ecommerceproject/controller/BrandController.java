@@ -53,8 +53,8 @@ public class BrandController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<Brand>> createBrand(@RequestBody Brand brand) {
-        Brand createdBrand = brandService.createBrand(brand);
+    public ResponseEntity<ApiResponse<Brand>> createBrand(@RequestBody Brand brandRequest) {
+        Brand createdBrand = brandService.createBrand(brandRequest);
         ApiResponse<Brand> response = new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
                 ApiStatus.SUCCESS.getMessage(),
@@ -64,8 +64,8 @@ public class BrandController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<ApiResponse<Brand>> updateBrand(@PathVariable String id, @RequestBody Brand brand) {
-        Brand updatedBrand = brandService.updateBrand(id, brand);
+    public ResponseEntity<ApiResponse<Brand>> updateBrand(@PathVariable String id, @RequestBody Brand brandRequest) {
+        Brand updatedBrand = brandService.updateBrand(id, brandRequest);
         if (updatedBrand != null) {
             ApiResponse<Brand> response = new ApiResponse<>(
                     ApiStatus.SUCCESS.getCode(),

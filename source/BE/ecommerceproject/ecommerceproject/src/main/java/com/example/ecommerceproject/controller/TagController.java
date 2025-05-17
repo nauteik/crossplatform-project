@@ -83,8 +83,8 @@ public class TagController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Tag>> createTag(@RequestBody Tag tag) {
-        Tag createdTag = tagService.createTag(tag);
+    public ResponseEntity<ApiResponse<Tag>> createTag(@RequestBody Tag tagRequest) {
+        Tag createdTag = tagService.createTag(tagRequest);
         ApiResponse<Tag> response = new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
                 ApiStatus.SUCCESS.getMessage(),

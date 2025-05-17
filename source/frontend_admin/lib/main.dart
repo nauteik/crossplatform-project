@@ -9,6 +9,7 @@ import 'package:frontend_admin/providers/overview_provider.dart';
 import 'package:frontend_admin/providers/product_provider.dart';
 import 'package:frontend_admin/providers/product_type_provider.dart';
 import 'package:frontend_admin/providers/statistics_provider.dart';
+import 'package:frontend_admin/providers/tag_provider.dart';
 import 'package:frontend_admin/providers/user_provider.dart';
 import 'package:frontend_admin/repository/user_repository.dart';
 import 'package:frontend_admin/screens_controller.dart';
@@ -37,10 +38,13 @@ class MyApp extends StatelessWidget {
           create: (context) => ProductProvider(),
         ),
         ChangeNotifierProvider(
-          create: (context) => BrandProvider(),
+          create: (context) => ProductTypeProvider(),
         ),
         ChangeNotifierProvider(
-          create: (context) => ProductTypeProvider(),
+          create: (context) => TagProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => BrandProvider(),
         ),
         ChangeNotifierProvider(
           create: (context) => CouponProvider(),

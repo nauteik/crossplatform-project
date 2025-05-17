@@ -15,9 +15,12 @@ class Brand {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
+    final Map<String, dynamic> data = {
       'name': name,
     };
+    if (id.isNotEmpty) {
+      data['id'] = id;
+    }
+    return data;
   }
 }

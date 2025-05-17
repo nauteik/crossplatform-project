@@ -27,17 +27,21 @@ public class BrandService {
         return brand.orElse(null);
     }
 
-    public Brand createBrand(Brand brand) {
+    public Brand createBrand(Brand brandRequest) {
+        Brand brand = new Brand();
+        brand.setName(brandRequest.getName());
         return brandRepository.save(brand);
     }
 
-    public Brand updateBrand(String id, Brand brand) {
-        if (!brandRepository.existsById(id)) {
+    public Brand updateBrand(String id, Brand brandRequest) {
+        Optional<Brand> existingBrandOptional = brandRepository.findById(id);
+        if (existingBrandOptional.isEmpty()) {
             return null;
         }
 
-        brand.setId(id);
-        return brandRepository.save(brand);
+        Brand existingBrand = existingBrandOptional.get();
+        existingBrand.setName(brandRequest.getName());
+        return brandRepository.save(existingBrand);
     }
 
     public boolean deleteBrand(String id) {

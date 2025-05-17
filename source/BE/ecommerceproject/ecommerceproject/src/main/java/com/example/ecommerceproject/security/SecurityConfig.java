@@ -71,11 +71,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/brand/update/{id}").permitAll()
                 .requestMatchers("/api/brand/delete/{id}").permitAll()
                 // ProductType API paths
-                .requestMatchers("/api/producttype/types").permitAll()
-                .requestMatchers("/api/producttype/{id}").permitAll()
-                .requestMatchers("/api/producttype/create").permitAll()
-                .requestMatchers("/api/producttype/update/{id}").permitAll()
-                .requestMatchers("/api/producttype/delete/{id}").permitAll()
+                .requestMatchers("/api/producttype/**").permitAll()
                 // Address API paths
                 .requestMatchers("/api/address/**").permitAll()
                 // Message API paths
