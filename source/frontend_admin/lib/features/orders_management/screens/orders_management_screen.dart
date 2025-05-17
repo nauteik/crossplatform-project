@@ -851,17 +851,17 @@ class _OrdersManagementScreenState extends State<OrdersManagementScreen> {
                         Text(
                           formatCurrency(order.total),
                           style: TextStyle(
-                            fontWeight: order.couponDiscount > 0 
+                            fontWeight: (order.couponDiscount > 0 || order.loyaltyPointsDiscount > 0)
                                 ? FontWeight.normal 
                                 : FontWeight.bold,
-                            decoration: order.couponDiscount > 0 
+                            decoration: (order.couponDiscount > 0 || order.loyaltyPointsDiscount > 0)
                                 ? TextDecoration.lineThrough 
                                 : TextDecoration.none,
                             decorationColor: Colors.grey[600],
-                            fontSize: order.couponDiscount > 0 ? 13 : 15,
+                            fontSize: (order.couponDiscount > 0 || order.loyaltyPointsDiscount > 0) ? 13 : 15,
                           ),
                         ),
-                        if (order.couponDiscount > 0)
+                        if (order.couponDiscount > 0 || order.loyaltyPointsDiscount > 0)
                           Text(
                             formatCurrency(order.finalAmount),
                             style: const TextStyle(

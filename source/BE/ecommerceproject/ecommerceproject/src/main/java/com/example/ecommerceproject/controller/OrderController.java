@@ -288,6 +288,8 @@ public class OrderController {
             Order order = orderService.getOrderById(orderId);
 
             if (success) {
+                int pointsEarned = order.calculateLoyaltyPointsEarned();
+                userService.addLoyaltyPoints(order.getUserId(), order.getFinalAmount());
                 return ResponseEntity.ok(new ApiResponse<>(
                         ApiStatus.SUCCESS.getCode(),
                         "Order processed successfully to state: " + order.getStatus(),

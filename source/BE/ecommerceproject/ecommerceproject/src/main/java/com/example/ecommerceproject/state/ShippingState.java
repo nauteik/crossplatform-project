@@ -17,7 +17,7 @@ public class ShippingState implements OrderState {
     public boolean process(Order order) {
         // Process to DELIVERED state
         logger.info("Processing order {} from SHIPPED state to DELIVERED state", order.getId());
-        order.setStatus(OrderStatus.DELIVERED);
+        order.updateStatus(OrderStatus.DELIVERED);
         return true;
     }
     
@@ -26,7 +26,7 @@ public class ShippingState implements OrderState {
         // More difficult to cancel once shipped, but still possible in some cases
         logger.info("Attempting to cancel order {} from SHIPPED state (return processing required)", order.getId());
         // In a real system this might need approval or additional steps
-        order.setStatus(OrderStatus.CANCELLED);
+        order.updateStatus(OrderStatus.CANCELLED);
         return true;
     }
     

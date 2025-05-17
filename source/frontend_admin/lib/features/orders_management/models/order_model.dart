@@ -1,4 +1,5 @@
 import 'package:frontend_admin/features/orders_management/models/order_item_model.dart';
+import 'package:frontend_admin/features/orders_management/models/status_history_entry.dart';
 
 class Address {
   final String id;
@@ -59,6 +60,7 @@ class Order {
   final double couponDiscount;
   final int loyaltyPointsUsed;
   final double loyaltyPointsDiscount;
+  final List<StatusHistoryEntry> statusHistory;
 
   Order({
     required this.id,
@@ -76,6 +78,7 @@ class Order {
     this.couponDiscount = 0.0,
     this.loyaltyPointsUsed = 0,
     this.loyaltyPointsDiscount = 0.0,
+    this.statusHistory = const [],
   }) : this.additionalInfo = additionalInfo ?? {};
 
   String get userEmail => additionalInfo['userEmail'] as String? ?? '';
@@ -84,6 +87,13 @@ class Order {
   double get finalAmount => total - couponDiscount - loyaltyPointsDiscount;
   double get totalDiscount => couponDiscount + loyaltyPointsDiscount;
   bool get hasLoyaltyPoints => loyaltyPointsUsed > 0;
+  
+  // Helper method to get sorted status history (newest first)
+  List<StatusHistoryEntry> get sortedStatusHistory {
+    final sorted = List<StatusHistoryEntry>.from(statusHistory);
+    sorted.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return sorted;
+  }
 
   factory Order.fromJson(Map<String, dynamic> json) {
     List<OrderItem> orderItems = [];
@@ -142,6 +152,22 @@ class Order {
       }
     }
 
+    // Parse status history
+    List<StatusHistoryEntry> parseStatusHistory(dynamic statusHistoryData) {
+      if (statusHistoryData == null) {
+        return [];
+      }
+      
+      try {
+        return (statusHistoryData as List)
+            .map((entry) => StatusHistoryEntry.fromJson(entry))
+            .toList();
+      } catch (e) {
+        print('Error parsing status history: $e');
+        return [];
+      }
+    }
+
     // Lấy additionalInfo từ json nếu có
     Map<String, dynamic>? additionalInfo;
     if (json['additionalInfo'] != null) {
@@ -188,6 +214,7 @@ class Order {
       couponDiscount: couponDiscount,
       loyaltyPointsUsed: loyaltyPointsUsed,
       loyaltyPointsDiscount: loyaltyPointsDiscount,
+      statusHistory: parseStatusHistory(json['statusHistory']),
     );
   }
 

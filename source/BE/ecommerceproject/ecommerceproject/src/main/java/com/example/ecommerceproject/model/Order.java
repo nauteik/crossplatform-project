@@ -33,6 +33,9 @@ public class Order {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
+    // Lịch sử trạng thái đơn hàng
+    private List<StatusHistoryEntry> statusHistory = new ArrayList<>();
+    
     // AdditionalInfo để lưu trữ thông tin Username, Email
     // @Transient đảm bảo trường này không được lưu vào database
     @Transient
@@ -52,12 +55,41 @@ public class Order {
         this.additionalInfo = new HashMap<>();
         this.loyaltyPointsUsed = 0;
         this.loyaltyPointsDiscount = 0;
+        
+        // Thêm trạng thái ban đầu vào lịch sử
+        this.statusHistory.add(new StatusHistoryEntry(status, this.createdAt, "Đơn hàng được tạo"));
     }
     
     // Method to update the order status
     public void updateStatus(OrderStatus newStatus) {
+        // Lưu trạng thái cũ
+        OrderStatus oldStatus = this.status;
+        
+        // Cập nhật trạng thái mới
         this.status = newStatus;
         this.updatedAt = LocalDateTime.now();
+        
+        // Thêm vào lịch sử trạng thái
+        String message = generateStatusChangeMessage(oldStatus, newStatus);
+        this.statusHistory.add(new StatusHistoryEntry(newStatus, this.updatedAt, message));
+    }
+    
+    // Phương thức tạo message cho việc thay đổi trạng thái
+    private String generateStatusChangeMessage(OrderStatus oldStatus, OrderStatus newStatus) {
+        switch (newStatus) {
+            case PAID:
+                return "Đơn hàng đã được thanh toán";
+            case SHIPPING:
+                return "Đơn hàng đang được vận chuyển";
+            case DELIVERED:
+                return "Đơn hàng đã được giao thành công";
+            case CANCELLED:
+                return "Đơn hàng đã bị hủy";
+            case FAILED:
+                return "Thanh toán đơn hàng thất bại";
+            default:
+                return "Trạng thái đơn hàng đã thay đổi từ " + oldStatus + " sang " + newStatus;
+        }
     }
     
     // Phương thức để thiết lập thông tin bổ sung

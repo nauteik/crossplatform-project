@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import com.example.ecommerceproject.model.StatusHistoryEntry;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -794,6 +795,53 @@ public class DataLoader implements CommandLineRunner {
             additionalInfo.put("email", user.getEmail());
         }
         order.setAdditionalInfo(additionalInfo);
+        
+        // Tạo lịch sử trạng thái dựa trên trạng thái hiện tại
+        List<StatusHistoryEntry> statusHistory = new ArrayList<>();
+        
+        // Luôn thêm trạng thái PENDING đầu tiên
+        statusHistory.add(new StatusHistoryEntry(
+            OrderStatus.PENDING, 
+            createdAt, 
+            "Đơn hàng được tạo"
+        ));
+        
+        // Thêm các trạng thái trung gian tùy theo trạng thái hiện tại
+        LocalDateTime timeStamp = createdAt.plusHours(1); // Mỗi trạng thái cách nhau 1 giờ
+        
+        if (status == OrderStatus.PAID || status == OrderStatus.SHIPPING || status == OrderStatus.DELIVERED) {
+            statusHistory.add(new StatusHistoryEntry(
+                OrderStatus.PAID, 
+                timeStamp, 
+                "Đơn hàng đã được thanh toán"
+            ));
+            timeStamp = timeStamp.plusHours(1);
+        }
+        
+        if (status == OrderStatus.SHIPPING || status == OrderStatus.DELIVERED) {
+            statusHistory.add(new StatusHistoryEntry(
+                OrderStatus.SHIPPING, 
+                timeStamp, 
+                "Đơn hàng đang được vận chuyển"
+            ));
+            timeStamp = timeStamp.plusHours(1);
+        }
+        
+        if (status == OrderStatus.DELIVERED) {
+            statusHistory.add(new StatusHistoryEntry(
+                OrderStatus.DELIVERED, 
+                timeStamp, 
+                "Đơn hàng đã được giao thành công"
+            ));
+        } else if (status == OrderStatus.CANCELLED) {
+            statusHistory.add(new StatusHistoryEntry(
+                OrderStatus.CANCELLED, 
+                timeStamp, 
+                "Đơn hàng đã bị hủy"
+            ));
+        }
+        
+        order.setStatusHistory(statusHistory);
         
         return order;
     }

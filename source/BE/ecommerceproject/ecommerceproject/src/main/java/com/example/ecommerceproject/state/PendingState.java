@@ -17,14 +17,14 @@ public class PendingState implements OrderState {
     public boolean process(Order order) {
         // Process payment and move to PAID state
         logger.info("Processing order {} from PENDING state to PAID state", order.getId());
-        order.setStatus(OrderStatus.PAID);
+        order.updateStatus(OrderStatus.PAID);
         return true;
     }
     
     @Override
     public boolean cancel(Order order) {
         logger.info("Cancelling order {} from PENDING state", order.getId());
-        order.setStatus(OrderStatus.CANCELLED);
+        order.updateStatus(OrderStatus.CANCELLED);
         return true;
     }
     

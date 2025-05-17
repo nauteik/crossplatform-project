@@ -1,5 +1,6 @@
 import 'order_item_model.dart';
 import 'order_status.dart';
+import 'status_history_entry_model.dart';
 import '../../core/models/address_model.dart';
 
 class OrderModel {
@@ -16,6 +17,7 @@ class OrderModel {
   final AddressModel shippingAddress;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final List<StatusHistoryEntryModel> statusHistory;
 
   OrderModel({
     required this.id,
@@ -31,6 +33,7 @@ class OrderModel {
     required this.shippingAddress,
     required this.createdAt,
     required this.updatedAt,
+    this.statusHistory = const [],
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -75,6 +78,22 @@ class OrderModel {
       }
     }
     
+    // Parse status history
+    List<StatusHistoryEntryModel> parseStatusHistory(dynamic statusHistoryData) {
+      if (statusHistoryData == null) {
+        return [];
+      }
+      
+      try {
+        return (statusHistoryData as List)
+            .map((entry) => StatusHistoryEntryModel.fromJson(entry))
+            .toList();
+      } catch (e) {
+        print('Error parsing status history: $e');
+        return [];
+      }
+    }
+    
     return OrderModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
@@ -91,6 +110,7 @@ class OrderModel {
       shippingAddress: parseAddress(json['shippingAddress']),
       createdAt: parseDate(json['createdAt']),
       updatedAt: parseDate(json['updatedAt']),
+      statusHistory: parseStatusHistory(json['statusHistory']),
     );
   }
 
@@ -109,6 +129,7 @@ class OrderModel {
       'shippingAddress': shippingAddress.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'statusHistory': statusHistory.map((entry) => entry.toJson()).toList(),
     };
   }
   
@@ -147,4 +168,11 @@ class OrderModel {
   
   // Helper method to calculate loyalty points earned (10% of final amount)
   int get loyaltyPointsEarned => (finalAmount * 0.1).round();
+  
+  // Helper method to get sorted status history (newest first)
+  List<StatusHistoryEntryModel> get sortedStatusHistory {
+    final sorted = List<StatusHistoryEntryModel>.from(statusHistory);
+    sorted.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return sorted;
+  }
 }

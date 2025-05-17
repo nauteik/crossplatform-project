@@ -10,9 +10,9 @@ class ProductModel {
   final double discountPercent;
   final Map<String, dynamic> brand;
   final Map<String, dynamic> productType;
-  final Map<String, dynamic>? specifications; // Add this field for product specifications
-  final int? createdAt; // Thêm trường createdAt
-  final List<dynamic> tags; // Thêm trường tags
+  final Map<String, dynamic>? specifications; 
+  final int? createdAt; 
+  final List<dynamic> tags; 
 
   ProductModel({
     required this.id,
@@ -26,9 +26,9 @@ class ProductModel {
     required this.discountPercent,
     required this.brand,
     required this.productType,
-    this.specifications, // Make it optional for backward compatibility
-    this.createdAt, // Thêm vào constructor
-    this.tags = const [], // Mặc định là mảng rỗng
+    this.specifications, 
+    this.createdAt, 
+    this.tags = const [], 
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {

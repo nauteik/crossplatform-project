@@ -17,7 +17,7 @@ public class PaidState implements OrderState {
     public boolean process(Order order) {
         // Process to SHIPPED state
         logger.info("Processing order {} from PAID state to SHIPPED state", order.getId());
-        order.setStatus(OrderStatus.SHIPPING);
+        order.updateStatus(OrderStatus.SHIPPING);
         return true;
     }
     
@@ -25,7 +25,7 @@ public class PaidState implements OrderState {
     public boolean cancel(Order order) {
         // Can still cancel after payment, will need refund process in real-world
         logger.info("Cancelling order {} from PAID state (refund required)", order.getId());
-        order.setStatus(OrderStatus.CANCELLED);
+        order.updateStatus(OrderStatus.CANCELLED);
         return true;
     }
     

@@ -13,7 +13,7 @@ import '../../../../core/utils/image_helper.dart';
 import '../../../../core/services/websocket_service.dart';
 
 class ChatSupportScreen extends StatefulWidget {
-  const ChatSupportScreen({Key? key}) : super(key: key);
+  const ChatSupportScreen({super.key});
 
   @override
   State<ChatSupportScreen> createState() => _ChatSupportScreenState();
@@ -365,6 +365,18 @@ class _ChatSupportScreenState extends State<ChatSupportScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (!isFromCurrentUser)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        "Quản trị viên",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.indigo,
+                        ),
+                      ),
+                    ),
                   if (message.content.isNotEmpty)
                     Text(message.content),
                   

@@ -24,6 +24,21 @@ class OrderDetailDialog extends StatelessWidget {
     );
     return formatter.format(amount);
   }
+
+  String _formatPaymentMethod(String method) {
+    switch (method) {
+      case 'CREDIT_CARD':
+        return 'Thẻ tín dụng';
+      case 'COD':
+        return 'Thanh toán khi nhận hàng';
+      case 'BANK_TRANSFER':
+        return 'Thanh toán qua ngân hàng';
+      case 'MOMO':
+        return 'Thanh toán qua MoMo';
+      default:
+        return method;
+    }
+  }
   
   @override
   Widget build(BuildContext context) {
@@ -160,6 +175,28 @@ class OrderDetailDialog extends StatelessWidget {
                                         ),
                                       ],
                                     ),
+                                    const SizedBox(height: 2),
+                                    // Số điện thoại
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Số điện thoại: ',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        Text(
+                                          order.shippingAddress.phoneNumber.isNotEmpty
+                                              ? order.shippingAddress.phoneNumber
+                                              : 'Không có thông tin',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
@@ -217,13 +254,18 @@ class OrderDetailDialog extends StatelessWidget {
                           child: _buildInfoBox(
                             context,
                             'Phương thức thanh toán',
-                            order.paymentMethod,
+                            _formatPaymentMethod(order.paymentMethod),
                             Icons.payment,
                             Colors.green[700]!,
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 20),
+                    
+                    // Order Tracking
+                    _buildOrderTrackingSection(),
+                    
                     const SizedBox(height: 20),
                     
                     // Items header
@@ -550,6 +592,174 @@ class OrderDetailDialog extends StatelessWidget {
         ),
       ),
     );
+  }
+  
+  Widget _buildOrderTrackingSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.history, color: Colors.indigo[700]),
+                const SizedBox(width: 8),
+                Text(
+                  'Lịch sử trạng thái',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.indigo[800],
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              '${order.statusHistory.length} cập nhật',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        
+        if (order.statusHistory.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: const Center(
+              child: Text(
+                'Chưa có thông tin cập nhật trạng thái',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: _buildStatusTimeline(),
+          ),
+      ],
+    );
+  }
+  
+  Widget _buildStatusTimeline() {
+    final sortedHistory = order.sortedStatusHistory;
+    
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: sortedHistory.length,
+      separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+      itemBuilder: (context, index) {
+        final entry = sortedHistory[index];
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Status dot
+              Container(
+                margin: const EdgeInsets.only(top: 4),
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: _getStatusColor(entry.status),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              
+              const SizedBox(width: 16),
+              
+              // Status information
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.message,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(entry.status).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _getStatusColor(entry.status).withOpacity(0.3),
+                            ),
+                          ),
+                          child: Text(
+                            Order.getStatusDescription(entry.status),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _getStatusColor(entry.status),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          _formatDateTime(entry.timestamp),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  String _formatDateTime(DateTime dateTime) {
+    return DateFormat('dd/MM/yyyy HH:mm:ss').format(dateTime);
+  }
+  
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'PAID':
+        return Colors.blue;
+      case 'PENDING':
+        return Colors.orange;
+      case 'SHIPPING':
+        return Colors.purple;
+      case 'DELIVERED':
+        return Colors.green;
+      case 'CANCELLED':
+        return Colors.red;
+      case 'FAILED':
+        return Colors.grey;
+      default:
+        return Colors.grey;
+    }
   }
   
   Widget _buildInfoItem(BuildContext context, String label, String value, {IconData? icon}) {

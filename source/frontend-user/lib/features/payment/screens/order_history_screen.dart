@@ -181,7 +181,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Order #${order.id.substring(0, 8)}',
+                    'Order #${order.id}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -331,7 +331,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
         borderRadius: BorderRadius.circular(30),
       ),
       child: Text(
-        status.displayName,
+        status == OrderStatus.PENDING ? 'Chờ xử lý' :
+        status == OrderStatus.PAID ? 'Đã thanh toán' :
+        status == OrderStatus.FAILED ? 'Thất bại' :
+        status == OrderStatus.SHIPPED ? 'Đang giao hàng' :
+        status == OrderStatus.DELIVERED ? 'Đã giao hàng' :
+        'Đã hủy',
         style: TextStyle(
           color: textColor,
           fontWeight: FontWeight.bold,
@@ -346,6 +351,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
         return 'Thẻ tín dụng';
       case 'COD':
         return 'Thanh toán khi nhận hàng';
+      case "MOMO":
+        return 'Thanh toán qua MoMo';
+      case "BANK_TRANSFER":
+        return 'Thanh toán qua ngân hàng';
       default:
         return method;
     }

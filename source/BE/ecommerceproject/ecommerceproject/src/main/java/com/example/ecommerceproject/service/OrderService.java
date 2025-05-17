@@ -266,11 +266,21 @@ public class OrderService {
 
         // Update order status based on payment result
         if (paymentSuccess) {
-            order.updateStatus(OrderStatus.PAID);
-            
-            // Add loyalty points to user after successful payment
-            int pointsEarned = order.calculateLoyaltyPointsEarned();
-            userService.addLoyaltyPoints(order.getUserId(), order.getFinalAmount());
+            // Kiểm tra nếu phương thức thanh toán là COD thì không tự động cập nhật trạng thái
+            // COD orders will remain in PENDING status until manually updated by staff
+            if (!"COD".equals(order.getPaymentMethod())) {
+                order.updateStatus(OrderStatus.PAID);
+                
+                // Add loyalty points to user after successful payment
+                int pointsEarned = order.calculateLoyaltyPointsEarned();
+                userService.addLoyaltyPoints(order.getUserId(), order.getFinalAmount());
+            } else {
+                // Với COD, chỉ cập nhật thời gian và không thay đổi trạng thái
+                logger.info("COD order {} confirmed but status remains PENDING until payment is received", order.getId());
+                order.setUpdatedAt(LocalDateTime.now());
+                
+                // Không cộng điểm loyalty cho đơn COD cho đến khi được xác nhận thanh toán
+            }
         } else {
             order.updateStatus(OrderStatus.FAILED);
         }
