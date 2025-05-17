@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 class Coupon {
   final String id;
   final String code;
-  final int value;
+  final double value;
   final int maxUses;
   final int usedCount;
   final DateTime creationTime;
@@ -24,7 +24,13 @@ class Coupon {
   factory Coupon.fromJson(Map<String, dynamic> json) {
     final String id = json['id']?.toString() ?? '';
     final String code = json['code']?.toString() ?? '';
-    final int value = json['value'] as int? ?? 0;
+    
+    // Xử lý value có thể là int hoặc double từ backend
+    final dynamic rawValue = json['value'];
+    final double value = rawValue is int 
+        ? rawValue.toDouble() 
+        : (rawValue is double ? rawValue : 0.0);
+        
     final int maxUses = json['maxUses'] as int? ?? 0;
     final int usedCount = json['usedCount'] as int? ?? 0;
     final bool valid = json['valid'] as bool? ?? false;

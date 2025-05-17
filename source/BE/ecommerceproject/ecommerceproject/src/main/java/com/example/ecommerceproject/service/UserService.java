@@ -27,15 +27,17 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-
-    @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final AddressService addressService;
 
     @Autowired
     private EmailService emailService;
+    
+    @Autowired
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AddressService addressService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.addressService = addressService;
+    }
 
     public User registerUser(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
@@ -43,10 +45,10 @@ public class UserService implements UserDetailsService {
         }
         user.setName("Chưa cập nhật");
         user.setAvatar("Chưa cập nhật");
-        user.setAddresses(new ArrayList<>());
         user.setPhone("Chưa cập nhật");
         user.setGender("Chưa cập nhật");
         user.setRank("Thành viên đồng");
+        user.setLoyaltyPoints(0); // Khởi tạo điểm loyalty
         // Mã hóa mật khẩu trước khi lưu
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
@@ -141,6 +143,11 @@ public class UserService implements UserDetailsService {
         // Here we're assuming the role is explicitly set in the updatedUser object
         existingUser.setRole(updatedUser.getRole());
         
+        // Cập nhật loyalty points nếu được chỉ định
+        if (updatedUser.getLoyaltyPoints() > 0) {
+            existingUser.setLoyaltyPoints(updatedUser.getLoyaltyPoints());
+        }
+        
         // Lưu người dùng đã cập nhật
         return userRepository.save(existingUser);
     }
@@ -199,178 +206,38 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
     
-    // Phương thức quản lý địa chỉ
-    
-    /**
-     * Thêm địa chỉ mới cho người dùng
-     * @param userId ID của người dùng
-     * @param address Địa chỉ mới
-     * @return User đã cập nhật
-     */
-    public User addAddress(String userId, Address address) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        
-        if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User not found with id: " + userId);
-        }
-        
-        User user = userOptional.get();
-        
-        // Nếu là địa chỉ mặc định, cập nhật các địa chỉ khác không còn là mặc định
-        if (address.isDefault()) {
-            user.getAddresses().forEach(a -> a.setDefault(false));
-        }
-        
-        // Nếu đây là địa chỉ đầu tiên, đặt nó làm mặc định
-        if (user.getAddresses().isEmpty()) {
-            address.setDefault(true);
-        }
-        
-        user.getAddresses().add(address);
-        return userRepository.save(user);
-    }
-    
-    /**
-     * Cập nhật địa chỉ của người dùng
-     * @param userId ID của người dùng
-     * @param addressId ID của địa chỉ
-     * @param updatedAddress Địa chỉ đã cập nhật
-     * @return User đã cập nhật
-     */
-    public User updateAddress(String userId, String addressId, Address updatedAddress) {
-        User user = getUserById(userId);
-        
-        if (user.getAddresses() == null || user.getAddresses().isEmpty()) {
-            throw new RuntimeException("Người dùng không có địa chỉ nào");
-        }
-        
-        // Tìm địa chỉ cần cập nhật
-        boolean addressFound = false;
-        for (int i = 0; i < user.getAddresses().size(); i++) {
-            Address address = user.getAddresses().get(i);
-            if (address.getId().equals(addressId)) {
-                // Giữ nguyên ID
-                updatedAddress.setId(addressId);
-                
-                // Nếu cập nhật thành địa chỉ mặc định
-                if (updatedAddress.isDefault() && !address.isDefault()) {
-                    // Đặt tất cả địa chỉ khác thành không mặc định
-                    user.getAddresses().forEach(a -> a.setDefault(false));
-                
-                }
-                
-                // Nếu địa chỉ này đang là mặc định, giữ nguyên trạng thái mặc định
-                if (address.isDefault() && !updatedAddress.isDefault()) {
-                    updatedAddress.setDefault(true);
-                }
-                
-                user.getAddresses().set(i, updatedAddress);
-                addressFound = true;
-                break;
-            }
-        }
-        
-        if (!addressFound) {
-            throw new RuntimeException("Không tìm thấy địa chỉ với ID: " + addressId);
-        }
-        
-        return userRepository.save(user);
-    }
-    
-    /**
-     * Xóa địa chỉ của người dùng
-     * @param userId ID của người dùng
-     * @param addressId ID của địa chỉ
-     * @return User đã cập nhật
-     */
-    public User deleteAddress(String userId, String addressId) {
-        User user = getUserById(userId);
-        
-        if (user.getAddresses() == null || user.getAddresses().isEmpty()) {
-            throw new RuntimeException("Người dùng không có địa chỉ nào");
-        }
-        
-        // Tìm địa chỉ cần xóa
-        Address addressToDelete = null;
-        for (Address address : user.getAddresses()) {
-            if (address.getId().equals(addressId)) {
-                addressToDelete = address;
-                break;
-            }
-        }
-        
-        if (addressToDelete == null) {
-            throw new RuntimeException("Không tìm thấy địa chỉ với ID: " + addressId);
-        }
-        
-        // Nếu xóa địa chỉ mặc định và còn địa chỉ khác
-        if (addressToDelete.isDefault() && user.getAddresses().size() > 1) {
-            // Đặt địa chỉ còn lại thành mặc định
-            Address otherAddress = user.getAddresses().stream()
-                    .filter(a -> !a.getId().equals(addressId))
-                    .findFirst()
-                    .orElse(null);
-            
-            if (otherAddress != null) {
-                otherAddress.setDefault(true);
-            }
-        }
-        
-        // Xóa địa chỉ
-        user.setAddresses(user.getAddresses().stream()
-                .filter(a -> !a.getId().equals(addressId))
-                .collect(Collectors.toList()));
-
-        
-        return userRepository.save(user);
-    }
-    
-    /**
-     * Đặt địa chỉ mặc định cho người dùng
-     * @param userId ID của người dùng
-     * @param addressId ID của địa chỉ
-     * @return User đã cập nhật
-     */
-    public User setDefaultAddress(String userId, String addressId) {
-        User user = getUserById(userId);
-        
-        if (user.getAddresses() == null || user.getAddresses().isEmpty()) {
-            throw new RuntimeException("Người dùng không có địa chỉ nào");
-        }
-        
-        // Tìm địa chỉ cần đặt mặc định
-        Address addressToSetDefault = null;
-        for (Address address : user.getAddresses()) {
-            if (address.getId().equals(addressId)) {
-                addressToSetDefault = address;
-            }
-            // Đặt tất cả địa chỉ thành không mặc định
-            address.setDefault(false);
-        }
-        
-        if (addressToSetDefault == null) {
-            throw new RuntimeException("Không tìm thấy địa chỉ với ID: " + addressId);
-        }
-        
-        // Đặt địa chỉ đã chọn thành mặc định
-        addressToSetDefault.setDefault(true);
-        
-        return userRepository.save(user);
-    }
-    
     /**
      * Lấy danh sách địa chỉ của người dùng
-     * @param userId ID của người dùng
-     * @return Danh sách địa chỉ
      */
     public List<Address> getUserAddresses(String userId) {
-        User user = getUserById(userId);
-        return user.getAddresses() != null ? user.getAddresses() : new ArrayList<>();
+        // Kiểm tra người dùng tồn tại
+        userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        // Sử dụng AddressService để lấy danh sách địa chỉ
+        return addressService.getUserAddresses(userId);
+    }
+    
+    /**
+     * Lấy địa chỉ theo ID
+     */
+    public Address getAddressById(String userId, String addressId) {
+        // Kiểm tra người dùng tồn tại
+        userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        
+        // Sử dụng AddressService để lấy địa chỉ
+        return addressService.getAddressByIdAndUserId(addressId, userId);
     }
 
     // Tìm người dùng theo email
     public User findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
+    }
+    
+    // Tìm người dùng theo username
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
     }
     
     // Tạo người dùng mới
@@ -384,24 +251,32 @@ public class UserService implements UserDetailsService {
         user.setRole(0); // Role mặc định là 0 (user thường)
         user.setRank("Bronze"); // Rank mặc định là Bronze
         user.setTotalSpend(0);
+        user.setLoyaltyPoints(0); // Khởi tạo điểm loyalty
         
         return userRepository.save(user);
     }
     
-    // Lấy địa chỉ theo ID
-    public Address getAddressById(String userId, String addressId) {
-        Optional<User> userOptional = userRepository.findById(userId);
+    // Tạo người dùng mới với username tùy chỉnh
+    public User createUser(String email, String username, String password, String fullName) {
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setName(fullName);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setRole(0); // Role mặc định là 0 (user thường)
+        user.setRank("Bronze"); // Rank mặc định là Bronze
+        user.setTotalSpend(0);
+        user.setLoyaltyPoints(0); // Khởi tạo điểm loyalty
         
-        if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User not found with id: " + userId);
-        }
-        
-        User user = userOptional.get();
-        
-        return user.getAddresses().stream()
-                .filter(address -> address.getId().equals(addressId))
-                .findFirst()
-                .orElse(null);
+        return userRepository.save(user);
+    }
+    
+    /**
+     * Thêm địa chỉ mới cho người dùng
+     */
+    public Address addAddress(String userId, Address address) {
+        return addressService.addAddress(userId, address);
     }
     
     // Tạo JWT token xác thực
@@ -466,6 +341,81 @@ public class UserService implements UserDetailsService {
         emailService.sendPasswordResetEmail(emailData);
         
         return true;
+    }
+    
+    /**
+     * Thêm điểm loyalty cho người dùng sau khi hoàn thành đơn hàng
+     * @param userId ID của người dùng
+     * @param totalAmount Tổng giá trị đơn hàng
+     * @return User đã cập nhật
+     */
+    public User addLoyaltyPoints(String userId, double totalAmount) {
+        User user = getUserById(userId);
+        
+        // Tính số điểm loyalty (10% giá trị đơn hàng / 1000)
+        // Mỗi 1000 VND = 1 điểm
+        int pointsToAdd = (int)(totalAmount * 0.1 / 1000);
+        
+        // Cập nhật tổng chi tiêu của người dùng
+        user.setTotalSpend(user.getTotalSpend() + (int)totalAmount);
+        
+        // Cập nhật điểm loyalty
+        user.setLoyaltyPoints(user.getLoyaltyPoints() + pointsToAdd);
+        
+        // Cập nhật rank dựa trên tổng chi tiêu
+        updateUserRank(user);
+        
+        return userRepository.save(user);
+    }
+    
+    /**
+     * Sử dụng điểm loyalty cho một đơn hàng
+     * @param userId ID người dùng
+     * @param pointsToUse Số điểm muốn sử dụng
+     * @return Số tiền giảm giá (1 điểm = 1000 VND)
+     * @throws RuntimeException nếu không đủ điểm
+     */
+    public double useLoyaltyPoints(String userId, int pointsToUse) {
+        User user = getUserById(userId);
+        
+        if (user.getLoyaltyPoints() < pointsToUse) {
+            throw new RuntimeException("Không đủ điểm loyalty");
+        }
+        
+        // Trừ điểm đã sử dụng
+        user.setLoyaltyPoints(user.getLoyaltyPoints() - pointsToUse);
+        userRepository.save(user);
+        
+        // Quy đổi điểm thành tiền (1 điểm = 1000 VND)
+        return pointsToUse * 1000;
+    }
+    
+    /**
+     * Lấy số điểm loyalty của người dùng
+     * @param userId ID người dùng
+     * @return Số điểm loyalty hiện có
+     */
+    public int getLoyaltyPoints(String userId) {
+        User user = getUserById(userId);
+        return user.getLoyaltyPoints();
+    }
+    
+    /**
+     * Cập nhật hạng thành viên của người dùng dựa trên tổng chi tiêu
+     * @param user User cần cập nhật
+     */
+    private void updateUserRank(User user) {
+        int totalSpend = user.getTotalSpend();
+        
+        if (totalSpend >= 10000000) { // 10 triệu VND
+            user.setRank("Thành viên bạch kim");
+        } else if (totalSpend >= 5000000) { // 5 triệu VND
+            user.setRank("Thành viên vàng");
+        } else if (totalSpend >= 2000000) { // 2 triệu VND
+            user.setRank("Thành viên bạc");
+        } else {
+            user.setRank("Thành viên đồng");
+        }
     }
 }
 

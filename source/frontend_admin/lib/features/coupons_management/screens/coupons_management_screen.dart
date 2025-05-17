@@ -15,8 +15,8 @@ class CouponsManagementScreen extends StatefulWidget {
 class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
   final _codeController = TextEditingController();
   final _maxUsesController = TextEditingController();
-  int _selectedDiscountValue = 10000;
-  final List<int> _discountValues = [10000, 20000, 50000, 100000];
+  double _selectedDiscountValue = 10000.0;
+  final List<double> _discountValues = [10000.0, 20000.0, 50000.0, 100000.0];
 
   @override
   void initState() {
@@ -58,18 +58,18 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
                     textCapitalization: TextCapitalization.characters,
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<int>(
+                  DropdownButtonFormField<double>(
                     value: _selectedDiscountValue,
                     decoration:
                         const InputDecoration(labelText: 'Giá trị giảm giá'),
-                    items: _discountValues.map((int value) {
+                    items: _discountValues.map((double value) {
                       final formatter = NumberFormat('#,###', 'vi_VN');
-                      return DropdownMenuItem<int>(
+                      return DropdownMenuItem<double>(
                         value: value,
                         child: Text('${formatter.format(value)} VND'),
                       );
                     }).toList(),
-                    onChanged: (int? newValue) {
+                    onChanged: (double? newValue) {
                       if (newValue != null) {
                         dialogSetState(() {
                           _selectedDiscountValue = newValue;
@@ -114,7 +114,7 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
                           final String code = _codeController.text.trim();
                           final int? maxUses =
                               int.tryParse(_maxUsesController.text.trim());
-                          final int value = _selectedDiscountValue;
+                          final double value = _selectedDiscountValue;
 
                           if (maxUses == null) {
                             ScaffoldMessenger.of(context).showSnackBar(

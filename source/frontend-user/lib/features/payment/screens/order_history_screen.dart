@@ -5,14 +5,15 @@ import '../../../data/model/order_model.dart';
 import '../../../data/model/order_status.dart';
 import '../providers/payment_provider.dart';
 import 'order_confirmation_screen.dart';
+import 'package:frontend_user/core/utils/format_currency.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   final String userId;
 
   const OrderHistoryScreen({
-    Key? key,
+    super.key,
     required this.userId,
-  }) : super(key: key);
+  });
 
   @override
   State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
@@ -200,12 +201,26 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildStatusBadge(order.status),
-                  Text(
-                    '\$${order.totalAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        formatCurrency(order.totalAmount),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if (order.couponDiscount != null && order.couponDiscount! > 0)
+                        Text(
+                          'Giảm: -${formatCurrency(order.couponDiscount!)}',
+                          style: TextStyle(
+                            color: Colors.green[700],
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -214,7 +229,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
               
               // Items summary
               Text(
-                '$totalItems ${totalItems == 1 ? 'item' : 'items'}',
+                '$totalItems ${totalItems == 1 ? 'sản phẩm' : 'sản phẩm'}',
                 style: TextStyle(color: Colors.grey[700]),
               ),
               
@@ -222,9 +237,41 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
               
               // Payment method
               Text(
-                'Payment: ${_formatPaymentMethod(order.paymentMethod)}',
+                'Phương thức thanh toán: ${_formatPaymentMethod(order.paymentMethod)}',
                 style: TextStyle(color: Colors.grey[700]),
               ),
+              
+              // Coupon info
+              if (order.couponCode != null && order.couponCode!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.discount_outlined, size: 16, color: Colors.green),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Mã giảm giá: ${order.couponCode}',
+                        style: TextStyle(color: Colors.green[700]),
+                      ),
+                    ],
+                  ),
+                ),
+              
+              // Loyalty points info
+              if (order.loyaltyPointsUsed > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.stars, size: 16, color: Colors.amber),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Điểm thưởng: -${formatCurrency(order.loyaltyPointsDiscount)}',
+                        style: TextStyle(color: Colors.amber[800]),
+                      ),
+                    ],
+                  ),
+                ),
               
               const SizedBox(height: 16),
               

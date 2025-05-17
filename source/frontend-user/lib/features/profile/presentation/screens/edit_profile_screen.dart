@@ -33,6 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String _avatarUrl = '';
   DateTime? _birthday;
   File? _avatarImage;
+  int _loyaltyPoints = 0;
 
   // Controllers for text fields
   final _nameController = TextEditingController();
@@ -98,6 +99,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               _gender = data['gender'] ?? '';
               _totalSpend = data['totalSpend'] ?? 0;
               _avatarUrl = data['avatar'] ?? '';
+              _loyaltyPoints = data['loyaltyPoints'] ?? 0;
 
               if (data['birthday'] != null) {
                 if (data['birthday'] is String) {
@@ -186,6 +188,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   DateFormat('dd/MM/yyyy').format(_birthday!);
             }
           }
+          _loyaltyPoints = userDetails['loyaltyPoints'] ?? 0;
 
           // Chỉ cập nhật controllers khi có giá trị thực sự
           if (_name != 'Chưa cập nhật') _nameController.text = _name;
@@ -226,6 +229,65 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     } catch (e) {
       print('Error fetching user details: $e');
+    }
+  }
+
+  // Upload avatar
+  Future<void> _uploadAvatar() async {
+    if (_avatarImage == null) return;
+
+    setState(() {
+      _isUploadingImage = true;
+    });
+
+    try {
+      if (kIsWeb) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Tính năng này chưa được hỗ trợ trên web')),
+        );
+        return;
+      }
+
+      // Gọi API để upload ảnh đại diện
+      final uploadedUrl =
+          await _userRepository.uploadAvatar(_id, _avatarImage!);
+      if (uploadedUrl != null) {
+        setState(() {
+          _avatarUrl = uploadedUrl;
+        });
+
+        // Cập nhật SharedPreferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? userDataStr = prefs.getString('user_data');
+
+        if (userDataStr != null) {
+          final data = jsonDecode(userDataStr);
+          data['avatar'] = uploadedUrl;
+
+          // Cập nhật các trường khác để đảm bảo dữ liệu nhất quán
+          data['name'] = _name;
+          data['email'] = _email;
+          data['phone'] = _phone;
+          data['rank'] = _rank;
+          data['loyaltyPoints'] = _loyaltyPoints;
+
+          // Encode với UTF-8
+          final encodedJson = jsonEncode(data);
+          await prefs.setString('user_data', encodedJson);
+        }
+      } else {
+        throw Exception('Không thể tải lên ảnh đại diện');
+      }
+    } catch (e) {
+      print('Error uploading avatar: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi tải lên ảnh đại diện: $e')),
+      );
+    } finally {
+      setState(() {
+        _isUploadingImage = false;
+      });
     }
   }
 
@@ -342,55 +404,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       },
     );
-  }
-
-  // Upload avatar
-  Future<void> _uploadAvatar() async {
-    if (_avatarImage == null) return;
-
-    setState(() {
-      _isUploadingImage = true;
-    });
-
-    try {
-      if (kIsWeb) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Tính năng này chưa được hỗ trợ trên web')),
-        );
-        return;
-      }
-
-      // Gọi API để upload ảnh đại diện
-      final uploadedUrl =
-          await _userRepository.uploadAvatar(_id, _avatarImage!);
-      if (uploadedUrl != null) {
-        setState(() {
-          _avatarUrl = uploadedUrl;
-        });
-
-        // Cập nhật SharedPreferences
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? userDataStr = prefs.getString('user_data');
-
-        if (userDataStr != null) {
-          final data = jsonDecode(userDataStr);
-          data['avatar'] = uploadedUrl;
-          await prefs.setString('user_data', jsonEncode(data));
-        }
-      } else {
-        throw Exception('Không thể tải lên ảnh đại diện');
-      }
-    } catch (e) {
-      print('Error uploading avatar: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi tải lên ảnh đại diện: $e')),
-      );
-    } finally {
-      setState(() {
-        _isUploadingImage = false;
-      });
-    }
   }
 
   // Hiển thị dialog chọn ngày sinh
@@ -510,7 +523,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator()) // Thêm '?' thay vì ':'
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -584,6 +598,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         title: const Text('Hạng thành viên'),
                         subtitle: Text(_rank),
                         trailing: _getRankIcon(),
+                      ),
+                    ),
+
+                    // Loyalty Points (not editable)
+                    Card(
+                      child: ListTile(
+                        leading: Icon(Icons.loyalty, color: Colors.blue),
+                        title: const Text('Điểm thưởng'),
+                        subtitle: Text('$_loyaltyPoints điểm'),
+                        trailing: Text(
+                          '${(_loyaltyPoints * 1000).toStringAsFixed(0)} VND',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green[700],
+                          ),
+                        ),
                       ),
                     ),
 

@@ -4,7 +4,8 @@ import '../../data/model/cart_item_model.dart';
 import '../../data/model/order_model.dart';
 import '../../utils/route_transitions.dart';
 import 'providers/payment_provider.dart';
-import 'screens/checkout_screen.dart';
+import 'screens/user_checkout_screen.dart';
+import 'screens/guest_checkout_screen.dart';
 import 'screens/order_history_screen.dart';
 
 /// This class provides static methods to navigate to payment-related screens
@@ -28,11 +29,16 @@ class PaymentFeature {
     // Use slide transition for better user experience
     pushWithSlideTransition(
       context: context,
-      page: CheckoutScreen(
-        userId: userId,
-        cartItems: cartItems,
-        totalAmount: totalAmount,
-      ),
+      page: userId != null 
+        ? UserCheckoutScreen(
+            userId: userId,
+            cartItems: cartItems,
+            totalAmount: totalAmount,
+          )
+        : GuestCheckoutScreen(
+            cartItems: cartItems,
+            totalAmount: totalAmount,
+          ),
     );
   }
   

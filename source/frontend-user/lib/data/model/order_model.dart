@@ -1,14 +1,19 @@
 import 'order_item_model.dart';
 import 'order_status.dart';
+import '../../core/models/address_model.dart';
 
 class OrderModel {
   final String id;
   final String userId;
   final List<OrderItemModel> items;
   final double totalAmount;
+  final String? couponCode;
+  final double couponDiscount;
+  final int loyaltyPointsUsed;
+  final double loyaltyPointsDiscount;
   final OrderStatus status;
   final String paymentMethod;
-  final String shippingAddress;
+  final AddressModel shippingAddress;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -17,6 +22,10 @@ class OrderModel {
     required this.userId,
     required this.items,
     required this.totalAmount,
+    this.couponCode,
+    this.couponDiscount = 0,
+    this.loyaltyPointsUsed = 0,
+    this.loyaltyPointsDiscount = 0,
     required this.status,
     required this.paymentMethod,
     required this.shippingAddress,
@@ -37,6 +46,35 @@ class OrderModel {
         return DateTime.now();
       }
     }
+    
+    // Xử lý shippingAddress có thể là chuỗi (legacy) hoặc object
+    AddressModel parseAddress(dynamic addressData) {
+      if (addressData is String) {
+        // Nếu là chuỗi (format cũ), tạo AddressModel với fullAddress
+        return AddressModel(
+          fullName: '',
+          phoneNumber: '',
+          addressLine: addressData,
+          city: '',
+          district: '',
+          ward: '',
+        );
+      } else if (addressData is Map<String, dynamic>) {
+        // Nếu là object, parse thành AddressModel
+        return AddressModel.fromJson(addressData);
+      } else {
+        // Fallback nếu không có thông tin địa chỉ
+        return AddressModel(
+          fullName: '',
+          phoneNumber: '',
+          addressLine: '',
+          city: '',
+          district: '',
+          ward: '',
+        );
+      }
+    }
+    
     return OrderModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
@@ -44,9 +82,13 @@ class OrderModel {
           .map((item) => OrderItemModel.fromJson(item))
           .toList(),
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
+      couponCode: json['couponCode'],
+      couponDiscount: (json['couponDiscount'] ?? 0).toDouble(),
+      loyaltyPointsUsed: json['loyaltyPointsUsed'] ?? 0,
+      loyaltyPointsDiscount: (json['loyaltyPointsDiscount'] ?? 0).toDouble(),
       status: OrderStatus.fromString(json['status'] ?? 'PENDING'),
       paymentMethod: json['paymentMethod'] ?? '',
-      shippingAddress: json['shippingAddress'] ?? '',
+      shippingAddress: parseAddress(json['shippingAddress']),
       createdAt: parseDate(json['createdAt']),
       updatedAt: parseDate(json['updatedAt']),
     );
@@ -58,9 +100,13 @@ class OrderModel {
       'userId': userId,
       'items': items.map((item) => item.toJson()).toList(),
       'totalAmount': totalAmount,
+      'couponCode': couponCode,
+      'couponDiscount': couponDiscount,
+      'loyaltyPointsUsed': loyaltyPointsUsed,
+      'loyaltyPointsDiscount': loyaltyPointsDiscount,
       'status': status.name,
       'paymentMethod': paymentMethod,
-      'shippingAddress': shippingAddress,
+      'shippingAddress': shippingAddress.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -79,4 +125,26 @@ class OrderModel {
   String get formattedCreatedDate {
     return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
   }
+  
+  // Helper method to get formatted address
+  String get formattedAddress {
+    return shippingAddress.fullAddress;
+  }
+  
+  // Helper method to get final amount after all discounts
+  double get finalAmount {
+    return totalAmount - couponDiscount - loyaltyPointsDiscount;
+  }
+  
+  // Helper method to check if coupon was applied
+  bool get hasCoupon => couponCode != null && couponCode!.isNotEmpty;
+  
+  // Helper method to check if loyalty points were used
+  bool get hasLoyaltyPoints => loyaltyPointsUsed > 0;
+  
+  // Helper method to get total discount amount
+  double get totalDiscount => couponDiscount + loyaltyPointsDiscount;
+  
+  // Helper method to calculate loyalty points earned (10% of final amount)
+  int get loyaltyPointsEarned => (finalAmount * 0.1).round();
 }

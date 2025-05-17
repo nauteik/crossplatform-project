@@ -4,16 +4,20 @@ import com.example.ecommerceproject.model.*;
 import com.example.ecommerceproject.repository.*;
 import com.example.ecommerceproject.model.Brand;
 import com.example.ecommerceproject.model.Cart;
+import com.example.ecommerceproject.model.Order;
+import com.example.ecommerceproject.model.OrderStatus;
 import com.example.ecommerceproject.model.Product;
 import com.example.ecommerceproject.model.ProductType;
 import com.example.ecommerceproject.model.Tag;
 import com.example.ecommerceproject.model.User;
 import com.example.ecommerceproject.repository.BrandRepository;
 import com.example.ecommerceproject.repository.CartRepository;
+import com.example.ecommerceproject.repository.OrderRepository;
 import com.example.ecommerceproject.repository.ProductRepository;
 import com.example.ecommerceproject.repository.ProductTypeRepository;
 import com.example.ecommerceproject.repository.UserRepository;
 import com.example.ecommerceproject.repository.TagRepository;
+import com.example.ecommerceproject.service.AddressService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +27,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -35,12 +41,15 @@ public class DataLoader implements CommandLineRunner {
     private final TagRepository tagRepository;
     private final PasswordEncoder passwordEncoder;
     private final CouponRepository couponRepository;
+    private final AddressService addressService;
+    private final OrderRepository orderRepository;
 
     @Autowired
     public DataLoader(BrandRepository brandRepository, ProductTypeRepository productTypeRepository, 
                       ProductRepository productRepository, UserRepository userRepository, 
                       CartRepository cartRepository, TagRepository tagRepository, 
-                      PasswordEncoder passwordEncoder, CouponRepository couponRepository) {
+                      PasswordEncoder passwordEncoder, CouponRepository couponRepository,
+                      AddressService addressService, OrderRepository orderRepository) {
         this.brandRepository = brandRepository;
         this.productTypeRepository = productTypeRepository;
         this.productRepository = productRepository;
@@ -49,6 +58,8 @@ public class DataLoader implements CommandLineRunner {
         this.tagRepository = tagRepository;
         this.passwordEncoder = passwordEncoder;
         this.couponRepository = couponRepository;
+        this.addressService = addressService;
+        this.orderRepository = orderRepository;
     }
 
     @Override
@@ -79,6 +90,9 @@ public class DataLoader implements CommandLineRunner {
 
         // Tạo Coupons
         createCoupons();
+        
+        // Tạo Orders
+        createOrders(products);
 
         System.out.println("Đã khởi tạo dữ liệu thành công!");
     }
@@ -473,8 +487,9 @@ public class DataLoader implements CommandLineRunner {
         admin.setRole(1); // 1 là admin
         admin.setAvatar("Chưa cập nhật");
         admin.setPhone("Chưa cập nhật");
-        admin.setAddresses(new ArrayList<>());
         admin.setGender("Chưa cập nhật");
+        admin.setRank("Thành viên đồng");
+        admin.setLoyaltyPoints(0);
         admin = userRepository.save(admin);
 
         // Tạo user thường
@@ -486,9 +501,43 @@ public class DataLoader implements CommandLineRunner {
         user.setRole(0); // 0 là user thường
         user.setAvatar("Chưa cập nhật");
         user.setPhone("Chưa cập nhật");
-        user.setAddresses(new ArrayList<>());
         user.setGender("Chưa cập nhật");
+        user.setRank("Thành viên đồng");
+        user.setLoyaltyPoints(0);
         user = userRepository.save(user);
+
+        // Tạo địa chỉ cho admin
+        Address adminAddress = new Address();
+        adminAddress.setFullName("Admin User");
+        adminAddress.setPhoneNumber("0987654321");
+        adminAddress.setAddressLine("123 Đường Nguyễn Văn Linh");
+        adminAddress.setCity("TP. Hồ Chí Minh");
+        adminAddress.setDistrict("Quận 7");
+        adminAddress.setWard("Phường Tân Phong");
+        adminAddress.setDefault(true);
+        addressService.addAddress(admin.getId(), adminAddress);
+
+        // Tạo địa chỉ 1 cho user thường
+        Address userAddress1 = new Address();
+        userAddress1.setFullName("Nguyễn Văn A");
+        userAddress1.setPhoneNumber("0123456789");
+        userAddress1.setAddressLine("456 Đường Lê Văn Việt");
+        userAddress1.setCity("TP. Hồ Chí Minh");
+        userAddress1.setDistrict("Quận 9");
+        userAddress1.setWard("Phường Hiệp Phú");
+        userAddress1.setDefault(true);
+        addressService.addAddress(user.getId(), userAddress1);
+
+        // Tạo địa chỉ 2 cho user thường
+        Address userAddress2 = new Address();
+        userAddress2.setFullName("Nguyễn Văn A");
+        userAddress2.setPhoneNumber("0123456789");
+        userAddress2.setAddressLine("789 Đường Quang Trung");
+        userAddress2.setCity("TP. Hồ Chí Minh");
+        userAddress2.setDistrict("Quận Gò Vấp");
+        userAddress2.setWard("Phường 11");
+        userAddress2.setDefault(false);
+        addressService.addAddress(user.getId(), userAddress2);
 
         // Tạo cart cho user
         Cart userCart = new Cart();
@@ -503,70 +552,289 @@ public class DataLoader implements CommandLineRunner {
         if (couponRepository.count() == 0) {
             List<Coupon> coupons = new ArrayList<>();
 
-            // Coupon giảm giá 10% cho người dùng mới
             Coupon welcome = new Coupon();
-            welcome.setCode("WELCOME10");
-            welcome.setValue(10);
+            welcome.setCode("VIP50");
+            welcome.setValue(50000);
             welcome.setMaxUses(100);
             welcome.setUsedCount(0);
             welcome.setCreationTime(LocalDateTime.now());
             welcome.setOrdersApplied(new ArrayList<>());
             coupons.add(welcome);
 
-            // Coupon giảm giá 20% cho mùa hè
             Coupon summer = new Coupon();
-            summer.setCode("SUMMER20");
-            summer.setValue(20);
+            summer.setCode("VP100");
+            summer.setValue(100000);
             summer.setMaxUses(50);
             summer.setUsedCount(0);
             summer.setCreationTime(LocalDateTime.now());
             summer.setOrdersApplied(new ArrayList<>());
             coupons.add(summer);
 
-            // Coupon giảm giá 30% cho VIP
-            Coupon vip = new Coupon();
-            vip.setCode("VIP30");
-            vip.setValue(30);
-            vip.setMaxUses(20);
-            vip.setUsedCount(0);
-            vip.setCreationTime(LocalDateTime.now());
-            vip.setOrdersApplied(new ArrayList<>());
-            coupons.add(vip);
-
-            // Coupon giảm giá 15% cho ngày lễ
             Coupon holiday = new Coupon();
-            holiday.setCode("HOLIDAY15");
-            holiday.setValue(15);
+            holiday.setCode("HOL20");
+            holiday.setValue(20000);
             holiday.setMaxUses(75);
             holiday.setUsedCount(0);
             holiday.setCreationTime(LocalDateTime.now());
             holiday.setOrdersApplied(new ArrayList<>());
             coupons.add(holiday);
 
-            // Coupon giảm giá 25% cho Black Friday
             Coupon blackFriday = new Coupon();
-            blackFriday.setCode("BLACK25");
-            blackFriday.setValue(25);
+            blackFriday.setCode("BF100");
+            blackFriday.setValue(100000);
             blackFriday.setMaxUses(30);
             blackFriday.setUsedCount(0);
             blackFriday.setCreationTime(LocalDateTime.now());
             blackFriday.setOrdersApplied(new ArrayList<>());
             coupons.add(blackFriday);
 
-            // Coupon giảm giá 50% cho đơn hàng đầu tiên
             Coupon firstOrder = new Coupon();
-            firstOrder.setCode("FIRST50");
-            firstOrder.setValue(50);
+            firstOrder.setCode("FIRST");
+            firstOrder.setValue(10000);
             firstOrder.setMaxUses(10);
             firstOrder.setUsedCount(0);
             firstOrder.setCreationTime(LocalDateTime.now());
             firstOrder.setOrdersApplied(new ArrayList<>());
             coupons.add(firstOrder);
 
-            // Lưu tất cả coupons vào database
             couponRepository.saveAll(coupons);
 
             System.out.println("Created " + coupons.size() + " coupons successfully!");
         }
+    }
+
+    private void createOrders(List<Product> products) {
+        // Lấy các user đã tạo
+        User admin = userRepository.findByUsername("admin").orElseThrow(() -> new RuntimeException("Admin user not found"));
+        User normalUser = userRepository.findByUsername("user").orElseThrow(() -> new RuntimeException("Normal user not found"));
+        
+        // Lấy địa chỉ của user
+        List<Address> adminAddresses = addressService.getUserAddresses(admin.getId());
+        List<Address> userAddresses = addressService.getUserAddresses(normalUser.getId());
+        
+        // Lấy các coupon đã tạo
+        List<Coupon> coupons = couponRepository.findAll();
+        
+        // Tạo danh sách đơn hàng với thời gian theo thứ tự
+        List<Order> orders = new ArrayList<>();
+        
+        // Tạo đơn hàng cho admin (3 tháng trước đến nay)
+        LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
+        
+        // Đơn hàng 1: Admin - Đã giao hàng - 3 tháng trước
+        orders.add(createOrder(
+            admin.getId(),
+            getRandomOrderItems(products, 2),
+            adminAddresses.get(0),
+            OrderStatus.DELIVERED,
+            "COD",
+            threeMonthsAgo,
+            null,
+            0,
+            0
+        ));
+        
+        // Đơn hàng 2: User - Đã giao hàng - 2 tháng trước
+        orders.add(createOrder(
+            normalUser.getId(),
+            getRandomOrderItems(products, 3),
+            userAddresses.get(0),
+            OrderStatus.DELIVERED,
+            "CREDIT_CARD",
+            threeMonthsAgo.plusMonths(1),
+            coupons.get(0).getCode(),
+            coupons.get(0).getValue(),
+            0
+        ));
+        
+        // Đơn hàng 3: User - Đang giao hàng - 2 tuần trước
+        orders.add(createOrder(
+            normalUser.getId(),
+            getRandomOrderItems(products, 2),
+            userAddresses.get(1),
+            OrderStatus.SHIPPING,
+            "COD",
+            LocalDateTime.now().minusWeeks(2),
+            null,
+            0,
+            0
+        ));
+        
+        // Đơn hàng 4: Admin - Đã thanh toán, chưa giao - 1 tuần trước
+        orders.add(createOrder(
+            admin.getId(),
+            getRandomOrderItems(products, 4),
+            adminAddresses.get(0),
+            OrderStatus.PAID,
+            "CREDIT_CARD",
+            LocalDateTime.now().minusWeeks(1),
+            coupons.get(1).getCode(),
+            coupons.get(1).getValue(),
+            0
+        ));
+        
+        // Đơn hàng 5: User - Đã hủy - 5 ngày trước
+        orders.add(createOrder(
+            normalUser.getId(),
+            getRandomOrderItems(products, 1),
+            userAddresses.get(0),
+            OrderStatus.CANCELLED,
+            "COD",
+            LocalDateTime.now().minusDays(5),
+            null,
+            0,
+            0
+        ));
+        
+        // Đơn hàng 6: User - Chờ thanh toán - 3 ngày trước
+        orders.add(createOrder(
+            normalUser.getId(),
+            getRandomOrderItems(products, 3),
+            userAddresses.get(0),
+            OrderStatus.PENDING,
+            "CREDIT_CARD",
+            LocalDateTime.now().minusDays(3),
+            coupons.get(2).getCode(),
+            coupons.get(2).getValue(),
+            1000
+        ));
+        
+        // Đơn hàng 7: Admin - Đã giao hàng - 2 ngày trước
+        orders.add(createOrder(
+            admin.getId(),
+            getRandomOrderItems(products, 2),
+            adminAddresses.get(0),
+            OrderStatus.DELIVERED,
+            "CREDIT_CARD",
+            LocalDateTime.now().minusDays(2),
+            null,
+            0,
+            2000
+        ));
+        
+        // Đơn hàng 8: User - Đã giao hàng - 1 ngày trước
+        orders.add(createOrder(
+            normalUser.getId(),
+            getRandomOrderItems(products, 5),
+            userAddresses.get(1),
+            OrderStatus.DELIVERED,
+            "COD",
+            LocalDateTime.now().minusDays(1),
+            coupons.get(3).getCode(),
+            coupons.get(3).getValue(),
+            0
+        ));
+        
+        // Đơn hàng 9: Admin - Chờ thanh toán - hôm nay
+        orders.add(createOrder(
+            admin.getId(),
+            getRandomOrderItems(products, 1),
+            adminAddresses.get(0),
+            OrderStatus.PENDING,
+            "COD",
+            LocalDateTime.now(),
+            null,
+            0,
+            0
+        ));
+        
+        // Đơn hàng 10: User - Đã thanh toán, chưa giao - hôm nay
+        orders.add(createOrder(
+            normalUser.getId(),
+            getRandomOrderItems(products, 4),
+            userAddresses.get(0),
+            OrderStatus.PAID,
+            "CREDIT_CARD",
+            LocalDateTime.now(),
+            coupons.get(4).getCode(),
+            coupons.get(4).getValue(),
+            5000
+        ));
+        
+        // Lưu tất cả đơn hàng vào database
+        orderRepository.saveAll(orders);
+        
+        System.out.println("Đã tạo " + orders.size() + " đơn hàng mẫu");
+    }
+
+    private Order createOrder(String userId, List<OrderItem> items, Address shippingAddress, 
+                            OrderStatus status, String paymentMethod, LocalDateTime createdAt,
+                            String couponCode, double couponDiscount, int loyaltyPointsUsed) {
+        // Tính tổng tiền
+        double totalAmount = items.stream()
+                .mapToDouble(item -> item.getPrice() * item.getQuantity())
+                .sum();
+        
+        // Tạo đơn hàng
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setItems(items);
+        order.setTotalAmount(totalAmount);
+        order.setStatus(status);
+        order.setPaymentMethod(paymentMethod);
+        order.setShippingAddress(shippingAddress);
+        order.setCreatedAt(createdAt);
+        order.setUpdatedAt(createdAt);
+        
+        // Áp dụng mã giảm giá nếu có
+        if (couponCode != null) {
+            order.applyCoupon(couponCode, couponDiscount);
+        }
+        
+        // Áp dụng điểm loyalty nếu có
+        if (loyaltyPointsUsed > 0) {
+            // 1 điểm = 1,000 VND
+            double loyaltyDiscount = loyaltyPointsUsed * 1000;
+            order.applyLoyaltyPoints(loyaltyPointsUsed, loyaltyDiscount);
+        }
+        
+        // Thêm thông tin bổ sung
+        Map<String, Object> additionalInfo = new HashMap<>();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            additionalInfo.put("username", user.getUsername());
+            additionalInfo.put("email", user.getEmail());
+        }
+        order.setAdditionalInfo(additionalInfo);
+        
+        return order;
+    }
+
+    private List<OrderItem> getRandomOrderItems(List<Product> products, int count) {
+        List<OrderItem> items = new ArrayList<>();
+        
+        // Tạo một bản sao của danh sách sản phẩm để không ảnh hưởng đến danh sách gốc
+        List<Product> productsCopy = new ArrayList<>(products);
+        
+        // Đảm bảo không lấy quá số lượng sản phẩm có sẵn
+        count = Math.min(count, productsCopy.size());
+        
+        // Lấy ngẫu nhiên 'count' sản phẩm
+        for (int i = 0; i < count; i++) {
+            // Chọn ngẫu nhiên một sản phẩm từ danh sách
+            int randomIndex = (int) (Math.random() * productsCopy.size());
+            Product product = productsCopy.get(randomIndex);
+            
+            // Tạo OrderItem từ sản phẩm
+            OrderItem item = new OrderItem();
+            item.setProductId(product.getId());
+            item.setProductName(product.getName());
+            item.setQuantity((int) (Math.random() * 3) + 1); // Số lượng từ 1-3
+            
+            // Tính giá sau khi giảm giá (nếu có)
+            double discountPercent = product.getDiscountPercent();
+            double originalPrice = product.getPrice();
+            double finalPrice = originalPrice - (originalPrice * discountPercent / 100);
+            
+            item.setPrice(finalPrice);
+            item.setImageUrl(product.getPrimaryImageUrl());
+            
+            items.add(item);
+            
+            // Loại bỏ sản phẩm đã chọn để tránh trùng lặp
+            productsCopy.remove(randomIndex);
+        }
+        
+        return items;
     }
 } 

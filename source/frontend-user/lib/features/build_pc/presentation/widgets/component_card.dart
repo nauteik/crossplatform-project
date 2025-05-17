@@ -11,13 +11,13 @@ class ComponentCard extends StatelessWidget {
   final IconData icon;
 
   const ComponentCard({
-    Key? key,
+    super.key,
     required this.componentType,
     required this.selectedComponent,
     required this.onSelectPressed,
     this.onRemovePressed,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +94,7 @@ class ComponentCard extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
                         onPressed: onRemovePressed,
-                        tooltip: 'Remove component',
+                        tooltip: 'Xóa thành phần',
                       ),
                   ],
                 ),
@@ -114,7 +114,7 @@ class ComponentCard extends StatelessWidget {
                     Icon(Icons.add, size: 40, color: Colors.grey.shade400),
                     const SizedBox(height: 8),
                     Text(
-                      'Select $componentType',
+                      'Chọn $componentType',
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
                   ],
@@ -131,7 +131,7 @@ class ComponentCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(selectedComponent == null ? 'Choose $componentType' : 'Change $componentType'),
+                child: Text(selectedComponent == null ? 'Chọn $componentType' : 'Thay đổi $componentType'),
               ),
             ),
           ],

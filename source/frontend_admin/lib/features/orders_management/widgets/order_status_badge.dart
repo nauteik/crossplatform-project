@@ -8,39 +8,81 @@ class OrderStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusInfo = _getStatusInfo();
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.0),
-        color: _getStatusColor(),
+        borderRadius: BorderRadius.circular(20.0),
+        color: statusInfo.color.withOpacity(0.15),
+        border: Border.all(color: statusInfo.color.withOpacity(0.5), width: 1),
       ),
-      child: Text(
-        Order.getStatusDescription(status),
-        style: const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 12.0,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            statusInfo.icon,
+            size: 14,
+            color: statusInfo.color,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            Order.getStatusDescription(status),
+            style: TextStyle(
+              color: statusInfo.color,
+              fontWeight: FontWeight.w600,
+              fontSize: 13.0,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Color _getStatusColor() {
+  StatusInfo _getStatusInfo() {
     switch (status) {
       case 'PENDING':
-        return Colors.orange;
+        return StatusInfo(
+          color: Colors.orange[700]!,
+          icon: Icons.hourglass_empty,
+        );
       case 'PAID':
-        return Colors.blue;
-      case 'SHIPPED':
-        return Colors.indigo;
+        return StatusInfo(
+          color: Colors.blue[600]!,
+          icon: Icons.payment,
+        );
+      case 'SHIPPING':
+        return StatusInfo(
+          color: Colors.purple[600]!,
+          icon: Icons.local_shipping,
+        );
       case 'DELIVERED':
-        return Colors.green;
+        return StatusInfo(
+          color: Colors.green[600]!,
+          icon: Icons.check_circle,
+        );
       case 'CANCELLED':
-        return Colors.red;
+        return StatusInfo(
+          color: Colors.red[600]!,
+          icon: Icons.cancel,
+        );
       case 'FAILED':
-        return Colors.deepOrange;
+        return StatusInfo(
+          color: Colors.deepOrange[700]!,
+          icon: Icons.error,
+        );
       default:
-        return Colors.grey;
+        return StatusInfo(
+          color: Colors.grey[600]!,
+          icon: Icons.help,
+        );
     }
   }
+}
+
+class StatusInfo {
+  final Color color;
+  final IconData icon;
+
+  StatusInfo({required this.color, required this.icon});
 }

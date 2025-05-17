@@ -4,11 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -20,11 +23,20 @@ public class Order {
     private String userId;
     private List<OrderItem> items = new ArrayList<>();
     private double totalAmount;
+    private String couponCode;
+    private double couponDiscount;
+    private int loyaltyPointsUsed;  // Số điểm loyalty đã sử dụng
+    private double loyaltyPointsDiscount; // Số tiền giảm giá từ điểm loyalty
     private OrderStatus status;
     private String paymentMethod;  // e.g., "CREDIT_CARD", "COD"
     private Address shippingAddress;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    // AdditionalInfo để lưu trữ thông tin Username, Email
+    // @Transient đảm bảo trường này không được lưu vào database
+    @Transient
+    private Map<String, Object> additionalInfo = new HashMap<>();
     
     // Constructor that initializes dates
     public Order(String userId, List<OrderItem> items, double totalAmount, 
@@ -37,11 +49,50 @@ public class Order {
         this.shippingAddress = shippingAddress;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.additionalInfo = new HashMap<>();
+        this.loyaltyPointsUsed = 0;
+        this.loyaltyPointsDiscount = 0;
     }
     
     // Method to update the order status
     public void updateStatus(OrderStatus newStatus) {
         this.status = newStatus;
         this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Phương thức để thiết lập thông tin bổ sung
+    public void setAdditionalInfo(Map<String, Object> additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
+    
+    // Phương thức để lấy thông tin bổ sung
+    public Map<String, Object> getAdditionalInfo() {
+        return this.additionalInfo;
+    }
+    
+    // Phương thức áp dụng coupon
+    public void applyCoupon(String couponCode, double discount) {
+        this.couponCode = couponCode;
+        this.couponDiscount = discount;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Phương thức áp dụng điểm loyalty
+    public void applyLoyaltyPoints(int points, double discount) {
+        this.loyaltyPointsUsed = points;
+        this.loyaltyPointsDiscount = discount;
+        this.updatedAt = LocalDateTime.now();
+    }
+    
+    // Phương thức lấy tổng tiền sau khi áp dụng coupon và điểm loyalty
+    public double getFinalAmount() {
+        return this.totalAmount - this.couponDiscount - this.loyaltyPointsDiscount;
+    }
+    
+    // Phương thức tính số điểm loyalty sẽ nhận được (10% của tổng tiền cuối cùng / 1000)
+    // 1 điểm tương đương 1000 VND
+    public int calculateLoyaltyPointsEarned() {
+        double finalAmount = getFinalAmount();
+        return (int)(finalAmount * 0.1 / 1000);
     }
 }

@@ -6,6 +6,70 @@ import '../../../../core/constants/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserRepository {
+  Future<String?> uploadAvatar(String userId, File avatarFile) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Không tìm thấy token đăng nhập');
+      }
+
+      print('File path: ${avatarFile.path}');
+      print('File size: ${await avatarFile.length()} bytes');
+
+      // Kiểm tra extension của file để xác định Content-Type
+      String contentType = 'image/jpeg'; // Mặc định là jpeg
+      if (avatarFile.path.toLowerCase().endsWith('.png')) {
+        contentType = 'image/png';
+      } else if (avatarFile.path.toLowerCase().endsWith('.gif')) {
+        contentType = 'image/gif';
+      }
+
+      // Tạo multipart request để upload file
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(
+            '${ApiConstants.baseUrl}/user/upload-avatar/$userId'), // Thêm /api vào đường dẫn
+      );
+
+      // Thêm token vào header
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+      });
+
+      // Thêm file vào request với content-type được xác định
+      final file = await http.MultipartFile.fromPath(
+        'avatar',
+        avatarFile.path,
+        contentType: MediaType.parse(contentType), // Thêm content-type rõ ràng
+      );
+      request.files.add(file);
+
+      print('Sending avatar upload request with content-type: $contentType');
+
+      // Gửi request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('Avatar upload response status: ${response.statusCode}');
+      print('Avatar upload response body: ${response.body}');
+
+      // Xử lý response
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 200 && data['data'] != null) {
+          return data['data']['avatar'];
+        }
+      }
+
+      print('Upload avatar error: ${response.body}');
+      return null;
+    } catch (e) {
+      print('Upload avatar exception: $e');
+      return null;
+    }
+  }
   Future<Map<String, dynamic>?> getCurrentUserDetails() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -123,69 +187,5 @@ class UserRepository {
     }
   }
 
-  // Thêm phương thức uploadAvatar
-  Future<String?> uploadAvatar(String userId, File avatarFile) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('jwt_token');
-
-      if (token == null) {
-        throw Exception('Không tìm thấy token đăng nhập');
-      }
-
-      print('File path: ${avatarFile.path}');
-      print('File size: ${await avatarFile.length()} bytes');
-
-      // Kiểm tra extension của file để xác định Content-Type
-      String contentType = 'image/jpeg'; // Mặc định là jpeg
-      if (avatarFile.path.toLowerCase().endsWith('.png')) {
-        contentType = 'image/png';
-      } else if (avatarFile.path.toLowerCase().endsWith('.gif')) {
-        contentType = 'image/gif';
-      }
-
-      // Tạo multipart request để upload file
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse(
-            '${ApiConstants.baseUrl}/user/upload-avatar/$userId'), // Thêm /api vào đường dẫn
-      );
-
-      // Thêm token vào header
-      request.headers.addAll({
-        'Authorization': 'Bearer $token',
-      });
-
-      // Thêm file vào request với content-type được xác định
-      final file = await http.MultipartFile.fromPath(
-        'avatar',
-        avatarFile.path,
-        contentType: MediaType.parse(contentType), // Thêm content-type rõ ràng
-      );
-      request.files.add(file);
-
-      print('Sending avatar upload request with content-type: $contentType');
-
-      // Gửi request
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      print('Avatar upload response status: ${response.statusCode}');
-      print('Avatar upload response body: ${response.body}');
-
-      // Xử lý response
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['status'] == 200 && data['data'] != null) {
-          return data['data']['avatar'];
-        }
-      }
-
-      print('Upload avatar error: ${response.body}');
-      return null;
-    } catch (e) {
-      print('Upload avatar exception: $e');
-      return null;
-    }
-  }
+  
 }

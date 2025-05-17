@@ -4,9 +4,11 @@ import com.example.ecommerceproject.model.*;
 import com.example.ecommerceproject.repository.CartRepository;
 import com.example.ecommerceproject.repository.OrderRepository;
 import com.example.ecommerceproject.repository.ProductRepository;
+import com.example.ecommerceproject.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 /**
  * Service for managing orders
@@ -46,42 +49,42 @@ public class OrderService {
     @Autowired
     private PaymentService paymentService;
 
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private CouponService couponService;
+    
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
     /**
      * Create a new order from cart items
      */
     public Order createOrder(String userId, Address shippingAddress, String paymentMethod, List<String> selectedItemIds) {
-        Cart cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Cart not found for user: " + userId));
-
-        List<CartItem> cartItems;
-        if (selectedItemIds != null && !selectedItemIds.isEmpty()) {
-            // Filter cart items based on selected item IDs
-            cartItems = cart.getItems().stream()
-                    .filter(item -> selectedItemIds.contains(item.getProductId()))
-                    .collect(Collectors.toList());
-            if (cartItems.isEmpty()) {
-                throw new IllegalArgumentException("No selected items found in cart");
-            }
-        } else {
-            cartItems = cart.getItems();
-            if (cartItems.isEmpty()) {
-                throw new IllegalArgumentException("Cart is empty");
-            }
+        if (selectedItemIds == null || selectedItemIds.isEmpty()) {
+            throw new IllegalArgumentException("Không có sản phẩm nào được chọn để thanh toán");
         }
 
-        // Convert cart items to order items
-        List<OrderItem> orderItems = cartItems.stream().map(cartItem -> {
-            Product product = productRepository.findById(cartItem.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + cartItem.getProductId()));
-
+        // Tạo danh sách OrderItems trực tiếp từ selectedItemIds
+        List<OrderItem> orderItems = new ArrayList<>();
+        
+        for (String productId : selectedItemIds) {
+            Product product = productRepository.findById(productId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm: " + productId));
+            
             OrderItem orderItem = new OrderItem();
-            orderItem.setProductId(cartItem.getProductId());
+            orderItem.setProductId(productId);
             orderItem.setProductName(product.getName());
-            orderItem.setQuantity(cartItem.getQuantity());
+            orderItem.setQuantity(1); // Mặc định số lượng là 1, có thể điều chỉnh sau
             orderItem.setPrice(product.getPrice());
             orderItem.setImageUrl(product.getPrimaryImageUrl());
-            return orderItem;
-        }).collect(Collectors.toList());
+            
+            orderItems.add(orderItem);
+        }
 
         // Calculate total amount
         double totalAmount = orderItems.stream()
@@ -90,7 +93,146 @@ public class OrderService {
 
         // Create new order
         Order order = new Order(userId, orderItems, totalAmount, OrderStatus.PENDING, paymentMethod, shippingAddress);
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        
+        // Gửi email thông báo đơn hàng thành công
+        sendOrderConfirmationEmail(savedOrder);
+        
+        return savedOrder;
+    }
+    
+    /**
+     * Create a new order from cart items with coupon applied
+     */
+    public Order createOrderWithCoupon(String userId, Address shippingAddress, String paymentMethod, 
+                                      List<String> selectedItemIds, String couponCode) {
+        // First create the order normally
+        Order order = createOrder(userId, shippingAddress, paymentMethod, selectedItemIds);
+        
+        // Apply coupon if provided
+        if (couponCode != null && !couponCode.isEmpty()) {
+            order = applyCouponToOrder(order.getId(), couponCode);
+            // Gửi email lại sau khi áp dụng coupon
+            sendOrderConfirmationEmail(order);
+        }
+        
+        return order;
+    }
+    
+    /**
+     * Create a new order with loyalty points applied
+     */
+    public Order createOrderWithLoyaltyPoints(String userId, Address shippingAddress, String paymentMethod, 
+                                      List<String> selectedItemIds, int loyaltyPointsToUse) {
+        // First create the order normally
+        Order order = createOrder(userId, shippingAddress, paymentMethod, selectedItemIds);
+        
+        // Apply loyalty points if provided
+        if (loyaltyPointsToUse > 0) {
+            order = applyLoyaltyPointsToOrder(order.getId(), loyaltyPointsToUse);
+            // Gửi email lại sau khi áp dụng loyalty points
+            sendOrderConfirmationEmail(order);
+        }
+        
+        return order;
+    }
+    
+    /**
+     * Create an order with both coupon and loyalty points
+     */
+    public Order createOrderWithCouponAndLoyaltyPoints(String userId, Address shippingAddress, String paymentMethod, 
+                                      List<String> selectedItemIds, String couponCode, int loyaltyPointsToUse) {
+        // First create the order normally
+        Order order = createOrder(userId, shippingAddress, paymentMethod, selectedItemIds);
+        
+        // Apply coupon if provided
+        if (couponCode != null && !couponCode.isEmpty()) {
+            order = applyCouponToOrder(order.getId(), couponCode);
+        }
+        
+        // Apply loyalty points if provided
+        if (loyaltyPointsToUse > 0) {
+            order = applyLoyaltyPointsToOrder(order.getId(), loyaltyPointsToUse);
+        }
+        
+        // Gửi email sau khi áp dụng tất cả giảm giá
+        sendOrderConfirmationEmail(order);
+        
+        return order;
+    }
+    
+    /**
+     * Apply loyalty points to an existing order
+     */
+    public Order applyLoyaltyPointsToOrder(String orderId, int pointsToUse) {
+        Order order = getOrderById(orderId);
+        
+        // Check if order already has loyalty points applied
+        if (order.getLoyaltyPointsUsed() > 0) {
+            throw new IllegalArgumentException("Order already has loyalty points applied");
+        }
+        
+        try {
+            // Calculate discount amount (1 point = 1000 VND)
+            double discountAmount = userService.useLoyaltyPoints(order.getUserId(), pointsToUse);
+            
+            // Apply loyalty points to order
+            order.applyLoyaltyPoints(pointsToUse, discountAmount);
+            
+            // Save and return updated order
+            return orderRepository.save(order);
+            
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error applying loyalty points: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Apply coupon to an existing order
+     */
+    public Order applyCouponToOrder(String orderId, String couponCode) {
+        Order order = getOrderById(orderId);
+        
+        // Check if order already has a coupon
+        if (order.getCouponCode() != null && !order.getCouponCode().isEmpty()) {
+            throw new IllegalArgumentException("Order already has a coupon applied");
+        }
+        
+        try {
+            // Validate and get coupon details
+            Map<String, Object> couponDetails = couponService.getCouponDetails(couponCode);
+            
+            if (!(Boolean) couponDetails.get("valid")) {
+                throw new IllegalArgumentException("Coupon is not valid");
+            }
+            
+            // Get coupon value
+            double couponValue;
+            Object rawValue = couponDetails.get("value");
+            if (rawValue instanceof Integer) {
+                couponValue = ((Integer) rawValue).doubleValue();
+            } else if (rawValue instanceof Double) {
+                couponValue = (Double) rawValue;
+            } else {
+                couponValue = 0.0;
+            }
+            
+            // Apply coupon to order
+            boolean applied = couponService.applyCouponToOrder(couponCode, orderId);
+            
+            if (!applied) {
+                throw new IllegalArgumentException("Failed to apply coupon to order");
+            }
+            
+            // Apply discount to order
+            order.applyCoupon(couponCode, couponValue);
+            
+            // Save and return updated order
+            return orderRepository.save(order);
+            
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error applying coupon: " + e.getMessage());
+        }
     }
 
     /**
@@ -120,11 +262,15 @@ public class OrderService {
         }
 
         // Process payment based on payment method
-        boolean paymentSuccess = processPaymentByMethod(order.getPaymentMethod(), paymentDetails, order.getTotalAmount());
+        boolean paymentSuccess = processPaymentByMethod(order.getPaymentMethod(), paymentDetails, order.getFinalAmount());
 
         // Update order status based on payment result
         if (paymentSuccess) {
             order.updateStatus(OrderStatus.PAID);
+            
+            // Add loyalty points to user after successful payment
+            int pointsEarned = order.calculateLoyaltyPointsEarned();
+            userService.addLoyaltyPoints(order.getUserId(), order.getFinalAmount());
         } else {
             order.updateStatus(OrderStatus.FAILED);
         }
@@ -142,7 +288,32 @@ public class OrderService {
      * Get all orders (for admin)
      */
     public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+        List<Order> orders = orderRepository.findAll();
+        
+        // Thêm thông tin user (email và username) vào response
+        for (Order order : orders) {
+            try {
+                Optional<User> userOpt = userRepository.findById(order.getUserId());
+                if (userOpt.isPresent()) {
+                    User user = userOpt.get();
+                    
+                    // Thêm thông tin dưới dạng thuộc tính bổ sung vào order
+                    Map<String, Object> additionalInfo = new HashMap<>();
+                    additionalInfo.put("userEmail", user.getEmail());
+                    additionalInfo.put("username", user.getUsername());
+                    
+                    // Lưu vào order (giả định đã có phương thức setAdditionalInfo trong Order)
+                    order.setAdditionalInfo(additionalInfo);
+                }
+            } catch (Exception e) {
+                logger.error("Error fetching user info for order: {}", order.getId(), e);
+            }
+        }
+        
+        // Sắp xếp đơn hàng theo thời gian tạo giảm dần (mới nhất trước)
+        orders.sort((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt()));
+        
+        return orders;
     }
 
     /**
@@ -266,5 +437,46 @@ public class OrderService {
 
     public List<Order> getOrdersBetweenDates(LocalDateTime startDateTime, LocalDateTime endDateTime) {
         return orderRepository.findByCreatedAtBetween(startDateTime, endDateTime);
+    }
+
+    /**
+     * Gửi email xác nhận đơn hàng
+     */
+    private void sendOrderConfirmationEmail(Order order) {
+        try {
+            // Lấy thông tin user để lấy email
+            User user = userRepository.findById(order.getUserId())
+                    .orElse(null);
+            
+            if (user != null && user.getEmail() != null) {
+                // Chuẩn bị thông tin cho email
+                Map<String, Object> emailData = new HashMap<>();
+                emailData.put("to", user.getEmail());
+                emailData.put("customerName", user.getName() != null ? user.getName() : user.getUsername());
+                emailData.put("orderId", order.getId());
+                emailData.put("totalAmount", order.getTotalAmount());
+                emailData.put("orderItems", order.getItems());
+                emailData.put("paymentMethod", order.getPaymentMethod());
+                emailData.put("shippingAddress", order.getShippingAddress());
+                
+                // Thêm thông tin coupon nếu có
+                if (order.getCouponCode() != null && !order.getCouponCode().isEmpty()) {
+                    emailData.put("couponCode", order.getCouponCode());
+                    emailData.put("couponDiscount", order.getCouponDiscount());
+                    emailData.put("finalAmount", order.getFinalAmount());
+                    emailData.put("hasCoupon", true);
+                } else {
+                    emailData.put("hasCoupon", false);
+                }
+                
+                // Gửi email
+                EmailService emailService = applicationContext.getBean(EmailService.class);
+                emailService.sendOrderConfirmationEmail(emailData);
+            } else {
+                logger.warn("User email not found for order: {}", order.getId());
+            }
+        } catch (Exception e) {
+            logger.error("Error sending order confirmation email: {}", e.getMessage());
+        }
     }
 }

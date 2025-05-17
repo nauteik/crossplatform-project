@@ -42,7 +42,7 @@ class AuthProvider extends ChangeNotifier {
           // Kiểm tra và lưu lại userId nếu chưa có
           if (_userData != null && _userData!['id'] != null) {
             await prefs.setString('userId', _userData!['id']);
-
+            _userId = _userData!['id'];
             // Tải thông tin chi tiết người dùng
             await loadUserDetails();
           }
@@ -108,6 +108,7 @@ class AuthProvider extends ChangeNotifier {
         // Lưu userId vào SharedPreferences
         if (_userData != null && _userData!['id'] != null) {
           final userId = _userData!['id'];
+          _userId = userId;
           await prefs.setString('userId', userId);
 
           // Cập nhật userId cho ChatSupportScreen

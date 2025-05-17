@@ -337,7 +337,7 @@ class _CartScreenState extends State<CartScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           minimumSize: const Size(double.infinity, 50),
                           disabledBackgroundColor: Colors.grey,
-                          disabledForegroundColor: Colors.white70,
+                        disabledForegroundColor: Colors.white70,
                         ),
                         child: Text(
                           cart.selectedItems.isEmpty

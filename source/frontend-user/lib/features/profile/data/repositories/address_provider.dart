@@ -35,7 +35,7 @@ class AddressProvider extends ChangeNotifier {
       notifyListeners();
       
       final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/user/addresses/$userId'),
+        Uri.parse('${ApiConstants.baseUrl}/address/$userId'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $token',

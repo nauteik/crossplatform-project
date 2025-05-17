@@ -8,12 +8,13 @@ class User {
   final String name;
   final String? username;
   final String? phone;
-  final String? address;
   final String? gender;
   final DateTime? birthday;
   final String? rank;
   final int? totalSpend;
-  final int role;
+  final int? loyaltyPoints;
+  final int role; 
+  final DateTime? createdAt;
 
   User({
     required this.id,
@@ -23,20 +24,41 @@ class User {
     required this.name,
     this.username,
     this.phone,
-    this.address,
     this.gender,
     this.birthday,
     this.rank,
     this.totalSpend,
+    this.loyaltyPoints,
     required this.role,
+    this.createdAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    print('Creating User from JSON: $json');
-    DateTime? parseBirthday(dynamic dateJson) {
+    String? parseNullableString(dynamic value) {
+      if (value == null) return null;
+      if (value is String && value.trim().toLowerCase() == "chưa cập nhật") return null;
+      if (value is String && value.isNotEmpty) return value;
+      return null;
+    }
+
+    String parseId(dynamic idJson) {
+      if (idJson is String) return idJson;
+      if (idJson is Map && idJson.containsKey('\$oid')) {
+        return idJson['\$oid'] as String;
+      }
+      return '';
+    }
+
+    DateTime? parseDateTime(dynamic dateJson) {
       if (dateJson == null) return null;
       if (dateJson is String) {
         return DateTime.tryParse(dateJson);
+      }
+      if (dateJson is Map && dateJson.containsKey('\$date')) {
+         final dateValue = dateJson['\$date'];
+         if (dateValue is String) {
+             return DateTime.tryParse(dateValue);
+         }
       }
       return null;
     }
@@ -58,47 +80,40 @@ class User {
       }
 
     var user = User(
-      id: json['id'] ?? json['_id'] ?? '',
+      id: parseId(json['_id'] ?? json['id']),
       email: json['email'] ?? '',
       password: null,
-      avatar: json['avatar'] as String?,
+      avatar: parseNullableString(json['avatar']),
       name: json['name'] ?? '',
-      username: json['username'] as String?,
-      phone: json['phone'] as String?,
-      address: json['address'] as String?,
-      gender: json['gender'] as String?,
-      birthday: parseBirthday(json['birthday']),
-      rank: json['rank'] as String?,
+      username: parseNullableString(json['username']),
+      phone: parseNullableString(json['phone']),
+      gender: parseNullableString(json['gender']),
+      birthday: parseDateTime(json['birthday']),
+      rank: parseNullableString(json['rank']),
       totalSpend: parseInt(json['totalSpend']),
+      loyaltyPoints: parseInt(json['loyaltyPoints']),
       role: parseRole(json['role']),
+      createdAt: parseDateTime(json['createdAt']), 
     );
-    
-    print('Created User: ${user.id}, ${user.name}, ${user.email}, Role: ${user.role}');
     return user;
   }
 
-  // Phương thức chuyển User thành JSON (khi gửi lên backend)
   Map<String, dynamic> toJson() {
-    String? formatBirthday(DateTime? date) {
+    String? formatBirthdayForJson(DateTime? date) {
       if (date == null) return null;
       return date.toIso8601String();
     }
 
     final Map<String, dynamic> data = {
       'email': email,
-      'username': username,
-      'password': password,
       'name': name,
       'avatar': avatar,
+      'username': username,
       'phone': phone,
-      'address': address,
       'gender': gender,
-      'birthday': formatBirthday(birthday),
-      'rank': rank,
-      'totalSpend': totalSpend,
+      'birthday': formatBirthdayForJson(birthday),
       'role': role,
     };
-    data.removeWhere((key, value) => value == null);
     return data;
   }
 
@@ -115,7 +130,9 @@ class User {
     DateTime? birthday,
     String? rank,
     int? totalSpend,
+    int? loyaltyPoints,
     int? role,
+    DateTime? createdAt,
   }) {
     return User(
       id: id ?? this.id,
@@ -125,25 +142,31 @@ class User {
       name: name ?? this.name,
       username: username ?? this.username,
       phone: phone ?? this.phone,
-      address: address ?? this.address,
       gender: gender ?? this.gender,
       birthday: birthday ?? this.birthday,
       rank: rank ?? this.rank,
       totalSpend: totalSpend ?? this.totalSpend,
+      loyaltyPoints: loyaltyPoints ?? this.loyaltyPoints,
       role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
   String get roleString {
     switch (role) {
-      case 1: return 'admin';
-      case 0: return 'user';
-      default: return 'unknown';
+      case 1: return 'Admin';
+      case 0: return 'User';
+      default: return 'Không xác định';
     }
   }
 
    String get birthdayString {
-     if (birthday == null) return 'N/A';
+     if (birthday == null) return 'Chưa cập nhật';
      return DateFormat('dd/MM/yyyy').format(birthday!);
+   }
+
+    String get createdAtString {
+     if (createdAt == null) return 'Chưa cập nhật';
+     return DateFormat('dd/MM/yyyy HH:mm').format(createdAt!);
    }
 }

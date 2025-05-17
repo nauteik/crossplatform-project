@@ -12,6 +12,15 @@ class AdminSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (screenWidth < 900 && sidebarXController.extended) {
+        sidebarXController.setExtended(false);
+      } else if (screenWidth >= 900 && !sidebarXController.extended) {
+        sidebarXController.setExtended(true);
+      }
+    });
 
     return SidebarX(
       controller: sidebarXController,

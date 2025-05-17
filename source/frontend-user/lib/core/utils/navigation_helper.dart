@@ -63,20 +63,6 @@ class NavigationHelper {
     );
   }
 
-  static Future<AddressModel?> navigateToAddressSelection<T>(
-      BuildContext context) {
-    return Navigator.of(context).push<AddressModel>(
-      MaterialPageRoute(
-        builder: (context) => AddressScreen(
-          isSelecting: true,
-          onAddressSelected: (address) {
-            Navigator.of(context).pop(address);
-          },
-        ),
-      ),
-    );
-  }
-
   static void navigateToForgotPassword(BuildContext context) {
     Navigator.push(
       context,

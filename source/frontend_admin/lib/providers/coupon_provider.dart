@@ -37,7 +37,7 @@ class CouponProvider with ChangeNotifier {
   // Add a new coupon
   Future<void> addCoupon({
     required String code,
-    required int value,
+    required double value,
     required int maxUses,
   }) async {
     // Business validation (can also be done in UI before calling provider)
@@ -49,7 +49,7 @@ class CouponProvider with ChangeNotifier {
         // Let's stick to the requirements (10) as per document page 5.
        throw Exception('Số lượt dùng tối đa phải là số nguyên dương từ 1 đến 10.');
     }
-     if (![10000, 20000, 50000, 100000].contains(value)) { // Allowed values as per requirements
+     if (![10000.0, 20000.0, 50000.0, 100000.0].contains(value)) { // Allowed values as per requirements
         throw Exception('Giá trị giảm giá không hợp lệ.');
      }
 

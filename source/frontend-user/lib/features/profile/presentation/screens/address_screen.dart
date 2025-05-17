@@ -6,13 +6,8 @@ import '../../data/repositories/address_provider.dart';
 import 'address_form_screen.dart';
 
 class AddressScreen extends StatefulWidget {
-  final bool isSelecting;
-  final Function(AddressModel)? onAddressSelected;
-
   const AddressScreen({
     Key? key,
-    this.isSelecting = false,
-    this.onAddressSelected,
   }) : super(key: key);
 
   @override
@@ -50,7 +45,7 @@ class _AddressScreenState extends State<AddressScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isSelecting ? 'Chọn địa chỉ giao hàng' : 'Địa chỉ của tôi'),
+        title: const Text('Địa chỉ của tôi'),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -165,103 +160,91 @@ class _AddressScreenState extends State<AddressScreen> {
           width: address.isDefault ? 2 : 0,
         ),
       ),
-      child: InkWell(
-        onTap: widget.isSelecting
-            ? () {
-                if (widget.onAddressSelected != null) {
-                  widget.onAddressSelected!(address);
-                }
-                Navigator.of(context).pop();
-              }
-            : null,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    address.fullName,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                if (address.isDefault)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Text(
-                      address.fullName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                      'Mặc định',
+                      style: TextStyle(
+                        color: Colors.blue.shade700,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
                       ),
                     ),
                   ),
-                  if (address.isDefault)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'Mặc định',
-                        style: TextStyle(
-                          color: Colors.blue.shade700,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(address.phoneNumber),
-              const SizedBox(height: 4),
-              Text(
-                address.fullAddress,
-                style: const TextStyle(color: Colors.black87),
-              ),
-              const SizedBox(height: 16),
-              if (!widget.isSelecting)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (!address.isDefault)
-                      TextButton.icon(
-                        onPressed: () async {
-                          if (authProvider.userId != null) {
-                            await addressProvider.setDefaultAddress(
-                              authProvider.userId!,
-                              address.id!,
-                              authProvider.token ?? '',
-                            );
-                          }
-                        },
-                        icon: const Icon(Icons.check_circle_outline, size: 18),
-                        label: const Text('Đặt mặc định'),
-                      ),
-                    TextButton.icon(
-                      onPressed: () => _navigateToAddressForm(
-                        context,
-                        address: address,
-                      ),
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Sửa'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _showDeleteConfirmation(context, address),
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        size: 18,
-                        color: Colors.red,
-                      ),
-                      label: const Text(
-                        'Xóa',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(address.phoneNumber),
+            const SizedBox(height: 4),
+            Text(
+              address.fullAddress,
+              style: const TextStyle(color: Colors.black87),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (!address.isDefault)
+                  TextButton.icon(
+                    onPressed: () async {
+                      if (authProvider.userId != null) {
+                        await addressProvider.setDefaultAddress(
+                          authProvider.userId!,
+                          address.id!,
+                          authProvider.token ?? '',
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text('Đặt mặc định'),
+                  ),
+                TextButton.icon(
+                  onPressed: () => _navigateToAddressForm(
+                    context,
+                    address: address,
+                  ),
+                  icon: const Icon(Icons.edit, size: 18),
+                  label: const Text('Sửa'),
                 ),
-            ],
-          ),
+                TextButton.icon(
+                  onPressed: () => _showDeleteConfirmation(context, address),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    size: 18,
+                    color: Colors.red,
+                  ),
+                  label: const Text(
+                    'Xóa',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
