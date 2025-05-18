@@ -17,7 +17,6 @@ import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/producttype")
-@CrossOrigin(origins = "*")
 public class ProductTypeController {
 
     private static final Logger logger = Logger.getLogger(ProductTypeController.class.getName());
