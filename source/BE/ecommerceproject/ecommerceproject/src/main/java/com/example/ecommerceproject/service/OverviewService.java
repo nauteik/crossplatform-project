@@ -2,22 +2,17 @@ package com.example.ecommerceproject.service;
 
 import com.example.ecommerceproject.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
 public class OverviewService
 {
-    private static final Logger logger = Logger.getLogger(OverviewService.class.getName());
     private final UserService userService;
     private final OrderService orderService;
     private final ProductService productService;
@@ -175,57 +170,38 @@ public class OverviewService
         return result;
     }
 
-    // Lấy dữ liệu tổng quan với caching để tăng hiệu năng
-    @Cacheable("overviewData")
+    // Lấy dữ liệu tổng quan
     public OverviewData getOverview() {
-        logger.info("Fetching overview data...");
-        
-        try {
-            // Sử dụng CompletableFuture để lấy dữ liệu song song
-            CompletableFuture<Integer> totalUsersFuture = CompletableFuture.supplyAsync(this::getTotalUsers);
-            CompletableFuture<Integer> totalOrdersFuture = CompletableFuture.supplyAsync(this::getTotalOrders);
-            CompletableFuture<Integer> totalProductTypesFuture = CompletableFuture.supplyAsync(this::getTotalProductTypes);
-            CompletableFuture<Integer> totalProductsFuture = CompletableFuture.supplyAsync(this::getTotalProducts);
-            CompletableFuture<Integer> newUsersFuture = CompletableFuture.supplyAsync(this::getNewUsersCreateToDay);
-            CompletableFuture<Integer> newOrdersFuture = CompletableFuture.supplyAsync(this::getNewOrdersCreateToDay);
-            CompletableFuture<Long> totalRevenueFuture = CompletableFuture.supplyAsync(this::getTotalRevenue);
-            CompletableFuture<Long> totalProfitFuture = CompletableFuture.supplyAsync(this::getTotalProfit);
-            
-            // Lấy dữ liệu theo thời gian và danh mục cũng song song
-            CompletableFuture<List<TimeBasedChartData>> timeSeriesRevenueFuture = 
-                CompletableFuture.supplyAsync(this::getRevenueAndProfitOverview);
-            CompletableFuture<List<TimeBasedChartData>> timeSeriesQuantityFuture = 
-                CompletableFuture.supplyAsync(this::getQuantitySoldOverview);
-            CompletableFuture<List<CategorySalesData>> categorySalesFuture = 
-                CompletableFuture.supplyAsync(this::getCategorySalesOverview);
-            
-            // Chờ tất cả các CompletableFuture hoàn thành
-            CompletableFuture.allOf(
-                totalUsersFuture, totalOrdersFuture, totalProductTypesFuture, totalProductsFuture,
-                newUsersFuture, newOrdersFuture, totalRevenueFuture, totalProfitFuture,
-                timeSeriesRevenueFuture, timeSeriesQuantityFuture, categorySalesFuture
-            ).join();
-            
-            // Tạo và trả về đối tượng OverviewData
-            logger.info("Overview data fetched successfully");
-            return new OverviewData(
-                totalUsersFuture.get(),
-                totalOrdersFuture.get(),
-                totalProductTypesFuture.get(),
-                totalProductsFuture.get(), 
-                newUsersFuture.get(),
-                newOrdersFuture.get(),
-                totalRevenueFuture.get(),
-                totalProfitFuture.get(),
-                timeSeriesRevenueFuture.get(),
-                timeSeriesQuantityFuture.get(),
-                categorySalesFuture.get()
-            );
-        } catch (InterruptedException | ExecutionException e) {
-            logger.severe("Error getting overview data: " + e.getMessage());
-            // Trả về dữ liệu trống trong trường hợp lỗi
-            return new OverviewData(0, 0, 0, 0, 0, 0, 0, 0, 
-                    new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-        }
+        // Lấy các chỉ số tổng
+        long totalUsers = getTotalUsers();
+        long totalOrders = getTotalOrders();
+        long totalProductTypes = getTotalProductTypes();
+        long totalProducts = getTotalProducts();
+        long newUsers = getNewUsersCreateToDay();
+        long newOrders = getNewOrdersCreateToDay();
+        long totalRevenue = getTotalRevenue();
+        long totalProfit = getTotalProfit();
+
+        // Lấy dữ liệu theo thời gian
+        List<TimeBasedChartData> timeSeriesRevenueProfitData = getRevenueAndProfitOverview();
+        List<TimeBasedChartData> timeSeriesQuantityData = getQuantitySoldOverview();
+
+        // Lấy dữ liệu bán theo danh mục
+        List<CategorySalesData> categorySalesRatio = getCategorySalesOverview();
+
+        // Tạo và trả về đối tượng DashboardData đầy đủ
+        return new OverviewData(
+                totalUsers,
+                totalOrders,
+                totalProductTypes,
+                totalProducts,
+                newUsers,
+                newOrders,
+                totalRevenue,
+                totalProfit,
+                timeSeriesRevenueProfitData,
+                timeSeriesQuantityData,
+                categorySalesRatio
+        );
     }
 }

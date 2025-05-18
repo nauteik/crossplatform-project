@@ -1,55 +1,35 @@
 package com.example.ecommerceproject.security;
 
-import com.example.ecommerceproject.response.ApiResponse;
 import com.example.ecommerceproject.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig {
 
     private final UserService userService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
-
-    @Value("${jwt.secret-key}")
-    private String secretKey;
-
+    
     @Autowired
-    public SecurityConfig(
-            @Lazy AuthenticationManager authenticationManager,
-            @Lazy UserDetailsService userDetailsService, 
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
+    public SecurityConfig(UserService userService, JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.userService = userService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.userService = null; // This will be initialized in the constructor
     }
     
     @Bean
@@ -68,70 +48,87 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Đảm bảo CORS được bật trước khi vô hiệu hóa CSRF
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write(new ObjectMapper().writeValueAsString(
-                            new ApiResponse<>(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage())));
-                })
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                    response.getWriter().write(new ObjectMapper().writeValueAsString(
-                            new ApiResponse<>(HttpServletResponse.SC_FORBIDDEN, accessDeniedException.getMessage())));
-                })
-            )
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/overview/**").permitAll()
-                .requestMatchers("/api/product/**").permitAll()
-                .requestMatchers("/api/producttype/**").permitAll()
-                .requestMatchers("/api/tag/**").permitAll()
-                .requestMatchers("/api/brand/**").permitAll()
-                .requestMatchers("/api/image/**").permitAll()
-                .requestMatchers("/api/review/**").permitAll()
-                .requestMatchers("/api/pc/**").permitAll()
+                .requestMatchers("/api/user/getAll").permitAll()
+                .requestMatchers("/api/user/get/**").permitAll()
+                .requestMatchers("/api/user/**").permitAll()
+                .requestMatchers("/login/oauth2/**").permitAll()
+                // Image API paths
+                .requestMatchers("/api/images/**").permitAll()
+                // Cart API paths
                 .requestMatchers("/api/cart/**").permitAll()
-                .requestMatchers("/api/message/send/**").permitAll()
-                .requestMatchers("/api/order/create").permitAll()
+                // Order API paths - adding permission for all order endpoints
+                .requestMatchers("/api/orders/**").permitAll()
+                // Brand API paths
+                .requestMatchers("/api/brand/brands").permitAll()
+                .requestMatchers("/api/brand/{id}").permitAll()
+                .requestMatchers("/api/brand/create").permitAll()
+                .requestMatchers("/api/brand/update/{id}").permitAll()
+                .requestMatchers("/api/brand/delete/{id}").permitAll()
+                // ProductType API paths
+                .requestMatchers("/api/producttype/**").permitAll()
+                // Address API paths
                 .requestMatchers("/api/address/**").permitAll()
-                .requestMatchers("/api/coupon/validate/**").permitAll()
-                .requestMatchers("/websocket/**").permitAll()
-                .requestMatchers("/api/ai/**").permitAll()
-                .requestMatchers("/api/statistics/**").hasAnyAuthority("ADMIN")
+                // Message API paths
+                .requestMatchers("/api/messages/**").permitAll()
+                .requestMatchers("/chat/**").permitAll()
+                // Product API paths
+                .requestMatchers("/api/tags/**").permitAll()
+                // Product API paths
+                .requestMatchers("/api/product/**").permitAll()
+                // Review API paths 
+                .requestMatchers("/api/reviews/**").permitAll()
+                // Coupon API paths
+                .requestMatchers("/api/coupon/**").permitAll()
+                .requestMatchers("/api/coupons/**").permitAll()
+                // Dashboard API paths
+                .requestMatchers("/api/dashboard/**").permitAll()
+                // Overview API paths
+                .requestMatchers("/api/overview/**").permitAll()
+                // Statistics API paths
+                .requestMatchers("/api/statistics/**").permitAll()
+                // PC API paths
+                .requestMatchers("/api/pc/**").permitAll()
                 .anyRequest().authenticated()
-            );
+            )
+            .oauth2Login(oauth2 -> oauth2
+                .defaultSuccessUrl("/api/auth/oauth2-success", true)
+                .authorizationEndpoint(endpoint -> 
+                    endpoint.baseUri("/oauth2/authorization")
+                )
+                // Xác định các URL public không yêu cầu xác thực
+                .permitAll()
+)
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
 
-        // Thêm JWT filter
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .httpBasic(httpBasic -> httpBasic.disable())
+            .formLogin(form -> form.disable());
 
         return http.build();
     }
-
+    
+    // Tắt phương thức này vì chúng ta sẽ sử dụng CorsFilter
+    /*
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-            "https://hkt-user.netlify.app",
-            "https://hkt-admin.netlify.app",
-            "http://localhost:3000",
-            "http://localhost:8080"
-        ));
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
-        
+        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
+        configuration.setExposedHeaders(Arrays.asList("x-auth-token"));
+        configuration.setAllowCredentials(true); // Cho phép credentials nếu cần
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-        
         return source;
     }
+    */
 }
