@@ -31899,7 +31899,7 @@ aR6(a){a.ga3().vc(B.Sx)
 switch(A.bo().a){case 0:case 1:return A.DO()
 case 2:return A.pv(A.b([A.Hu(B.Dv),A.aff()],t.mo),t.H)
 case 3:case 4:case 5:return A.d2(null,t.H)}},
-BI(){return"http://localhost:8080"},
+BI(){return"https://hkt-backend-a2bb8a1df288.herokuapp.com"},
 DZ(a){var s
 if(a.length===0)return""
 s=Date.now()

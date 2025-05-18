@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:frontend_admin/features/orders_management/models/order_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:frontend_admin/constants/api_constants.dart';
 
 enum DateFilter {
   all,
@@ -15,7 +16,7 @@ enum DateFilter {
 
 class OrderController {
   // Base URL for API calls - update to match your actual backend URL
-  final String baseUrl = 'http://localhost:8080/api/orders';
+  final String baseUrl = ApiConstants.baseUrl + '/orders';
   
   // Get all orders with pagination and date filtering
   Future<Map<String, dynamic>> getAllOrders({
