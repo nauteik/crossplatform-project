@@ -45,10 +45,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // Cho phép tất cả các đường dẫn
-                .allowedOriginPatterns("*") // Cho phép tất cả các origin (sử dụng allowedOriginPatterns thay vì allowedOrigins để hỗ trợ wildcard tốt hơn)
+                .allowedOriginPatterns("*") // Cho phép tất cả các origin
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Cho phép các phương thức HTTP
                 .allowedHeaders("*") // Cho phép tất cả các header
-                .allowCredentials(true); // Cho phép gửi cookie
+                .exposedHeaders("Authorization") // Thêm exposedHeaders
+                .allowCredentials(true) // Đảm bảo cho phép credentials
+                .maxAge(3600); // Thêm maxAge
     }
     
     @Bean
