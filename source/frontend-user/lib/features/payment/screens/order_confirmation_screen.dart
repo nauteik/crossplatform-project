@@ -228,7 +228,7 @@ class OrderConfirmationScreen extends StatelessWidget {
             // Final amount
             _buildDetailRow(
               order.hasCoupon ? 'Tổng tiền thanh toán' : 'Tổng số tiền',
-              formatCurrency(order.hasCoupon ? order.finalAmount : order.totalAmount),
+              formatCurrency(order.hasCoupon || order.hasLoyaltyPoints ? order.finalAmount : order.totalAmount),
               valueStyle: const TextStyle(
                 fontWeight: FontWeight.bold, 
                 fontSize: 16,

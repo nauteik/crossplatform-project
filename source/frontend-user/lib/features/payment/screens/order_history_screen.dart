@@ -205,7 +205,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        formatCurrency(order.totalAmount),
+                        formatCurrency(order.hasCoupon || order.hasLoyaltyPoints ? order.finalAmount : order.totalAmount),
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -213,7 +213,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with WidgetsBin
                       ),
                       if (order.couponDiscount != null && order.couponDiscount! > 0)
                         Text(
-                          'Giảm: -${formatCurrency(order.couponDiscount!)}',
+                          'Giảm: -${formatCurrency(order.couponDiscount! + order.loyaltyPointsDiscount!)}',
                           style: TextStyle(
                             color: Colors.green[700],
                             fontWeight: FontWeight.w500,

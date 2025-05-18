@@ -500,6 +500,7 @@ public class DataLoader implements CommandLineRunner {
         product.setPrice(price);
         product.setQuantity(quantity);
         product.setDescription(description);
+        product.setCreatedAt(LocalDateTime.now().minusDays(2));
         
         // Thiết lập hình ảnh theo loại sản phẩm
         String typeName = productType.getName().toLowerCase();
