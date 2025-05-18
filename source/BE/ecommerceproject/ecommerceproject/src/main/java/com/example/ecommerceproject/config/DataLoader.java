@@ -102,7 +102,8 @@ public class DataLoader implements CommandLineRunner {
         List<String> brandNames = Arrays.asList(
             "ASUS", "MSI", "Gigabyte", "Intel", "AMD", "NVIDIA", 
             "Corsair", "Kingston", "Western Digital", "Seagate", 
-            "Samsung", "G.Skill", "EVGA", "Cooler Master", "Thermaltake"
+            "Samsung", "G.Skill", "EVGA", "Cooler Master", "Thermaltake",
+            "Khác"
         );
         
         List<Brand> brands = new ArrayList<>();
@@ -118,7 +119,7 @@ public class DataLoader implements CommandLineRunner {
 
     private List<ProductType> createProductTypes() {
         List<String> typeNames = Arrays.asList(
-            "CPU", "GPU", "Mainboard", "RAM", "SSD", "HDD", 
+             "PC", "CPU", "GPU", "Mainboard", "RAM", "SSD", "HDD", 
             "PSU", "Case", "Cooling", "Monitor", "Peripherals"
         );
         
@@ -166,6 +167,7 @@ public class DataLoader implements CommandLineRunner {
         ProductType hddType = productTypeRepository.findByName("HDD");
         ProductType psuType = productTypeRepository.findByName("PSU");
         ProductType caseType = productTypeRepository.findByName("Case");
+        ProductType pcType = productTypeRepository.findByName("PC");
         
         // Lấy các Brand theo tên để dễ sử dụng
         Brand intel = brandRepository.findByName("Intel");
@@ -412,6 +414,35 @@ public class DataLoader implements CommandLineRunner {
                 42, 15.0, asus, caseType)
         );
         
+        // Danh sách sản phẩm PC (máy tính đã build sẵn)
+        Brand khacBrand = brandRepository.findByName("Khác");
+        
+        List<Product> pcProducts = Arrays.asList(
+            createProduct("PC Gaming Enthusiast Intel Edition", 55990000, 10, 
+                "Máy tính chơi game hiệu năng cao với CPU Intel Core i9, RTX 4080, tản nhiệt nước, đèn RGB",
+                32, 8.0, khacBrand, pcType),
+                
+            createProduct("PC Gaming Pro AMD Edition", 42990000, 15, 
+                "Máy tính chơi game chuyên nghiệp với CPU Ryzen 9, RTX 4070, 32GB RAM DDR5",
+                48, 5.0, khacBrand, pcType),
+                
+            createProduct("PC Workstation Creator", 68990000, 5, 
+                "Máy trạm làm việc dành cho các nhà sáng tạo nội dung, đồ họa 3D, với RTX 4090 và 64GB RAM",
+                12, 3.0, khacBrand, pcType),
+                
+            createProduct("PC Gaming Mid-range Intel", 32990000, 25, 
+                "Máy tính chơi game tầm trung với CPU Intel Core i5, RTX 4060, 16GB RAM DDR5",
+                65, 10.0, khacBrand, pcType),
+                
+            createProduct("PC Gaming Mid-range AMD", 30990000, 30, 
+                "Máy tính chơi game tầm trung với CPU Ryzen 5, RTX 4060, 16GB RAM DDR5",
+                72, 12.0, khacBrand, pcType),
+                
+            createProduct("PC Office Business", 18990000, 40, 
+                "Máy tính văn phòng dành cho doanh nghiệp, CPU Intel Core i5, 16GB RAM, SSD 512GB",
+                95, 5.0, khacBrand, pcType)
+        );
+        
         // Gộp tất cả các sản phẩm lại và lưu vào database
         List<Product> allProducts = new ArrayList<>();
         allProducts.addAll(cpuProducts);
@@ -422,6 +453,7 @@ public class DataLoader implements CommandLineRunner {
         allProducts.addAll(hddProducts);
         allProducts.addAll(psuProducts);
         allProducts.addAll(caseProducts);
+        allProducts.addAll(pcProducts);
         
         productRepository.saveAll(allProducts);
         
@@ -468,8 +500,57 @@ public class DataLoader implements CommandLineRunner {
         product.setPrice(price);
         product.setQuantity(quantity);
         product.setDescription(description);
-        product.setPrimaryImageUrl("razormouse1.png");
-        product.setImageUrls(List.of("razormouse2.png", "razormouse3.png", "razormouse4.png", "razormouse5.png"));
+        
+        // Thiết lập hình ảnh theo loại sản phẩm
+        String typeName = productType.getName().toLowerCase();
+        String primaryImage = typeName + "1.png";
+        List<String> imageUrls = new ArrayList<>();
+        
+        switch (typeName) {
+            case "cpu":
+                primaryImage = "cpu1.png";
+                imageUrls = List.of("cpu2.png", "cpu3.png", "cpu4.png");
+                break;
+            case "gpu":
+                primaryImage = "gpu1.png";
+                imageUrls = List.of("gpu2.png", "gpu3.png", "gpu4.png");
+                break;
+            case "mainboard":
+                primaryImage = "mainboard1.png";
+                imageUrls = List.of("mainboard2.png", "mainboard3.png", "mainboard4.png");
+                break;
+            case "ram":
+                primaryImage = "ram1.png";
+                imageUrls = List.of("ram2.png", "ram3.png", "ram4.png");
+                break;
+            case "ssd":
+                primaryImage = "ssd1.png";
+                imageUrls = List.of("ssd2.png", "ssd3.png", "ssd4.png");
+                break;
+            case "hdd":
+                primaryImage = "hdd1.png";
+                imageUrls = List.of("hdd2.png", "hdd3.png", "hdd4.png");
+                break;
+            case "psu":
+                primaryImage = "psu1.png";
+                imageUrls = List.of("psu2.png", "psu3.png", "psu4.png");
+                break;
+            case "case":
+                primaryImage = "case1.png";
+                imageUrls = List.of("case2.png", "case3.png", "case4.png");
+                break;
+            case "pc":
+                primaryImage = "pc1.png";
+                imageUrls = List.of("pc2.png", "pc3.png", "pc4.png");
+                break;
+            default:
+                primaryImage = "razormouse1.png";
+                imageUrls = List.of("razormouse2.png", "razormouse3.png", "razormouse4.png");
+                break;
+        }
+        
+        product.setPrimaryImageUrl(primaryImage);
+        product.setImageUrls(imageUrls);
         product.setSoldCount(soldCount);
         product.setDiscountPercent(discountPercent);
         product.setBrand(brand);
@@ -499,6 +580,22 @@ public class DataLoader implements CommandLineRunner {
             specifications.put("Kiến trúc", brand.getName().equals("Intel") ? "Raptor Lake" : "Zen 4");
             specifications.put("Quy trình sản xuất", brand.getName().equals("Intel") ? "10nm" : "5nm");
             specifications.put("Card đồ họa tích hợp", brand.getName().equals("Intel") ? "UHD Graphics 770" : "Radeon Graphics");
+        }
+        
+        // PC specifications (prebuilt PC)
+        else if (productType.getName().equals("PC")) {
+            // Thông số cơ bản cho một máy tính đã build sẵn
+            specifications.put("CPU", name.contains("Intel") ? "Intel Core i7-14700K" : "AMD Ryzen 7 7800X3D");
+            specifications.put("Mainboard", name.contains("Intel") ? "ASUS ROG STRIX Z790-F GAMING WIFI" : "MSI MAG B650 TOMAHAWK WIFI");
+            specifications.put("RAM", "32GB DDR5 5600MHz");
+            specifications.put("GPU", name.contains("Gaming") ? "NVIDIA GeForce RTX 4070 12GB" : "NVIDIA GeForce RTX 4060 Ti 8GB");
+            specifications.put("SSD", "1TB NVMe M.2 PCIe Gen 4");
+            specifications.put("HDD", "2TB 7200RPM SATA");
+            specifications.put("PSU", "750W 80 Plus Gold");
+            specifications.put("Case", "Tempered Glass Mid Tower");
+            specifications.put("Cooling", "AIO Liquid Cooling 240mm");
+            specifications.put("OS", "Windows 11 Home");
+            specifications.put("Kích thước", "420 x 210 x 480 mm");
         }
         
         // GPU specifications

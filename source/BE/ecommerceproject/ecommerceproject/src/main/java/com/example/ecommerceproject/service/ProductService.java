@@ -99,8 +99,14 @@ public class ProductService {
             return null;
         }
 
-        product.setId(id);
-        return productRepository.save(product);
+        Product existingProduct = productRepository.findById(id).orElse(null);
+        if (existingProduct != null) {
+            product.setId(id);
+            product.setCreatedAt(existingProduct.getCreatedAt());
+            return productRepository.save(product);
+        }
+
+        return null;
     }
 
     public boolean deleteProduct(String id) {
