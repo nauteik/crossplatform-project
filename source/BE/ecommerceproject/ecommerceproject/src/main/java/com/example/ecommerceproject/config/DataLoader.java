@@ -536,8 +536,8 @@ public class DataLoader implements CommandLineRunner {
                 imageUrls = List.of("psu2.png", "psu3.png", "psu4.png");
                 break;
             case "case":
-                primaryImage = "case1.png";
-                imageUrls = List.of("case2.png", "case3.png", "case4.png");
+                primaryImage = "pc1.png";
+                imageUrls = List.of("pc2.png", "pc3.png", "pc4.png");
                 break;
             case "pc":
                 primaryImage = "pc1.png";
