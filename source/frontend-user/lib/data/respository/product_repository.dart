@@ -13,34 +13,19 @@ class ProductRepository {
   // Lấy tất cả sản phẩm
   Future<ApiResponse<List<ProductModel>>> getProducts() async {
     try {
-      // Sử dụng API có phân trang, mặc định trang 0, kích thước 8
       final response = await http.get(
-        Uri.parse('$baseUrl/api/product/products/paged?page=0&size=8')
+        Uri.parse('$baseUrl/api/product/products')
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
-        
-        if (responseData['data'] is Map<String, dynamic> && 
-            responseData['data'].containsKey('products') && 
-            responseData['data']['products'] is List) {
-          // Xử lý đúng cấu trúc phản hồi phân trang
-          final productsList = responseData['data']['products'] as List;
-          
-          return ApiResponse<List<ProductModel>>(
-            status: responseData['status'],
-            message: responseData['message'],
-            data: productsList.map((item) => ProductModel.fromJson(item)).toList(),
-          );
-        } else {
-          // Trường hợp cấu trúc phản hồi không như mong đợi
-          return ApiResponse.fromJson(
-            responseData,
-            (data) => (data is List) 
-                ? data.map((item) => ProductModel.fromJson(item)).toList()
-                : [],
-          );
-        }
+
+        return ApiResponse.fromJson(
+          responseData,
+          (data) => (data as List)
+              .map((item) => ProductModel.fromJson(item))
+              .toList(),
+        );
       } else {
         throw Exception('Failed to load products: Status code ${response.statusCode}');
       }
