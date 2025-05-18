@@ -108,18 +108,9 @@ class ProductInfo extends StatelessWidget {
           ],
         ),
         
-        // Rating and sold count
-        const SizedBox(height: 8),
+        // sold count
         Row(
           children: [
-            const Icon(Icons.star, color: Colors.amber, size: 18),
-            const Text(
-              '4.8',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
             const SizedBox(width: 16),
             Text(
               'Đã bán: ${product.soldCount}',

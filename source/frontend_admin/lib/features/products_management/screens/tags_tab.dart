@@ -95,6 +95,7 @@ class _TagsTabState extends State<TagsTab> {
         color: _colorController.text.trim(),
         description: _descriptionController.text.trim(),
         active: _isActive,
+        createdAt: DateTime.now().toIso8601String(), // Thêm trường createdAt
       );
       
       Provider.of<TagProvider>(context, listen: false)
@@ -123,6 +124,7 @@ class _TagsTabState extends State<TagsTab> {
         color: _colorController.text.trim(),
         description: _descriptionController.text.trim(),
         active: _isActive,
+        createdAt: _selectedTag!.createdAt, // Sử dụng createdAt từ tag hiện tại
       );
       
       Provider.of<TagProvider>(context, listen: false)

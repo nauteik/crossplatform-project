@@ -358,25 +358,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Giảm đến 20% cho tất cả sản phẩm công nghệ',
+            'Giảm tối đa đến 50% cho tất cả sản phẩm công nghệ',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blue.shade700,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text(
-              'Khám Phá Ngay',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
         ],
       ),
     );

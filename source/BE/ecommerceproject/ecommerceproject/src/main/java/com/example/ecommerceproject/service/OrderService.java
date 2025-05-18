@@ -325,6 +325,95 @@ public class OrderService {
         
         return orders;
     }
+    
+    /**
+     * Get filtered orders with pagination
+     * 
+     * @param status      Order status filter
+     * @param startDate   Start date filter (ISO-8601 format)
+     * @param endDate     End date filter (ISO-8601 format)
+     * @param page        Page number (0-based)
+     * @param size        Page size
+     * @return Map containing orders and pagination info
+     */
+    public Map<String, Object> getFilteredOrders(String status, String startDate, String endDate, int page, int size) {
+        // Lấy tất cả đơn hàng trước (để tương thích với cách triển khai cũ)
+        List<Order> allOrders = getAllOrders();
+        List<Order> filteredOrders = new ArrayList<>(allOrders);
+        
+        // Log thông tin bộ lọc cho debug
+        logger.info("Filtering orders - status: {}, startDate: {}, endDate: {}, page: {}, size: {}", 
+                    status, startDate, endDate, page, size);
+        
+        // Lọc theo trạng thái nếu được chỉ định
+        if (status != null && !status.isEmpty()) {
+            try {
+                OrderStatus orderStatus = OrderStatus.valueOf(status);
+                filteredOrders = filteredOrders.stream()
+                                            .filter(order -> order.getStatus() == orderStatus)
+                                            .collect(Collectors.toList());
+                logger.info("After status filter: {} orders", filteredOrders.size());
+            } catch (IllegalArgumentException e) {
+                logger.warn("Invalid order status: {}", status);
+            }
+        }
+        
+        // Lọc theo ngày bắt đầu nếu được chỉ định
+        if (startDate != null && !startDate.isEmpty()) {
+            try {
+                LocalDateTime startDateTime = LocalDateTime.parse(startDate);
+                filteredOrders = filteredOrders.stream()
+                                            .filter(order -> order.getCreatedAt().isAfter(startDateTime) || 
+                                                           order.getCreatedAt().isEqual(startDateTime))
+                                            .collect(Collectors.toList());
+                logger.info("After startDate filter: {} orders", filteredOrders.size());
+            } catch (Exception e) {
+                logger.error("Error parsing startDate: {}", startDate, e);
+            }
+        }
+        
+        // Lọc theo ngày kết thúc nếu được chỉ định
+        if (endDate != null && !endDate.isEmpty()) {
+            try {
+                LocalDateTime endDateTime = LocalDateTime.parse(endDate);
+                filteredOrders = filteredOrders.stream()
+                                            .filter(order -> order.getCreatedAt().isBefore(endDateTime) || 
+                                                           order.getCreatedAt().isEqual(endDateTime))
+                                            .collect(Collectors.toList());
+                logger.info("After endDate filter: {} orders", filteredOrders.size());
+            } catch (Exception e) {
+                logger.error("Error parsing endDate: {}", endDate, e);
+            }
+        }
+        
+        // Tính toán tổng số trang
+        int totalItems = filteredOrders.size();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        
+        // Áp dụng phân trang
+        List<Order> pagedOrders;
+        if (page >= 0 && size > 0) {
+            int fromIndex = page * size;
+            int toIndex = Math.min(fromIndex + size, filteredOrders.size());
+            
+            if (fromIndex < filteredOrders.size()) {
+                pagedOrders = filteredOrders.subList(fromIndex, toIndex);
+            } else {
+                pagedOrders = new ArrayList<>();
+            }
+        } else {
+            pagedOrders = filteredOrders;
+        }
+        
+        // Tạo kết quả với thông tin phân trang
+        Map<String, Object> result = new HashMap<>();
+        result.put("orders", pagedOrders);
+        result.put("currentPage", page);
+        result.put("totalPages", totalPages);
+        result.put("totalItems", totalItems);
+        
+        return result;
+    }
 
     /**
      * Update order status

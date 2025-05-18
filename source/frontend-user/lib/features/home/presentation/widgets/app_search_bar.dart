@@ -4,10 +4,24 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:frontend_user/features/cart/presentation/screens/cart_screen.dart';
 import 'package:frontend_user/features/cart/providers/cart_provider.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/utils/navigation_helper.dart';
 
-class AppSearchBar extends StatelessWidget {
+class AppSearchBar extends StatefulWidget {
   const AppSearchBar({super.key});
 
+  @override
+  State<AppSearchBar> createState() => _AppSearchBarState();
+}
+
+class _AppSearchBarState extends State<AppSearchBar> {
+  final TextEditingController _searchController = TextEditingController();
+  
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+  
   Widget _platformSpecificSizedBox(double width) {
     if (kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       return SizedBox(width: width);
@@ -20,6 +34,16 @@ class AppSearchBar extends StatelessWidget {
       context,
       MaterialPageRoute(builder: (context) => const CartScreen()),
     );
+  }
+  
+  void _handleSearch(BuildContext context) {
+    final searchQuery = _searchController.text.trim();
+    if (searchQuery.isNotEmpty) {
+      // Chuyển tới màn hình ProductCategoryScreen với searchQuery
+      NavigationHelper.navigateToProductCategory(context, searchQuery: searchQuery);
+      // Xóa text sau khi tìm kiếm
+      _searchController.clear();
+    }
   }
 
   @override
@@ -44,8 +68,9 @@ class AppSearchBar extends StatelessWidget {
                   child: SizedBox(
                     height: 40,
                     child: TextField(
+                      controller: _searchController,
                       decoration: InputDecoration(
-                        hintText: 'Tìm kiếm...',
+                        hintText: 'Tìm kiếm sản phẩm...',
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
@@ -61,7 +86,22 @@ class AppSearchBar extends StatelessWidget {
                             const EdgeInsets.symmetric(horizontal: 10),
                         prefixIcon:
                             const Icon(Icons.search, color: Colors.grey),
+                        suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {});
+                              },
+                            )
+                          : null,
                       ),
+                      onChanged: (value) {
+                        setState(() {});
+                      },
+                      onSubmitted: (value) {
+                        _handleSearch(context);
+                      },
                     ),
                   ),
                 ),

@@ -80,18 +80,7 @@ public class SecurityConfig {
                 // Product API paths
                 .requestMatchers("/api/tags/**").permitAll()
                 // Product API paths
-                .requestMatchers("/api/product/products").permitAll()
-                .requestMatchers("/api/product/products/paged").permitAll()
-                .requestMatchers("/api/product/{id}").permitAll()
-                .requestMatchers("/api/product/search").permitAll()
-                .requestMatchers("/api/product/by-brand/{brandId}").permitAll()
-                .requestMatchers("/api/product/by-type/{productTypeId}").permitAll()
-                .requestMatchers("/api/product/create").permitAll()
-                .requestMatchers("/api/product/update/{id}").permitAll()
-                .requestMatchers("/api/product/delete/{id}").permitAll()
-                .requestMatchers("/api/product/discount/{id}").permitAll()
-                .requestMatchers("/api/product/discount-brand/{brandId}").permitAll()
-                .requestMatchers("/api/product/discount-type/{productTypeId}").permitAll()
+                .requestMatchers("/api/product/**").permitAll()
                 // Review API paths 
                 .requestMatchers("/api/reviews/**").permitAll()
                 // Coupon API paths

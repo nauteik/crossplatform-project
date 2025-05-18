@@ -402,15 +402,30 @@ public class OrderController {
      * Get all orders - new endpoint for admin interface
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAllOrders() {
+    public ResponseEntity<ApiResponse<?>> getAllOrders(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            List<Order> orders = orderService.getAllOrders();
+            // Log các tham số nhận được để debug
+            System.out.println("Filter params - status: " + status + 
+                               ", startDate: " + startDate + 
+                               ", endDate: " + endDate +
+                               ", page: " + page +
+                               ", size: " + size);
+            
+            // Lấy và lọc danh sách đơn hàng
+            Map<String, Object> result = orderService.getFilteredOrders(status, startDate, endDate, page, size);
+            
             return ResponseEntity.ok(new ApiResponse<>(
                     ApiStatus.SUCCESS.getCode(),
-                    "All orders retrieved successfully",
-                    orders
+                    "Orders retrieved successfully",
+                    result
             ));
         } catch (Exception e) {
+            e.printStackTrace(); // In stack trace để dễ debug
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     new ApiResponse<>(ApiStatus.SERVER_ERROR.getCode(),
                             "Error retrieving orders: " + e.getMessage(), null));

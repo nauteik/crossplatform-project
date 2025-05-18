@@ -69,7 +69,7 @@ public class EmailService {
                 "        <p>Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua email hỗ trợ.</p>" +
                 "    </div>" +
                 "    <div class=\"footer\">" +
-                "        <p>&copy; 2024 Cửa hàng của chúng tôi. Tất cả các quyền được bảo lưu.</p>" +
+                "        <p>&copy; 2025 HKT Store. Tất cả các quyền được bảo lưu.</p>" +
                 "        <p>Đây là email tự động, vui lòng không trả lời.</p>" +
                 "    </div>" +
                 "</body>" +

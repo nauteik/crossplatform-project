@@ -475,7 +475,296 @@ public class DataLoader implements CommandLineRunner {
         product.setBrand(brand);
         product.setProductType(productType);
         product.setTags(new ArrayList<>());
+        
+        // Thêm specifications cho sản phẩm dựa vào loại sản phẩm
+        Map<String, String> specifications = new HashMap<>();
+        
+        // CPU specifications
+        if (productType.getName().equals("CPU")) {
+            // Trích xuất thông tin từ description
+            String cores = extractCores(description);
+            String threads = extractThreads(description);
+            String socket = extractSocket(description);
+            String baseClock = extractBaseClock(description);
+            String boostClock = extractBoostClock(description);
+            String cacheSize = extractCacheSize(description);
+            
+            specifications.put("cores", cores);
+            specifications.put("threads", threads);
+            specifications.put("socket", socket);
+            specifications.put("base_clock", baseClock);
+            specifications.put("boost_clock", boostClock);
+            specifications.put("cache", cacheSize);
+            specifications.put("tdp", brand.getName().equals("Intel") ? "125W" : "105W");
+            specifications.put("architecture", brand.getName().equals("Intel") ? "Raptor Lake" : "Zen 4");
+            specifications.put("manufacturing_process", brand.getName().equals("Intel") ? "10nm" : "5nm");
+            specifications.put("integrated_graphics", brand.getName().equals("Intel") ? "UHD Graphics 770" : "Radeon Graphics");
+        }
+        
+        // GPU specifications
+        else if (productType.getName().equals("GPU")) {
+            // Trích xuất thông tin từ description và name
+            String memorySize = extractMemorySize(description);
+            
+            specifications.put("memory_size", memorySize);
+            specifications.put("memory_type", name.contains("RTX 40") ? "GDDR6X" : "GDDR6");
+            specifications.put("memory_bus", name.contains("RTX 4090") ? "384-bit" : 
+                              name.contains("RTX 4080") ? "256-bit" : 
+                              name.contains("RTX 4070") ? "192-bit" : 
+                              name.contains("RTX 4060") ? "128-bit" : "256-bit");
+            specifications.put("cuda_cores", name.contains("RX 7900") ? "12288" : 
+                               name.contains("RX 7800") ? "3840" : 
+                               name.contains("RX 6700") ? "2560" : "");
+            specifications.put("stream_processors", name.contains("RX 7900") ? "12288" : 
+                               name.contains("RX 7800") ? "3840" : 
+                               name.contains("RX 6700") ? "2560" : "");
+            specifications.put("ray_tracing", name.contains("RTX") || name.contains("RX 7") ? "Có" : "Không");
+            specifications.put("power_connector", name.contains("RTX 4090") || name.contains("RTX 4080") ? 
+                              "16-pin (12VHPWR)" : "8-pin PCIe");
+            specifications.put("recommended_psu", name.contains("RTX 4090") ? "850W" : 
+                               name.contains("RTX 4080") ? "750W" : 
+                               name.contains("RTX 4070") ? "650W" : "600W");
+        }
+        
+        // Mainboard specifications
+        else if (productType.getName().equals("Mainboard")) {
+            String chipset = "";
+            String socket = "";
+            
+            if (description.contains("Z790")) {
+                chipset = "Z790";
+                socket = "LGA1700";
+            } else if (description.contains("B760")) {
+                chipset = "B760";
+                socket = "LGA1700";
+            } else if (description.contains("X670E")) {
+                chipset = "X670E";
+                socket = "AM5";
+            } else if (description.contains("B650")) {
+                chipset = "B650";
+                socket = "AM5";
+            }
+            
+            String formFactor = "ATX";
+            if (description.contains("Micro-ATX") || description.contains("MATX")) {
+                formFactor = "Micro-ATX";
+            } else if (description.contains("Mini-ITX") || description.contains("ITX")) {
+                formFactor = "Mini-ITX";
+            }
+            
+            specifications.put("chipset", chipset);
+            specifications.put("socket", socket);
+            specifications.put("form_factor", formFactor);
+            specifications.put("memory_slots", "4");
+            specifications.put("memory_type", socket.equals("AM5") || socket.equals("LGA1700") ? "DDR5" : "DDR4");
+            specifications.put("max_memory", "128GB");
+            specifications.put("pcie_slots", formFactor.equals("ATX") ? "3 x PCIe 4.0 x16" : 
+                              formFactor.equals("Micro-ATX") ? "2 x PCIe 4.0 x16" : "1 x PCIe 4.0 x16");
+            specifications.put("sata_ports", formFactor.equals("ATX") ? "6" : 
+                              formFactor.equals("Micro-ATX") ? "4" : "2");
+            specifications.put("m2_slots", formFactor.equals("ATX") ? "3" : 
+                              formFactor.equals("Micro-ATX") ? "2" : "1");
+            specifications.put("usb_ports", "USB 3.2 Gen 2x2 Type-C, USB 3.2 Gen 2, USB 3.2 Gen 1, USB 2.0");
+            specifications.put("wifi", description.contains("WIFI") ? "Wi-Fi 6E" : "Không");
+            specifications.put("bluetooth", description.contains("WIFI") ? "Bluetooth 5.2" : "Không");
+        }
+        
+        // RAM specifications
+        else if (productType.getName().equals("RAM")) {
+            // Trích xuất thông tin từ description và name
+            String capacity = extractCapacity(description);
+            String memoryType = extractMemoryType(description);
+            String speed = extractMemorySpeed(description);
+            
+            specifications.put("capacity", capacity);
+            specifications.put("memory_type", memoryType);
+            specifications.put("speed", speed);
+            specifications.put("cas_latency", memoryType.equals("DDR5") ? "CL30-36-36-76" : "CL16-18-18-38");
+            specifications.put("voltage", memoryType.equals("DDR5") ? "1.35V" : "1.2V");
+            specifications.put("heat_spreader", name.contains("RGB") ? "Nhôm với đèn RGB" : "Nhôm");
+            specifications.put("xmp_profile", "Có");
+            specifications.put("form_factor", "DIMM");
+            specifications.put("modules", description.contains("2x") ? "2" : 
+                              description.contains("4x") ? "4" : "1");
+        }
+        
+        // SSD specifications
+        else if (productType.getName().equals("SSD")) {
+            // Trích xuất thông tin từ description
+            String capacity = extractCapacity(description);
+            boolean isNVMe = description.contains("NVMe") || description.contains("PCIe");
+            String formFactor = description.contains("M.2") ? "M.2" : "2.5-inch";
+            
+            specifications.put("capacity", capacity);
+            specifications.put("interface", isNVMe ? "PCIe Gen 4 x4 NVMe" : "SATA III 6Gb/s");
+            specifications.put("form_factor", formFactor);
+            specifications.put("sequential_read", isNVMe ? "7,000 MB/s" : "560 MB/s");
+            specifications.put("sequential_write", isNVMe ? "5,100 MB/s" : "530 MB/s");
+            specifications.put("controller", brand.getName().equals("Samsung") ? "Samsung Elpis" : 
+                               brand.getName().equals("Western Digital") ? "WD Proprietary" : 
+                               "Phison E18");
+            specifications.put("nand_type", "3D TLC NAND");
+            specifications.put("tbw", capacity.contains("1TB") ? "600 TBW" : 
+                              capacity.contains("2TB") ? "1,200 TBW" : "300 TBW");
+            specifications.put("mtbf", "1,500,000 giờ");
+            specifications.put("encryption", brand.getName().equals("Samsung") ? "AES 256-bit" : "Không");
+        }
+        
+        // HDD specifications
+        else if (productType.getName().equals("HDD")) {
+            // Trích xuất thông tin từ description
+            String capacity = extractCapacity(description);
+            String rpm = extractRPM(description);
+            String cacheSize = extractCacheHDD(description);
+            
+            specifications.put("capacity", capacity);
+            specifications.put("form_factor", "3.5-inch");
+            specifications.put("interface", "SATA III 6Gb/s");
+            specifications.put("rpm", rpm);
+            specifications.put("cache", cacheSize);
+            specifications.put("average_latency", "4.16ms");
+            specifications.put("data_transfer_rate", "up to 190 MB/s");
+            specifications.put("workload_rate", name.contains("IronWolf") || name.contains("Exos") ? "300 TB/year" : 
+                               "180 TB/year");
+            specifications.put("mtbf", "1,000,000 giờ");
+            if (name.contains("IronWolf") || name.contains("Exos")) {
+                specifications.put("usage_type", "NAS, Server");
+            } else {
+                specifications.put("usage_type", "Desktop, Gaming");
+            }
+        }
+        
+        // PSU specifications
+        else if (productType.getName().equals("PSU")) {
+            // Trích xuất thông tin từ description và name
+            String wattage = extractWattage(name);
+            String certification = extractCertification(description);
+            boolean isModular = description.contains("Modular");
+            
+            specifications.put("wattage", wattage);
+            specifications.put("certification", certification);
+            specifications.put("type", isModular ? "Full Modular" : "Non-Modular");
+            specifications.put("fan_size", "135mm");
+            specifications.put("pfc", "Active PFC");
+            specifications.put("efficiency", certification.contains("Gold") ? "90%" : 
+                              certification.contains("Platinum") ? "92%" : "87%");
+            specifications.put("atx_connector", "24-pin");
+            specifications.put("eps_connector", "4+4-pin & 8-pin");
+            specifications.put("pcie_connector", wattage.contains("1200") || wattage.contains("1000") ? 
+                              "6 x 6+2-pin" : "4 x 6+2-pin");
+            specifications.put("sata_connector", "10");
+            specifications.put("cooling", "Quạt 135mm với công nghệ zero RPM");
+        }
+        
+        // Case specifications
+        else if (productType.getName().equals("Case")) {
+            // Trích xuất thông tin từ description và name
+            String caseType = "";
+            if (description.contains("Full Tower")) {
+                caseType = "Full Tower";
+            } else if (description.contains("Mid Tower")) {
+                caseType = "Mid Tower";
+            } else {
+                caseType = "Mid Tower"; // Mặc định
+            }
+            
+            specifications.put("case_type", caseType);
+            specifications.put("side_panel", description.contains("TG") || description.contains("Glass") ? 
+                              "Tempered Glass" : "Acrylic");
+            specifications.put("color", "Đen");
+            specifications.put("material", "Steel, Tempered Glass");
+            specifications.put("motherboard_support", "E-ATX, ATX, Micro-ATX, Mini-ITX");
+            specifications.put("psu_mount", "Bottom");
+            specifications.put("front_io", "2 x USB 3.0, 1 x USB 3.1 Type-C, Audio In/Out");
+            specifications.put("expansion_slots", "7");
+            specifications.put("drive_bays", caseType.equals("Full Tower") ? 
+                              "6 x 3.5\", 4 x 2.5\"" : "2 x 3.5\", 3 x 2.5\"");
+            specifications.put("cooling_support", caseType.equals("Full Tower") ? 
+                              "Front: 3 x 120mm, Top: 3 x 120mm, Rear: 1 x 120mm" : 
+                              "Front: 2 x 120mm, Top: 2 x 120mm, Rear: 1 x 120mm");
+            specifications.put("max_gpu_length", caseType.equals("Full Tower") ? "420mm" : "360mm");
+            specifications.put("max_cpu_cooler_height", caseType.equals("Full Tower") ? "190mm" : "165mm");
+            specifications.put("pre_installed_fans", description.contains("RGB") ? "3 x ARGB 120mm" : "2 x 120mm");
+        }
+        
+        product.setSpecifications(specifications);
         return product;
+    }
+    
+    // Helper methods to extract specifications from description
+    private String extractCores(String description) {
+        return extractRegexValue(description, "(\\d+)\\s*Cores", "");
+    }
+    
+    private String extractThreads(String description) {
+        return extractRegexValue(description, "(\\d+)\\s*Threads", "");
+    }
+    
+    private String extractSocket(String description) {
+        if (description.toLowerCase().contains("lga1700")) return "LGA1700";
+        if (description.toLowerCase().contains("am5")) return "AM5";
+        if (description.toLowerCase().contains("am4")) return "AM4";
+        if (description.toLowerCase().contains("lga1200")) return "LGA1200";
+        return "";
+    }
+    
+    private String extractBaseClock(String description) {
+        return extractRegexValue(description, "(\\d+\\.\\d+)GHz", "");
+    }
+    
+    private String extractBoostClock(String description) {
+        return extractRegexValue(description, "up to (\\d+\\.\\d+)GHz", "");
+    }
+    
+    private String extractCacheSize(String description) {
+        return extractRegexValue(description, "(\\d+)MB Cache", "");
+    }
+    
+    private String extractMemorySize(String description) {
+        return extractRegexValue(description, "(\\d+)GB (GDDR|G)\\w+", "");
+    }
+    
+    private String extractCapacity(String description) {
+        if (description.matches(".*\\b(\\d+)TB\\b.*")) {
+            return extractRegexValue(description, "(\\d+)TB", "");
+        }
+        return extractRegexValue(description, "(\\d+)GB", "");
+    }
+    
+    private String extractMemoryType(String description) {
+        if (description.toLowerCase().contains("ddr5")) return "DDR5";
+        if (description.toLowerCase().contains("ddr4")) return "DDR4";
+        if (description.toLowerCase().contains("ddr3")) return "DDR3";
+        return "";
+    }
+    
+    private String extractMemorySpeed(String description) {
+        return extractRegexValue(description, "(\\d+)MHz", "");
+    }
+    
+    private String extractRPM(String description) {
+        return extractRegexValue(description, "(\\d+)rpm", "");
+    }
+    
+    private String extractCacheHDD(String description) {
+        return extractRegexValue(description, "(\\d+)MB Cache", "");
+    }
+    
+    private String extractWattage(String name) {
+        return extractRegexValue(name, "(\\d+)W", "");
+    }
+    
+    private String extractCertification(String description) {
+        if (description.contains("80 Plus Gold")) return "80 Plus Gold";
+        if (description.contains("80 Plus Platinum")) return "80 Plus Platinum";
+        if (description.contains("80 Plus Bronze")) return "80 Plus Bronze";
+        return "80 Plus";
+    }
+    
+    private String extractRegexValue(String text, String regex, String defaultValue) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(regex, java.util.regex.Pattern.CASE_INSENSITIVE);
+        java.util.regex.Matcher matcher = pattern.matcher(text);
+        return matcher.find() ? matcher.group(1) : defaultValue;
     }
 
     private void createUsersAndCarts() {

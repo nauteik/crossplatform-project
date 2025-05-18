@@ -1,13 +1,17 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend_admin/core/utils/image_helper.dart' show ImageHelper;
 import 'package:frontend_admin/models/brand_model.dart';
 import 'package:frontend_admin/models/product_model.dart';
 import 'package:frontend_admin/models/product_type_model.dart';
+import 'package:frontend_admin/models/tag_model.dart';
 import 'package:frontend_admin/providers/brand_provider.dart';
 import 'package:frontend_admin/providers/product_provider.dart';
 import 'package:frontend_admin/providers/product_type_provider.dart';
+import 'package:frontend_admin/providers/tag_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -40,23 +44,28 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   // Dùng để thêm/xóa các trường thông số kỹ thuật
   final List<String> _specKeys = [];
   
-  File? _imageFile;
+  XFile? _imageFile;
   String _selectedBrandId = '';
   String _selectedProductTypeId = '';
   bool _isLoading = false;
-  String? _imagePreviewUrl;
+  Uint8List? _imageBytesForWebPreview;
+  
+  // Thêm các biến cần thiết cho tags
+  final List<String> _selectedTagIds = [];
   
   @override
   void initState() {
     super.initState();
     
-    // Load brands and product types
+    // Load brands, product types, và tags
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final brandProvider = Provider.of<BrandProvider>(context, listen: false);
       final typeProvider = Provider.of<ProductTypeProvider>(context, listen: false);
+      final tagProvider = Provider.of<TagProvider>(context, listen: false);
       
       brandProvider.fetchBrands();
       typeProvider.fetchProductTypes();
+      tagProvider.fetchTags();
       
       // Nếu đang chỉnh sửa, điền thông tin sản phẩm vào form
       if (widget.isEditing && widget.product != null) {
@@ -83,7 +92,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   
   void _populateForm(Product product) {
     _nameController.text = product.name;
-    _priceController.text = product.price.toString();
+    _priceController.text = NumberFormat('#,###', 'vi_VN').format(product.price);
     _quantityController.text = product.quantity.toString();
     _descriptionController.text = product.description;
     _discountController.text = product.discountPercent.toString();
@@ -101,9 +110,18 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       _addSpecification(key, value);
     });
     
+    // Điền các tag đã chọn
+    if (product.tags.isNotEmpty) {
+      for (var tag in product.tags) {
+        if (tag['id'] != null) {
+          _selectedTagIds.add(tag['id'] as String);
+        }
+      }
+    }
+    
     // Hiển thị ảnh hiện tại nếu có
     if (product.primaryImageUrl.isNotEmpty) {
-      _imagePreviewUrl = ImageHelper.getProductImage(product.primaryImageUrl);
+      // Không cần _imagePreviewUrl nữa vì đã đổi logic hiển thị ảnh
     }
   }
   
@@ -114,12 +132,17 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       
       if (pickedFile != null) {
         setState(() {
-          // Trên web không thể truy cập trực tiếp File
-          if (!kIsWeb) {
-            _imageFile = File(pickedFile.path);
+          _imageFile = pickedFile;
+          if (kIsWeb) {
+            // Đọc bytes để preview trên web nếu cần
+            pickedFile.readAsBytes().then((bytes) {
+              setState(() {
+                _imageBytesForWebPreview = bytes;
+              });
+            });
+          } else {
+            _imageBytesForWebPreview = null; // Reset nếu không phải web
           }
-          // Lưu đường dẫn ảnh để hiển thị preview
-          _imagePreviewUrl = pickedFile.path;
         });
       }
     } catch (e) {
@@ -159,6 +182,14 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   
   Future<void> _saveProduct() async {
     if (_formKey.currentState!.validate()) {
+      // Kiểm tra xem ảnh đã được chọn chưa khi tạo mới
+      if (!widget.isEditing && _imageFile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vui lòng chọn hình ảnh cho sản phẩm')),
+        );
+        return;
+      }
+      
       // Nếu chưa chọn brand hoặc product type thì thông báo lỗi
       if (_selectedBrandId.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -182,6 +213,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         final productProvider = Provider.of<ProductProvider>(context, listen: false);
         final brandProvider = Provider.of<BrandProvider>(context, listen: false);
         final typeProvider = Provider.of<ProductTypeProvider>(context, listen: false);
+        final tagProvider = Provider.of<TagProvider>(context, listen: false);
         
         // Lấy thông tin brand và product type
         final selectedBrand = brandProvider.brands.firstWhere(
@@ -206,11 +238,25 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           }
         }
         
+        // Lấy danh sách tags đã chọn
+        final selectedTags = tagProvider.tags
+            .where((tag) => _selectedTagIds.contains(tag.id))
+            .map((tag) => {
+              'id': tag.id,
+              'name': tag.name,
+              'color': tag.color,
+            })
+            .toList();
+        
+        // Parse giá từ chuỗi đã định dạng về dạng số
+        final priceText = _priceController.text.replaceAll('.', '').replaceAll(',', '').trim();
+        final price = double.tryParse(priceText) ?? 0;
+        
         // Tạo đối tượng Product
         final product = Product(
           id: widget.isEditing && widget.product != null ? widget.product!.id : '',
           name: _nameController.text,
-          price: double.tryParse(_priceController.text) ?? 0,
+          price: price,
           quantity: int.tryParse(_quantityController.text) ?? 0,
           description: _descriptionController.text,
           primaryImageUrl: widget.isEditing && widget.product != null && _imageFile == null
@@ -232,6 +278,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             'name': selectedType.name,
           },
           specifications: specifications,
+          tags: selectedTags,
         );
         
         bool success;
@@ -242,11 +289,41 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
             product,
             imageFile: _imageFile,
           );
+          
+          // Cập nhật tags (xóa rồi thêm lại)
+          if (success) {
+            // Thêm các tag mới
+            for (String tagId in _selectedTagIds) {
+              final existingTagIds = widget.product!.tags
+                  .where((tag) => tag['id'] != null)
+                  .map((tag) => tag['id'] as String)
+                  .toList();
+                  
+              if (!existingTagIds.contains(tagId)) {
+                await tagProvider.addTagToProduct(widget.product!.id, tagId);
+              }
+            }
+            
+            // Xóa các tag đã bỏ chọn
+            for (var tag in widget.product!.tags) {
+              if (tag['id'] != null && !_selectedTagIds.contains(tag['id'])) {
+                await tagProvider.removeTagFromProduct(widget.product!.id, tag['id'] as String);
+              }
+            }
+          }
         } else {
           success = await productProvider.createProduct(
             product,
             imageFile: _imageFile,
           );
+          
+          // Thêm tags cho sản phẩm mới
+          if (success && productProvider.currentProduct != null) {
+            final newProductId = productProvider.currentProduct!.id;
+            for (String tagId in _selectedTagIds) {
+              await tagProvider.addTagToProduct(newProductId, tagId);
+            }
+          }
         }
         
         if (success) {
@@ -292,6 +369,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   Widget build(BuildContext context) {
     final brandProvider = Provider.of<BrandProvider>(context);
     final typeProvider = Provider.of<ProductTypeProvider>(context);
+    final tagProvider = Provider.of<TagProvider>(context);
     final formatCurrency = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
     
     return Scaffold(
@@ -311,28 +389,26 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     Center(
                       child: Column(
                         children: [
-                          if (_imagePreviewUrl != null) ...[
+                          if (_imageFile != null) ...[
                             Container(
                               width: 200,
                               height: 200,
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.grey),
                               ),
-                              child: kIsWeb || _imageFile == null
-                                  ? (_imageFile == null && widget.isEditing) 
+                              child: _imageFile != null
+                                  ? (kIsWeb 
+                                      ? (_imageBytesForWebPreview != null 
+                                          ? Image.memory(_imageBytesForWebPreview!, fit: BoxFit.cover) 
+                                          : const Center(child: CircularProgressIndicator()))
+                                      : Image.file(File(_imageFile!.path), fit: BoxFit.cover))
+                                  : (widget.isEditing && widget.product!.primaryImageUrl.isNotEmpty 
                                       ? Image.network(
-                                          _imagePreviewUrl!,
+                                          ImageHelper.getProductImage(widget.product!.primaryImageUrl),
                                           fit: BoxFit.cover,
                                           errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, size: 60),
                                         )
-                                      : Image.network(
-                                          _imagePreviewUrl!, 
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, size: 60),
-                                        )
-                                  : Image.file(
-                                      _imageFile!,
-                                      fit: BoxFit.cover,
+                                      : const Icon(Icons.image_not_supported, size: 60, color: Colors.grey)
                                     ),
                             ),
                             const SizedBox(height: 8),
@@ -340,7 +416,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                           ElevatedButton.icon(
                             onPressed: _pickImage,
                             icon: const Icon(Icons.photo_camera),
-                            label: Text(_imagePreviewUrl == null ? 'Chọn ảnh' : 'Đổi ảnh'),
+                            label: Text(_imageFile == null && (widget.product?.primaryImageUrl.isEmpty ?? true) ? 'Chọn ảnh' : 'Đổi ảnh'),
                           ),
                           const SizedBox(height: 20),
                         ],
@@ -373,16 +449,32 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                             decoration: const InputDecoration(
                               labelText: 'Giá (VND)',
                               border: OutlineInputBorder(),
+                              prefixText: 'đ ',
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Nhập giá';
                               }
-                              if (double.tryParse(value) == null) {
-                                return 'Giá không hợp lệ';
-                              }
                               return null;
                             },
+                            // Định dạng giá tiền khi người dùng nhập
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              TextInputFormatter.withFunction((oldValue, newValue) {
+                                if (newValue.text.isEmpty) {
+                                  return newValue;
+                                }
+                                
+                                final int value = int.parse(newValue.text);
+                                final formatter = NumberFormat('#,###', 'vi_VN');
+                                final newText = formatter.format(value);
+                                
+                                return TextEditingValue(
+                                  text: newText,
+                                  selection: TextSelection.collapsed(offset: newText.length),
+                                );
+                              }),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -574,6 +666,113 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
+                    
+                    // Tags section
+                    const SizedBox(height: 24),
+                    Card(
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Thẻ gắn kèm',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            
+                            // Hiển thị loading nếu đang tải tags
+                            if (tagProvider.status == TagStatus.loading)
+                              const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                            // Hiển thị thông báo nếu không có tags
+                            else if (tagProvider.tags.isEmpty)
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'Chưa có thẻ nào để chọn.',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              )
+                            // Hiển thị danh sách tags để chọn
+                            else
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: tagProvider.tags.map((tag) {
+                                  final isSelected = _selectedTagIds.contains(tag.id);
+                                  
+                                  // Chuyển đổi màu từ hex sang Color
+                                  Color tagColor;
+                                  try {
+                                    tagColor = Color(int.parse(tag.color.replaceFirst('#', '0xFF')));
+                                  } catch (e) {
+                                    tagColor = Colors.grey;
+                                  }
+                                  
+                                  // Tính toán màu chữ dựa vào độ sáng của màu nền
+                                  final double luminance = tagColor.computeLuminance();
+                                  final Color textColor = luminance > 0.5 ? Colors.black : Colors.white;
+                                  
+                                  return FilterChip(
+                                    label: Text(tag.name),
+                                    labelStyle: TextStyle(
+                                      color: isSelected ? textColor : Colors.black,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                    selected: isSelected,
+                                    selectedColor: tagColor,
+                                    checkmarkColor: textColor,
+                                    backgroundColor: Colors.grey.shade200,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        if (selected) {
+                                          _selectedTagIds.add(tag.id);
+                                        } else {
+                                          _selectedTagIds.remove(tag.id);
+                                        }
+                                      });
+                                    },
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      side: BorderSide(
+                                        color: isSelected ? tagColor : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                  );
+                                }).toList(),
+                              ),
+                            
+                            // Hiển thị lỗi nếu có
+                            if (tagProvider.status == TagStatus.error)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(
+                                  'Lỗi: ${tagProvider.errorMessage}',
+                                  style: TextStyle(color: Colors.red.shade700),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
                     
                     // Nút lưu
                     Center(

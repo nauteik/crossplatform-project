@@ -11,6 +11,8 @@ class Product {
   final Map<String, dynamic> brand;
   final Map<String, dynamic> productType;
   final Map<String, String> specifications;
+  final List<dynamic> tags; // Thêm tags
+  final DateTime? createdAt; // Thêm ngày tạo
 
   Product({
     required this.id,
@@ -25,6 +27,8 @@ class Product {
     required this.brand,
     required this.productType,
     required this.specifications,
+    this.tags = const [], // Default empty list
+    this.createdAt,
   });
 
   // Constructor for creating a new product with default values
@@ -42,10 +46,35 @@ class Product {
       brand: {},
       productType: {},
       specifications: {},
+      tags: [],
+      createdAt: DateTime.now(),
     );
   }
 
   factory Product.fromJson(Map<String, dynamic> json) {
+    // Parse createdAt if available
+    DateTime? parsedCreatedAt;
+    if (json['createdAt'] != null) {
+      try {
+        if (json['createdAt'] is String) {
+          parsedCreatedAt = DateTime.parse(json['createdAt']);
+        } else if (json['createdAt'] is List) {
+          // Handle array format: [year, month, day, hour, minute, second]
+          List<dynamic> dateArray = json['createdAt'];
+          parsedCreatedAt = DateTime(
+            dateArray[0] as int, // year
+            dateArray[1] as int, // month
+            dateArray[2] as int, // day
+            dateArray.length > 3 ? dateArray[3] as int : 0, // hour
+            dateArray.length > 4 ? dateArray[4] as int : 0, // minute
+            dateArray.length > 5 ? dateArray[5] as int : 0, // second
+          );
+        }
+      } catch (e) {
+        print('Error parsing createdAt: $e');
+      }
+    }
+    
     return Product(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
@@ -63,6 +92,8 @@ class Product {
       specifications: json['specifications'] != null 
           ? Map<String, String>.from(json['specifications'])
           : {},
+      tags: json['tags'] != null ? List<dynamic>.from(json['tags']) : [],
+      createdAt: parsedCreatedAt,
     );
   }
 
@@ -80,6 +111,8 @@ class Product {
       'brand': brand,
       'productType': productType,
       'specifications': specifications,
+      'tags': tags,
+      'createdAt': createdAt?.toIso8601String(),
     };
   }
 
@@ -97,6 +130,8 @@ class Product {
     Map<String, dynamic>? brand,
     Map<String, dynamic>? productType,
     Map<String, String>? specifications,
+    List<dynamic>? tags,
+    DateTime? createdAt,
   }) {
     return Product(
       id: id ?? this.id,
@@ -111,6 +146,15 @@ class Product {
       brand: brand ?? this.brand,
       productType: productType ?? this.productType,
       specifications: specifications ?? this.specifications,
+      tags: tags ?? this.tags,
+      createdAt: createdAt ?? this.createdAt,
     );
+  }
+  
+  // Helper para formatear la fecha de creación
+  String get formattedCreatedAt {
+    if (createdAt == null) return 'N/A';
+    
+    return '${createdAt!.day}/${createdAt!.month}/${createdAt!.year}';
   }
 }

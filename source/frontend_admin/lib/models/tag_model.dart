@@ -4,22 +4,25 @@ class Tag {
   final String color;
   final String description;
   final bool active;
+  final String createdAt;
 
   Tag({
     required this.id,
     required this.name,
     required this.color,
-    this.description = '',
-    this.active = true,
+    required this.description,
+    required this.active,
+    required this.createdAt,
   });
 
   factory Tag.fromJson(Map<String, dynamic> json) {
     return Tag(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      color: json['color'] ?? '#000000',
-      description: json['description'] ?? '',
-      active: json['active'] ?? true,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      color: json['color']?.toString() ?? '#000000',
+      description: json['description']?.toString() ?? '',
+      active: json['active'] as bool? ?? true,
+      createdAt: json['createdAt']?.toString() ?? '',
     );
   }
 
@@ -30,6 +33,7 @@ class Tag {
       'color': color,
       'description': description,
       'active': active,
+      'createdAt': createdAt,
     };
   }
 } 

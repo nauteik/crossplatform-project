@@ -4,6 +4,7 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/product/presentation/screens/product_detail_screen.dart';
 import '../../features/product/presentation/screens/product_review_screen.dart';
+import '../../features/product/presentation/screens/product_category_screen.dart';
 import '../../features/cart/presentation/screens/cart_screen.dart';
 import '../../features/payment/screens/order_history_screen.dart';
 import '../../features/profile/presentation/screens/address_screen.dart';
@@ -38,6 +39,14 @@ class NavigationHelper {
     return pushWithSlideTransition(
       context: context,
       page: ProductReviewScreen(productId: productId),
+    );
+  }
+
+  static Future<T?> navigateToProductCategory<T>(
+      BuildContext context, {String? searchQuery}) {
+    return pushWithSlideTransition(
+      context: context,
+      page: ProductCategoryScreen(initialSearchQuery: searchQuery),
     );
   }
 

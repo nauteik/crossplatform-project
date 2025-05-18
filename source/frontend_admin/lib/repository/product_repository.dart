@@ -1,17 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:frontend_admin/core/config/api_config.dart';
 import 'package:frontend_admin/models/api_response_model.dart';
 import 'package:frontend_admin/models/product_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 
 class ProductRepository {
-  // Lấy tất cả sản phẩm
-  Future<ApiResponse<List<Product>>> getProducts() async {
+  // Lấy tất cả sản phẩm (thêm tham số phân trang)
+  Future<ApiResponse<List<Product>>> getProducts({int page = 0, int size = 20}) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/product/products'),
+        Uri.parse('${ApiConfig.baseUrl}/api/product/products/paged?page=$page&size=$size'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -20,13 +22,19 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final List<dynamic> productsJson = responseData['data'];
+        final Map<String, dynamic> pageData = responseData['data'];
+        final List<dynamic> productsJson = pageData['products'];
         final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
+          meta: {
+            'currentPage': pageData['currentPage'],
+            'totalItems': pageData['totalItems'],
+            'totalPages': pageData['totalPages'],
+          },
         );
       } else {
         return ApiResponse<List<Product>>(
@@ -80,11 +88,11 @@ class ProductRepository {
     }
   }
 
-  // Tìm kiếm sản phẩm 
-  Future<ApiResponse<List<Product>>> searchProducts(String query) async {
+  // Tìm kiếm sản phẩm (thêm tham số phân trang)
+  Future<ApiResponse<List<Product>>> searchProducts(String query, {int page = 0, int size = 20}) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/product/search?query=$query'),
+        Uri.parse('${ApiConfig.baseUrl}/api/product/search?query=$query&page=$page&size=$size'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -93,13 +101,19 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final List<dynamic> productsJson = responseData['data'];
+        final Map<String, dynamic> pageData = responseData['data'];
+        final List<dynamic> productsJson = pageData['products'];
         final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
+          meta: {
+            'currentPage': pageData['currentPage'],
+            'totalItems': pageData['totalItems'],
+            'totalPages': pageData['totalPages'],
+          },
         );
       } else {
         return ApiResponse<List<Product>>(
@@ -117,11 +131,11 @@ class ProductRepository {
     }
   }
 
-  // Lấy sản phẩm theo thương hiệu
-  Future<ApiResponse<List<Product>>> getProductsByBrand(String brandId) async {
+  // Lấy sản phẩm theo thương hiệu (thêm tham số phân trang)
+  Future<ApiResponse<List<Product>>> getProductsByBrand(String brandId, {int page = 0, int size = 20}) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/product/by-brand/$brandId'),
+        Uri.parse('${ApiConfig.baseUrl}/api/product/by-brand/$brandId?page=$page&size=$size'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -130,13 +144,19 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final List<dynamic> productsJson = responseData['data'];
+        final Map<String, dynamic> pageData = responseData['data'];
+        final List<dynamic> productsJson = pageData['products'];
         final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
+          meta: {
+            'currentPage': pageData['currentPage'],
+            'totalItems': pageData['totalItems'],
+            'totalPages': pageData['totalPages'],
+          },
         );
       } else {
         return ApiResponse<List<Product>>(
@@ -154,11 +174,11 @@ class ProductRepository {
     }
   }
 
-  // Lấy sản phẩm theo loại
-  Future<ApiResponse<List<Product>>> getProductsByType(String typeId) async {
+  // Lấy sản phẩm theo loại (thêm tham số phân trang)
+  Future<ApiResponse<List<Product>>> getProductsByType(String typeId, {int page = 0, int size = 20}) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/api/product/by-type/$typeId'),
+        Uri.parse('${ApiConfig.baseUrl}/api/product/by-type/$typeId?page=$page&size=$size'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -167,13 +187,19 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final List<dynamic> productsJson = responseData['data'];
+        final Map<String, dynamic> pageData = responseData['data'];
+        final List<dynamic> productsJson = pageData['products'];
         final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
+          meta: {
+            'currentPage': pageData['currentPage'],
+            'totalItems': pageData['totalItems'],
+            'totalPages': pageData['totalPages'],
+          },
         );
       } else {
         return ApiResponse<List<Product>>(
@@ -190,70 +216,101 @@ class ProductRepository {
       );
     }
   }
+  
+  // Lấy sản phẩm theo tag (thêm chức năng mới)
+  Future<ApiResponse<List<Product>>> getProductsByTag(String tagId, {int page = 0, int size = 20}) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiConfig.baseUrl}/api/product/by-tag/$tagId?page=$page&size=$size'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      final Map<String, dynamic> responseData = json.decode(response.body);
+
+      if (response.statusCode == 200 && responseData['status'] == 200) {
+        final Map<String, dynamic> pageData = responseData['data'];
+        final List<dynamic> productsJson = pageData['products'];
+        final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
+        
+        return ApiResponse<List<Product>>(
+          status: responseData['status'],
+          message: responseData['message'],
+          data: products,
+          meta: {
+            'currentPage': pageData['currentPage'],
+            'totalItems': pageData['totalItems'],
+            'totalPages': pageData['totalPages'],
+          },
+        );
+      } else {
+        return ApiResponse<List<Product>>(
+          status: responseData['status'],
+          message: responseData['message'] ?? 'Không thể tải sản phẩm theo tag',
+          data: null,
+        );
+      }
+    } catch (e) {
+      return ApiResponse<List<Product>>(
+        status: 500,
+        message: 'Lỗi kết nối: $e',
+        data: null,
+      );
+    }
+  }
 
   // Tạo sản phẩm mới
-  Future<ApiResponse<Product>> createProduct(Product product, {File? imageFile}) async {
+  Future<ApiResponse<Product>> createProduct(Product product, {XFile? imageFile}) async {
     try {
-      final url = Uri.parse('${ApiConfig.baseUrl}/api/product/create');
+      final url = Uri.parse('${ApiConfig.baseUrl}/api/product/create-with-image');
       
-      // Tạo request với multipart khi có file ảnh
+      // Luôn tạo MultipartRequest để đảm bảo Content-Type là multipart/form-data
+      var request = http.MultipartRequest('POST', url);
+      
+      // Thêm thông tin sản phẩm dạng JSON
+      Map<String, dynamic> productJson = product.toJson();
+      productJson.remove('id'); // Bỏ id để backend tạo tự động
+      request.fields['product'] = json.encode(productJson);
+      
+      // Thêm file ảnh nếu có
       if (imageFile != null) {
-        var request = http.MultipartRequest('POST', url);
-        
-        // Thêm thông tin sản phẩm dạng JSON
-        Map<String, dynamic> productJson = product.toJson();
-        request.fields['product'] = json.encode(productJson);
-        
-        // Thêm file ảnh
-        var multipartFile = await http.MultipartFile.fromPath(
-          'image', 
-          imageFile.path,
-          filename: imageFile.path.split('/').last
-        );
-        request.files.add(multipartFile);
-        
-        // Gửi request
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
-        
-        final responseData = json.decode(response.body);
-        
-        if (response.statusCode == 201 && responseData['status'] == 200) {
-          return ApiResponse<Product>(
-            status: responseData['status'],
-            message: responseData['message'],
-            data: Product.fromJson(responseData['data']),
+        if (kIsWeb) {
+          Uint8List imageBytes = await imageFile.readAsBytes();
+          var multipartFile = http.MultipartFile.fromBytes(
+            'image',
+            imageBytes,
+            filename: imageFile.name,
           );
+          request.files.add(multipartFile);
         } else {
-          return ApiResponse<Product>(
-            status: responseData['status'] ?? response.statusCode,
-            message: responseData['message'] ?? 'Lỗi khi tạo sản phẩm',
-            data: null,
+          var multipartFile = await http.MultipartFile.fromPath(
+            'image', 
+            imageFile.path,
+            filename: imageFile.path.split('/').last
           );
+          request.files.add(multipartFile);
         }
+      }
+      
+      // Gửi request
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      
+      final responseData = json.decode(response.body);
+      
+      if (response.statusCode == 201 && responseData['status'] == 200) {
+        return ApiResponse<Product>(
+          status: responseData['status'],
+          message: responseData['message'],
+          data: Product.fromJson(responseData['data']),
+        );
       } else {
-        // Nếu không có file ảnh, gửi JSON request bình thường
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode(product.toJson()),
+        return ApiResponse<Product>(
+          status: responseData['status'] ?? response.statusCode,
+          message: responseData['message'] ?? 'Lỗi khi tạo sản phẩm',
+          data: null,
         );
-        
-        final responseData = json.decode(response.body);
-        
-        if (response.statusCode == 201 && responseData['status'] == 200) {
-          return ApiResponse<Product>(
-            status: responseData['status'],
-            message: responseData['message'],
-            data: Product.fromJson(responseData['data']),
-          );
-        } else {
-          return ApiResponse<Product>(
-            status: responseData['status'] ?? response.statusCode,
-            message: responseData['message'] ?? 'Lỗi khi tạo sản phẩm',
-            data: null,
-          );
-        }
       }
     } catch (e) {
       return ApiResponse<Product>(
@@ -265,68 +322,55 @@ class ProductRepository {
   }
 
   // Cập nhật sản phẩm
-  Future<ApiResponse<Product>> updateProduct(String id, Product product, {File? imageFile}) async {
+  Future<ApiResponse<Product>> updateProduct(String id, Product product, {XFile? imageFile}) async {
     try {
-      final url = Uri.parse('${ApiConfig.baseUrl}/api/product/update/$id');
+      final url = Uri.parse('${ApiConfig.baseUrl}/api/product/update-with-image/$id');
       
-      // Tạo request với multipart khi có file ảnh
+      // Luôn tạo MultipartRequest để đảm bảo Content-Type là multipart/form-data
+      var request = http.MultipartRequest('PUT', url);
+      
+      // Thêm thông tin sản phẩm dạng JSON
+      Map<String, dynamic> productJson = product.toJson();
+      request.fields['product'] = json.encode(productJson);
+      
+      // Thêm file ảnh nếu có
       if (imageFile != null) {
-        var request = http.MultipartRequest('PUT', url);
-        
-        // Thêm thông tin sản phẩm dạng JSON
-        Map<String, dynamic> productJson = product.toJson();
-        request.fields['product'] = json.encode(productJson);
-        
-        // Thêm file ảnh
-        var multipartFile = await http.MultipartFile.fromPath(
-          'image', 
-          imageFile.path,
-          filename: imageFile.path.split('/').last
-        );
-        request.files.add(multipartFile);
-        
-        // Gửi request
-        var streamedResponse = await request.send();
-        var response = await http.Response.fromStream(streamedResponse);
-        
-        final responseData = json.decode(response.body);
-        
-        if (response.statusCode == 200 && responseData['status'] == 200) {
-          return ApiResponse<Product>(
-            status: responseData['status'],
-            message: responseData['message'],
-            data: Product.fromJson(responseData['data']),
+        if (kIsWeb) {
+          Uint8List imageBytes = await imageFile.readAsBytes();
+          var multipartFile = http.MultipartFile.fromBytes(
+            'image',
+            imageBytes,
+            filename: imageFile.name,
           );
+          request.files.add(multipartFile);
         } else {
-          return ApiResponse<Product>(
-            status: responseData['status'] ?? response.statusCode,
-            message: responseData['message'] ?? 'Lỗi khi cập nhật sản phẩm',
-            data: null,
+          var multipartFile = await http.MultipartFile.fromPath(
+            'image', 
+            imageFile.path,
+            filename: imageFile.path.split('/').last
           );
+          request.files.add(multipartFile);
         }
+      }
+      
+      // Gửi request
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+      
+      final responseData = json.decode(response.body);
+      
+      if (response.statusCode == 200 && responseData['status'] == 200) {
+        return ApiResponse<Product>(
+          status: responseData['status'],
+          message: responseData['message'],
+          data: Product.fromJson(responseData['data']),
+        );
       } else {
-        // Nếu không có file ảnh, gửi JSON request bình thường
-        final response = await http.put(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode(product.toJson()),
+        return ApiResponse<Product>(
+          status: responseData['status'] ?? response.statusCode,
+          message: responseData['message'] ?? 'Lỗi khi cập nhật sản phẩm',
+          data: null,
         );
-        
-        final responseData = json.decode(response.body);
-        
-        if (response.statusCode == 200 && responseData['status'] == 200) {
-          return ApiResponse<Product>(
-            status: responseData['status'],
-            message: responseData['message'],
-            data: Product.fromJson(responseData['data']),
-          );
-        } else {
-          return ApiResponse<Product>(
-            status: responseData['status'] ?? response.statusCode,
-            message: responseData['message'] ?? 'Lỗi khi cập nhật sản phẩm',
-            data: null,
-          );
-        }
       }
     } catch (e) {
       return ApiResponse<Product>(

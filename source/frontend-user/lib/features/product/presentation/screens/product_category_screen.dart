@@ -12,7 +12,12 @@ import '../widgets/category_screen/filter_sidebar_widget.dart';
 import '../widgets/category_screen/product_type_grid_widget.dart';
 
 class ProductCategoryScreen extends StatefulWidget {
-  const ProductCategoryScreen({super.key});
+  final String? initialSearchQuery;
+  
+  const ProductCategoryScreen({
+    super.key, 
+    this.initialSearchQuery,
+  });
 
   @override
   State<ProductCategoryScreen> createState() => _ProductCategoryScreenState();
@@ -36,11 +41,26 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
   @override
   void initState() {
     super.initState();
+    
+    // Khởi tạo _searchController với initialSearchQuery nếu có
+    if (widget.initialSearchQuery != null && widget.initialSearchQuery!.isNotEmpty) {
+      _searchController.text = widget.initialSearchQuery!;
+      _searchQuery = widget.initialSearchQuery!;
+      _showProductTypeGrid = false; // Ẩn lưới loại sản phẩm nếu có tìm kiếm ban đầu
+    }
+    
     _initData();
     _searchController.addListener(_onSearchChanged);
     
     // Thêm listener cho ScrollController để xử lý tải thêm sản phẩm
     _scrollController.addListener(_scrollListener);
+    
+    // Áp dụng tìm kiếm nếu có initialSearchQuery
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialSearchQuery != null && widget.initialSearchQuery!.isNotEmpty) {
+        _applyFilters();
+      }
+    });
   }
   
   void _scrollListener() {

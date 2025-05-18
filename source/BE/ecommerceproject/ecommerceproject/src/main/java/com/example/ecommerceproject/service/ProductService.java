@@ -82,6 +82,7 @@ public class ProductService {
     }
 
     public Product createProduct(Product product) {
+        product.setId(null);
         return productRepository.save(product);
     }
 
