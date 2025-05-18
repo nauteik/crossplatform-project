@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiConstants {
   // Base URLs for different environments
-  static const String localEmulatorUrl = 'http://10.0.2.2:8080';
-  static const String localUrl = 'http://localhost:8080';
+  static const String localEmulatorUrl = 'https://hkt-backend-a2bb8a1df288.herokuapp.com';
+  static const String localUrl = 'https://hkt-backend-a2bb8a1df288.herokuapp.com';
+  // static const String localEmulatorUrl = 'http://10.0.2.2:8080';
+  // static const String localUrl = 'http://localhost:8080';
   
   // Chọn base URL phù hợp theo môi trường
   static String get baseApiUrl {

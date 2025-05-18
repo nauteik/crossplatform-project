@@ -5,15 +5,19 @@ class ApiConstants {
   // Base URLs for different environments
 
   //Real Android url
-  static const String localEmulatorUrl = 'http://10.0.2.2:8080';
+  // static const String localEmulatorUrl = 'http://10.0.2.2:8080';
+  static const String localEmulatorUrl = 'https://hkt-backend-a2bb8a1df288.herokuapp.com';
 
   // Thay đổi IP này thành IP của máy tính bạn vừa xác định ở bước 1
   static const String localDeviceUrl =
-      'http://192.168.1.4:8080'; // Thay IP thực tế tại đây
+      // 'http://192.168.1.4:8080'; // Thay IP thực tế tại đây
+      'https://hkt-backend-a2bb8a1df288.herokuapp.com'; // Thay IP thực tế tại đây
 
-  static const String localUrl = 'http://localhost:8080';
+  // static const String localUrl = 'http://localhost:8080';
+  static const String localUrl = 'https://hkt-backend-a2bb8a1df288.herokuapp.com';
   static const String fallbackUrl =
-      'http://10.0.2.2:8080'; // Fallback URL nếu không kết nối được
+      // 'http://10.0.2.2:8080'; // Fallback URL nếu không kết nối được
+      'https://hkt-backend-a2bb8a1df288.herokuapp.com'; // Fallback URL nếu không kết nối được
 
   // Chọn base URL phù hợp theo môi trường
   static String get baseApiUrl {
