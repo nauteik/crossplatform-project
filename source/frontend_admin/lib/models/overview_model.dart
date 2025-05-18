@@ -8,8 +8,8 @@ class OverviewData {
   final int totalProducts;
   final int newUsers;
   final int newOrders;
-  final int totalRevenue;
-  final int totalProfit;
+  final double totalRevenue;
+  final double totalProfit;
   final List<TimeBasedChartData>? timeSeriesRevenueProfitData;
   final List<TimeBasedChartData>? timeSeriesQuantityData;
   final List<CategorySalesData>? categorySalesRatio;

@@ -35,13 +35,13 @@ class StatisticsProvider with ChangeNotifier {
   DateTime? _endDate;
   DateTime? get endDate => _endDate;
 
-  int? _selectedMonth;
+  int? _selectedMonth = DateTime.now().month;
   int? get selectedMonth => _selectedMonth;
 
   int? _selectedQuarter;
   int? get selectedQuarter => _selectedQuarter;
 
-  int? _selectedYear;
+  int? _selectedYear = DateTime.now().year;
   int? get selectedYear => _selectedYear;
 
   StatisticsProvider() {

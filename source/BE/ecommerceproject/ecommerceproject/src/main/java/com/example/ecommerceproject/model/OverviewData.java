@@ -17,8 +17,8 @@ public class OverviewData {
     private long totalProducts;
     private long newUsers;
     private long newOrders;
-    private long totalRevenue;
-    private long totalProfit;
+    private double totalRevenue;
+    private double totalProfit;
 
     private List<TimeBasedChartData> timeSeriesRevenueProfitData;
     private List<TimeBasedChartData> timeSeriesQuantityData;

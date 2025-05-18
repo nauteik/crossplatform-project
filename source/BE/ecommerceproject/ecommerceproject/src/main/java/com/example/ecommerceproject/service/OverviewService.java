@@ -59,21 +59,21 @@ public class OverviewService
     }
 
     // Lấy tổng số Revenue
-    public long getTotalRevenue() {
+    public double getTotalRevenue() {
         List<Order> allOrders = orderService.getAllOrders();
-        return (long) allOrders.stream()
+        return allOrders.stream()
                 .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
     }
 
     // Lấy tổng số Profit
-    public long getTotalProfit() {
+    public double getTotalProfit() {
         List<Order> completedOrders = orderService.getAllOrders().stream()
                 .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
                 .toList();
 
-        int totalProfit = 0;
+        double totalProfit = 0;
         for (Order order : completedOrders) {
             for (OrderItem item : order.getItems()) {
                 Product product = productService.getProductById(item.getProductId());
@@ -179,8 +179,8 @@ public class OverviewService
         long totalProducts = getTotalProducts();
         long newUsers = getNewUsersCreateToDay();
         long newOrders = getNewOrdersCreateToDay();
-        long totalRevenue = getTotalRevenue();
-        long totalProfit = getTotalProfit();
+        double totalRevenue = getTotalRevenue();
+        double totalProfit = getTotalProfit();
 
         // Lấy dữ liệu theo thời gian
         List<TimeBasedChartData> timeSeriesRevenueProfitData = getRevenueAndProfitOverview();

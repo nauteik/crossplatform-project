@@ -431,11 +431,12 @@ public class OrderService {
     // Lấy doanh thu theo ngày
     public Double getRevenueByDate(LocalDate date) {
         LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusNanos(1);
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusSeconds(1);
 
         List<Order> orders = orderRepository.findByCreatedAtBetween(startOfDay, endOfDay);
 
         return orders.stream()
+                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
     }
@@ -449,11 +450,12 @@ public class OrderService {
     // Lấy số lượng sản phẩm đã bán theo ngày
     public Integer getQuantitySoldByDate(LocalDate date) {
         LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusNanos(1);
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay().minusSeconds(1);
 
         List<Order> orders = orderRepository.findByCreatedAtBetween(startOfDay, endOfDay);
 
         return orders.stream()
+                .filter(order -> order.getStatus() == OrderStatus.DELIVERED)
                 .flatMap(order -> order.getItems().stream())
                 .mapToInt(OrderItem::getQuantity)
                 .sum();

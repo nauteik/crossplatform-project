@@ -1,5 +1,3 @@
-// --- START OF FILE user_form_screen.txt ---
-
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
