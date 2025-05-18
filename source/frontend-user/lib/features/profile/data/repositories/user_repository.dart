@@ -1,6 +1,7 @@
 import 'dart:convert' show json, jsonDecode, jsonEncode, utf8;
 import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart'; // Thêm import này
 import '../../../../core/constants/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,7 +31,7 @@ class UserRepository {
       var request = http.MultipartRequest(
         'POST',
         Uri.parse(
-            '${ApiConstants.baseUrl}/user/upload-avatar/$userId'), // Thêm /api vào đường dẫn
+            '${ApiConstants.baseUrl}/user/upload-avatar/$userId'),
       );
 
       // Thêm token vào header
@@ -70,6 +71,67 @@ class UserRepository {
       return null;
     }
   }
+
+  // Phương thức upload ảnh đại diện cho Web
+  Future<String?> uploadAvatarWeb(String userId, Uint8List imageBytes) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Không tìm thấy token đăng nhập');
+      }
+
+      print('Web image size: ${imageBytes.length} bytes');
+
+      // Tạo multipart request để upload file
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.baseUrl}/user/upload-avatar/$userId'),
+      );
+
+      // Thêm token vào header
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+      });
+
+      // Tạo tên file ngẫu nhiên có đuôi .jpg
+      String randomFileName = 'web_avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Thêm bytes của ảnh vào request với content-type image/jpeg
+      final file = http.MultipartFile.fromBytes(
+        'avatar',
+        imageBytes,
+        filename: randomFileName,
+        contentType: MediaType.parse('image/jpeg'), 
+      );
+      request.files.add(file);
+
+      print('Sending web avatar upload request');
+
+      // Gửi request
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('Web avatar upload response status: ${response.statusCode}');
+      print('Web avatar upload response body: ${response.body}');
+
+      // Xử lý response
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == 200 && data['data'] != null) {
+          return data['data']['avatar'];
+        }
+      }
+
+      print('Web upload avatar error: ${response.body}');
+      return null;
+    } catch (e) {
+      print('Web upload avatar exception: $e');
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> getCurrentUserDetails() async {
     try {
       final prefs = await SharedPreferences.getInstance();

@@ -4,7 +4,8 @@ import 'dart:convert' show json, jsonDecode, jsonEncode, utf8;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'dart:io';
+import 'package:universal_io/io.dart';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../../../core/constants/api_constants.dart';
 import '../../data/repositories/user_repository.dart';
@@ -32,7 +33,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   int _totalSpend = 0;
   String _avatarUrl = '';
   DateTime? _birthday;
-  File? _avatarImage;
+  dynamic _avatarImage; // File trên mobile, XFile trên web
+  Uint8List? _webImageBytes; // Lưu bytes của ảnh cho web
   int _loyaltyPoints = 0;
 
   // Controllers for text fields
@@ -234,60 +236,75 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   // Upload avatar
   Future<void> _uploadAvatar() async {
-    if (_avatarImage == null) return;
-
     setState(() {
       _isUploadingImage = true;
     });
 
     try {
       if (kIsWeb) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Tính năng này chưa được hỗ trợ trên web')),
-        );
-        return;
-      }
-
-      // Gọi API để upload ảnh đại diện
-      final uploadedUrl =
-          await _userRepository.uploadAvatar(_id, _avatarImage!);
-      if (uploadedUrl != null) {
-        setState(() {
-          _avatarUrl = uploadedUrl;
-        });
-
-        // Cập nhật SharedPreferences
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? userDataStr = prefs.getString('user_data');
-
-        if (userDataStr != null) {
-          final data = jsonDecode(userDataStr);
-          data['avatar'] = uploadedUrl;
-
-          // Cập nhật các trường khác để đảm bảo dữ liệu nhất quán
-          data['name'] = _name;
-          data['email'] = _email;
-          data['phone'] = _phone;
-          data['rank'] = _rank;
-          data['loyaltyPoints'] = _loyaltyPoints;
-
-          // Encode với UTF-8
-          final encodedJson = jsonEncode(data);
-          await prefs.setString('user_data', encodedJson);
+        // Xử lý cho web
+        if (_avatarImage != null && _webImageBytes != null) {
+          final uploadedUrl = await _userRepository.uploadAvatarWeb(_id, _webImageBytes!);
+          if (uploadedUrl != null) {
+            setState(() {
+              _avatarUrl = uploadedUrl;
+            });
+            
+            // Cập nhật SharedPreferences
+            await _updateAvatarInPrefs(uploadedUrl);
+          } else {
+            throw Exception('Không thể tải lên ảnh đại diện');
+          }
         }
       } else {
-        throw Exception('Không thể tải lên ảnh đại diện');
+        // Xử lý cho mobile
+        if (_avatarImage != null) {
+          final uploadedUrl = await _userRepository.uploadAvatar(_id, _avatarImage);
+          if (uploadedUrl != null) {
+            setState(() {
+              _avatarUrl = uploadedUrl;
+            });
+            
+            // Cập nhật SharedPreferences
+            await _updateAvatarInPrefs(uploadedUrl);
+          } else {
+            throw Exception('Không thể tải lên ảnh đại diện');
+          }
+        }
       }
     } catch (e) {
       print('Error uploading avatar: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi tải lên ảnh đại diện: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi tải lên ảnh đại diện: $e')),
+        );
+      }
     } finally {
       setState(() {
         _isUploadingImage = false;
       });
+    }
+  }
+
+  // Cập nhật avatar trong SharedPreferences
+  Future<void> _updateAvatarInPrefs(String avatarUrl) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userDataStr = prefs.getString('user_data');
+
+    if (userDataStr != null) {
+      final data = jsonDecode(userDataStr);
+      data['avatar'] = avatarUrl;
+
+      // Cập nhật các trường khác để đảm bảo dữ liệu nhất quán
+      data['name'] = _name;
+      data['email'] = _email;
+      data['phone'] = _phone;
+      data['rank'] = _rank;
+      data['loyaltyPoints'] = _loyaltyPoints;
+
+      // Encode với UTF-8
+      final encodedJson = jsonEncode(data);
+      await prefs.setString('user_data', encodedJson);
     }
   }
 
@@ -307,33 +324,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         print('Image picked: ${pickedFile.path}');
         print('Image mime type: ${pickedFile.mimeType}');
 
-        // Nếu định dạng không phải là image/jpeg, image/png hoặc image/gif
-        // thì chuyển đổi sang image/jpeg
-        final File originalFile = File(pickedFile.path);
-        File fileToUpload;
-
-        // Kiểm tra nếu file không phải là các định dạng mong muốn
-        if (pickedFile.mimeType != 'image/jpeg' &&
-            pickedFile.mimeType != 'image/png' &&
-            pickedFile.mimeType != 'image/gif') {
-          // Có thể xử lý chuyển đổi format ở đây nếu cần
-          // Hoặc đơn giản là thông báo cho người dùng
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Đang xử lý hình ảnh tải lên'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-
-          // Vẫn sử dụng file gốc, nhưng báo trước cho người dùng
-          fileToUpload = originalFile;
+        if (kIsWeb) {
+          // Xử lý cho web
+          final imageBytes = await pickedFile.readAsBytes();
+          setState(() {
+            _avatarImage = pickedFile;
+            _webImageBytes = imageBytes;
+          });
         } else {
-          fileToUpload = originalFile;
+          // Xử lý cho mobile
+          final File fileToUpload = File(pickedFile.path);
+          setState(() {
+            _avatarImage = fileToUpload;
+          });
         }
-
-        setState(() {
-          _avatarImage = fileToUpload;
-        });
 
         // Tự động upload ảnh khi đã chọn
         await _uploadAvatar();
@@ -357,9 +361,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
       if (pickedFile != null) {
-        setState(() {
-          _avatarImage = File(pickedFile.path);
-        });
+        if (kIsWeb) {
+          // Xử lý cho web
+          final imageBytes = await pickedFile.readAsBytes();
+          setState(() {
+            _avatarImage = pickedFile;
+            _webImageBytes = imageBytes;
+          });
+        } else {
+          // Xử lý cho mobile
+          setState(() {
+            _avatarImage = File(pickedFile.path);
+          });
+        }
 
         // Tự động upload ảnh khi đã chụp
         await _uploadAvatar();
@@ -390,14 +404,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     _pickImage();
                   },
                 ),
-                ListTile(
-                  leading: const Icon(Icons.camera_alt),
-                  title: const Text('Chụp ảnh mới'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    _takePhoto();
-                  },
-                ),
+                if (!kIsWeb) // Camera chỉ hiển thị trên mobile
+                  ListTile(
+                    leading: const Icon(Icons.camera_alt),
+                    title: const Text('Chụp ảnh mới'),
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _takePhoto();
+                    },
+                  ),
               ],
             ),
           ),
@@ -738,12 +753,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildAvatar() {
-    if (_avatarImage != null) {
+    if (kIsWeb && _webImageBytes != null) {
+      // Hiển thị ảnh trên web
       return CircleAvatar(
         radius: 60,
-        backgroundImage: FileImage(_avatarImage!),
+        backgroundImage: MemoryImage(_webImageBytes!),
+      );
+    } else if (!kIsWeb && _avatarImage != null) {
+      // Hiển thị ảnh trên mobile
+      return CircleAvatar(
+        radius: 60,
+        backgroundImage: FileImage(_avatarImage),
       );
     } else if (_avatarUrl.isNotEmpty && _avatarUrl != 'Chưa cập nhật') {
+      // Hiển thị ảnh từ URL
       return CircleAvatar(
         radius: 60,
         backgroundImage: NetworkImage(_avatarUrl),
@@ -754,6 +777,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         },
       );
     } else {
+      // Hiển thị avatar mặc định
       return CircleAvatar(
         radius: 60,
         backgroundColor: Colors.blue.shade100,
