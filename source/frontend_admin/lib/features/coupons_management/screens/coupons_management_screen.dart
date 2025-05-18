@@ -19,6 +19,10 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
   double _selectedDiscountValue = 10000.0;
   final List<double> _discountValues = [10000.0, 20000.0, 50000.0, 100000.0];
 
+  // Add state for fake delete loading
+  bool _isShowingFakeDeleteLoading = false;
+  String? _deletingCouponCode;
+
   @override
   void initState() {
     super.initState();
@@ -279,6 +283,22 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
       ),
       body: Consumer<CouponProvider>(
         builder: (context, couponProvider, child) {
+          // --- Start of Fake Loading Logic ---
+          if (_isShowingFakeDeleteLoading) {
+             return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text('Đang xóa mã "${_deletingCouponCode ?? 'đang chọn'}"...'),
+                ],
+              ),
+            );
+          }
+          // --- End of Fake Loading Logic ---
+
+
           if (couponProvider.isLoading &&
               couponProvider.coupons.isEmpty &&
               couponProvider.errorMessage == null) {
@@ -342,25 +362,58 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
                   // Show confirmation dialog before actually dismissing
                   return await _confirmDelete(context, coupon);
                 },
-                onDismissed: (direction) {
-                  // Call the provider to delete the coupon after confirmation
-                  Provider.of<CouponProvider>(context, listen: false)
-                      .deleteCoupon(coupon.id)
-                      .catchError((error) {
-                    // Handle errors specific to deletion if necessary
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              'Xóa mã "${coupon.code}" thất bại: ${error.toString()}')),
-                    );
-                    // Need to manually re-add the item if delete failed on backend
-                    // This is complex, often better to rely on loadCoupons() after error or a more robust state management
-                    // For simplicity here, we just show an error snackbar. The state might be temporarily inconsistent.
+                // Make onDismissed async to allow awaiting futures
+                onDismissed: (direction) async {
+                  final String code = coupon.code; // Store code before list potentially updates
+
+                  // --- Start of Fake Loading Trigger ---
+                  // Set local state to show fake loading
+                  if (!mounted) return; // Check if widget is still mounted
+                  setState(() {
+                    _isShowingFakeDeleteLoading = true;
+                    _deletingCouponCode = code;
                   });
-                  // Show a temporary message
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Đang xóa mã "${coupon.code}"...')),
-                  );
+                  // --- End of Fake Loading Trigger ---
+
+                  try {
+                    // Call the provider to delete the coupon
+                    final deleteFuture = Provider.of<CouponProvider>(context, listen: false).deleteCoupon(coupon.id);
+
+                    // Wait for the actual delete operation AND the fake 500ms delay
+                    await Future.wait([
+                       deleteFuture,
+                       Future.delayed(const Duration(milliseconds: 500)),
+                    ]);
+
+                    // Show success message after fake loading is done
+                     if (mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(content: Text('Đã xóa mã "$code" thành công.')),
+                       );
+                     }
+
+                  } catch (error) {
+                    // Handle errors specific to deletion if necessary
+                     if (mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(
+                             content: Text(
+                                 'Xóa mã "$code" thất bại: ${error.toString()}')),
+                       );
+                       // Note: If delete failed on backend, the item might reappear if provider reloads
+                       // or doesn't remove it locally. For simplicity, we just show the error.
+                     }
+                  } finally {
+                    // --- Start of Fake Loading End ---
+                    // Hide fake loading after delay (and deletion attempt)
+                    if (mounted) {
+                      setState(() {
+                        _isShowingFakeDeleteLoading = false;
+                        _deletingCouponCode = null;
+                      });
+                    }
+                    // --- End of Fake Loading End ---
+                  }
                 },
                 child: Card(
                   elevation: 2.0,
