@@ -41,12 +41,12 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<ApiResponse<List<Product>>> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
-        ApiResponse<List<Product>> response = new ApiResponse<>(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllProducts() {
+        Map<String, Object> pageResult = productService.getPagedProducts(0, 100);
+        ApiResponse<Map<String, Object>> response = new ApiResponse<>(
                 ApiStatus.SUCCESS.getCode(),
                 ApiStatus.SUCCESS.getMessage(),
-                products
+                pageResult
         );
         return ResponseEntity.ok(response);
     }
