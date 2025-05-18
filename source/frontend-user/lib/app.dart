@@ -5,6 +5,7 @@ import 'features/auth/providers/auth_provider.dart';
 import 'features/cart/providers/cart_provider.dart';
 import 'features/product/providers/product_provider.dart';
 import 'features/product/providers/product_type_provider.dart';
+import 'features/product/providers/review_provider.dart'; // Import ReviewProvider
 import 'features/navigation/providers/navigation_provider.dart';
 import 'features/payment/payment_feature.dart'; // Import PaymentFeature
 import 'features/support/presentation/providers/message_provider.dart'; // Thêm import MessageProvider
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()), // Keep one CartProvider
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => ProductTypeProvider()),
+        ChangeNotifierProvider(create: (_) => ReviewProvider()), // Thêm ReviewProvider
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
         // Add PaymentProvider using the static method from PaymentFeature
         ...PaymentFeature.getProviders(),

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../data/model/product_model.dart';
 import '../../../data/respository/product_repository.dart';
+import '../../../data/respository/review_repository.dart';
 import 'dart:developer' as developer;
 
 enum ProductStatus { initial, loading, loaded, error }
 
 class ProductProvider with ChangeNotifier {
   final ProductRepository _repository = ProductRepository();
+  final ReviewRepository _reviewRepository = ReviewRepository();
 
   List<ProductModel> _products = [];
   List<ProductModel> _filteredProducts = [];
@@ -54,6 +56,9 @@ class ProductProvider with ChangeNotifier {
           developer.log("Sample product: ${_products.first.name}");
           developer.log("Sample product type: ${_products.first.productType}");
         }
+        
+        // Lấy thông tin rating cho các sản phẩm
+        await _fetchRatingsForProducts();
       } else {
         _status = ProductStatus.error;
         _errorMessage = response.message;
@@ -92,6 +97,9 @@ class ProductProvider with ChangeNotifier {
         _status = ProductStatus.loaded;
         
         developer.log("Fetched ${_products.length} products, total: $_totalItems, pages: $_totalPages");
+        
+        // Lấy thông tin rating cho các sản phẩm
+        await _fetchRatingsForProducts();
       } else {
         _status = ProductStatus.error;
         _errorMessage = response.message;
@@ -139,6 +147,9 @@ class ProductProvider with ChangeNotifier {
             _hasMoreData = _currentPage < _totalPages - 1;
             
             developer.log("Added ${newProducts.length} more products, total: ${_products.length}, currentPage: $_currentPage, totalPages: $_totalPages");
+            
+            // Lấy thông tin rating cho các sản phẩm mới
+            await _fetchRatingsForNewProducts(newProducts);
           } else {
             _hasMoreData = false;
             developer.log("No more products to load (empty list returned)");
@@ -173,6 +184,9 @@ class ProductProvider with ChangeNotifier {
         _currentProduct = response.data;
         _status = ProductStatus.loaded;
         developer.log("Successfully fetched product: ${_currentProduct?.name}");
+        
+        // Lấy thông tin rating cho sản phẩm hiện tại
+        await _fetchRatingForCurrentProduct();
       } else {
         _status = ProductStatus.error;
         _errorMessage = response.message;
@@ -201,6 +215,9 @@ class ProductProvider with ChangeNotifier {
         _filteredProducts = response.data!;
         _status = ProductStatus.loaded;
         developer.log("Found ${_products.length} products matching query");
+        
+        // Lấy thông tin rating cho các sản phẩm tìm thấy
+        await _fetchRatingsForProducts();
       } else {
         _status = ProductStatus.error;
         _errorMessage = response.message;
@@ -229,6 +246,9 @@ class ProductProvider with ChangeNotifier {
         _filteredProducts = response.data!;
         _status = ProductStatus.loaded;
         developer.log("Found ${_products.length} products for brand");
+        
+        // Lấy thông tin rating cho các sản phẩm
+        await _fetchRatingsForProducts();
       } else {
         _status = ProductStatus.error;
         _errorMessage = response.message;
@@ -257,6 +277,9 @@ class ProductProvider with ChangeNotifier {
         _filteredProducts = response.data!;
         _status = ProductStatus.loaded;
         developer.log("Found ${_products.length} products for type");
+        
+        // Lấy thông tin rating cho các sản phẩm
+        await _fetchRatingsForProducts();
       } else {
         _status = ProductStatus.error;
         _errorMessage = response.message;
@@ -315,5 +338,177 @@ class ProductProvider with ChangeNotifier {
   // Phương thức để lấy danh sách sản phẩm đã lọc
   List<dynamic> getFilteredProducts() {
     return _filteredProducts;
+  }
+  
+  // Phương thức mới để lấy rating cho tất cả sản phẩm
+  Future<void> _fetchRatingsForProducts() async {
+    try {
+      if (_products.isEmpty) return;
+      
+      // Sử dụng Future.wait để lấy rating cho tất cả sản phẩm song song
+      // Để tránh quá tải server, chia nhỏ việc lấy rating thành nhiều batch
+      final int batchSize = 20;
+      int processedCount = 0;
+      
+      while (processedCount < _products.length) {
+        // Lấy batch tiếp theo
+        final endIndex = (processedCount + batchSize < _products.length) 
+            ? processedCount + batchSize 
+            : _products.length;
+            
+        final batch = _products.sublist(processedCount, endIndex);
+        
+        final futures = batch.map((product) async {
+          try {
+            final response = await _reviewRepository.getReviewSummary(product.id);
+            if (response.data != null && response.status > 0) {
+              // Tìm sản phẩm trong danh sách và cập nhật rating
+              final index = _products.indexWhere((p) => p.id == product.id);
+              if (index != -1) {
+                final averageRating = response.data!['averageRating'] != null 
+                    ? (response.data!['averageRating'] as num).toDouble()
+                    : 0.0;
+                
+                // Tạo bản sao mới với rating đã cập nhật
+                final updatedProduct = ProductModel(
+                  id: _products[index].id,
+                  name: _products[index].name,
+                  price: _products[index].price,
+                  quantity: _products[index].quantity,
+                  description: _products[index].description,
+                  primaryImageUrl: _products[index].primaryImageUrl,
+                  imageUrls: _products[index].imageUrls,
+                  soldCount: _products[index].soldCount,
+                  discountPercent: _products[index].discountPercent,
+                  brand: _products[index].brand,
+                  productType: _products[index].productType,
+                  specifications: _products[index].specifications,
+                  createdAt: _products[index].createdAt,
+                  tags: _products[index].tags,
+                  averageRating: averageRating,
+                );
+                
+                _products[index] = updatedProduct;
+                
+                // Cập nhật lại filtered products
+                final filteredIndex = _filteredProducts.indexWhere((p) => p.id == product.id);
+                if (filteredIndex != -1) {
+                  _filteredProducts[filteredIndex] = updatedProduct;
+                }
+              }
+            }
+          } catch (e) {
+            developer.log("Error fetching rating for product ${product.id}: $e");
+          }
+        }).toList();
+        
+        await Future.wait(futures);
+        
+        // Thông báo UI cập nhật sau mỗi batch
+        notifyListeners();
+        
+        // Tăng số lượng sản phẩm đã xử lý
+        processedCount += batchSize;
+      }
+    } catch (e) {
+      developer.log("Error in _fetchRatingsForProducts: $e");
+    }
+  }
+  
+  // Phương thức để lấy rating cho danh sách sản phẩm mới
+  Future<void> _fetchRatingsForNewProducts(List<ProductModel> newProducts) async {
+    try {
+      if (newProducts.isEmpty) return;
+      
+      final futures = newProducts.map((product) async {
+        try {
+          final response = await _reviewRepository.getReviewSummary(product.id);
+          if (response.data != null && response.status > 0) {
+            // Tìm sản phẩm trong danh sách và cập nhật rating
+            final index = _products.indexWhere((p) => p.id == product.id);
+            if (index != -1) {
+              final averageRating = response.data!['averageRating'] != null 
+                  ? (response.data!['averageRating'] as num).toDouble()
+                  : 0.0;
+              
+              // Tạo bản sao mới với rating đã cập nhật
+              final updatedProduct = ProductModel(
+                id: _products[index].id,
+                name: _products[index].name,
+                price: _products[index].price,
+                quantity: _products[index].quantity,
+                description: _products[index].description,
+                primaryImageUrl: _products[index].primaryImageUrl,
+                imageUrls: _products[index].imageUrls,
+                soldCount: _products[index].soldCount,
+                discountPercent: _products[index].discountPercent,
+                brand: _products[index].brand,
+                productType: _products[index].productType,
+                specifications: _products[index].specifications,
+                createdAt: _products[index].createdAt,
+                tags: _products[index].tags,
+                averageRating: averageRating,
+              );
+              
+              _products[index] = updatedProduct;
+              
+              // Cập nhật lại filtered products
+              final filteredIndex = _filteredProducts.indexWhere((p) => p.id == product.id);
+              if (filteredIndex != -1) {
+                _filteredProducts[filteredIndex] = updatedProduct;
+              }
+            }
+          }
+        } catch (e) {
+          developer.log("Error fetching rating for product ${product.id}: $e");
+        }
+      }).toList();
+      
+      await Future.wait(futures);
+      
+      // Thông báo UI cập nhật
+      notifyListeners();
+      
+    } catch (e) {
+      developer.log("Error in _fetchRatingsForNewProducts: $e");
+    }
+  }
+  
+  // Phương thức để lấy rating cho sản phẩm hiện tại
+  Future<void> _fetchRatingForCurrentProduct() async {
+    try {
+      if (_currentProduct == null) return;
+      
+      final response = await _reviewRepository.getReviewSummary(_currentProduct!.id);
+      if (response.data != null && response.status > 0) {
+        final averageRating = response.data!['averageRating'] != null 
+            ? (response.data!['averageRating'] as num).toDouble()
+            : 0.0;
+        
+        // Tạo bản sao mới với rating đã cập nhật
+        _currentProduct = ProductModel(
+          id: _currentProduct!.id,
+          name: _currentProduct!.name,
+          price: _currentProduct!.price,
+          quantity: _currentProduct!.quantity,
+          description: _currentProduct!.description,
+          primaryImageUrl: _currentProduct!.primaryImageUrl,
+          imageUrls: _currentProduct!.imageUrls,
+          soldCount: _currentProduct!.soldCount,
+          discountPercent: _currentProduct!.discountPercent,
+          brand: _currentProduct!.brand,
+          productType: _currentProduct!.productType,
+          specifications: _currentProduct!.specifications,
+          createdAt: _currentProduct!.createdAt,
+          tags: _currentProduct!.tags,
+          averageRating: averageRating,
+        );
+        
+        // Thông báo UI cập nhật
+        notifyListeners();
+      }
+    } catch (e) {
+      developer.log("Error in _fetchRatingForCurrentProduct: $e");
+    }
   }
 }

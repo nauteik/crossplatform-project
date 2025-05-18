@@ -128,78 +128,149 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMainContent(List<ProductModel> products, List<dynamic> productTypes) {
-    // Sắp xếp sản phẩm dựa trên tags từ backend thay vì logic frontend
+    // Nhóm sản phẩm theo tags (chỉ sử dụng các tags có active = true)
+    final Map<String, List<ProductModel>> productsByTag = {};
+    final Map<String, String> tagNameMap = {}; // Ánh xạ từ tag ID sang tag name
     
-    // 1. Tìm sản phẩm theo tag "Khuyến mãi"
-    final promotionalProducts = products
-        .where((product) => product.tags.isNotEmpty && 
-            product.tags.any((tag) => tag is Map<String, dynamic> && 
-                tag.containsKey('name') && tag['name'] == 'Khuyến mãi'))
-        .toList();
-        
-    // 2. Tìm sản phẩm theo tag "Bán chạy"
-    final bestSellerProducts = products
-        .where((product) => product.tags.isNotEmpty && 
-            product.tags.any((tag) => tag is Map<String, dynamic> && 
-                tag.containsKey('name') && tag['name'] == 'Bán chạy'))
-        .toList();
+    // Danh sách các tag đặc biệt cần theo dõi
+    const String promotionalTagName = 'Khuyến mãi';
+    const String bestSellerTagName = 'Bán chạy';
+    const String newTagName = 'Mới';
     
-    // 3. Tìm sản phẩm theo tag "Mới"
-    final latestProducts = products
-        .where((product) => product.tags.isNotEmpty && 
-            product.tags.any((tag) => tag is Map<String, dynamic> && 
-                tag.containsKey('name') && tag['name'] == 'Mới'))
-        .toList();
-    
-    // Dự phòng: Nếu không có sản phẩm nào có tag "Khuyến mãi", lấy các sản phẩm có discountPercent > 0
-    if (promotionalProducts.isEmpty) {
-      promotionalProducts.addAll(
-        products.where((p) => p.discountPercent > 0).take(10).toList()
-      );
+    // 1. Duyệt qua danh sách sản phẩm và nhóm theo tags (chỉ lấy những tag active = true)
+    for (var product in products) {
+      if (product.tags.isNotEmpty) {
+        for (var tag in product.tags) {
+          // Chỉ xử lý các tag có dạng Map và có trường active = true
+          if (tag is Map<String, dynamic> && 
+              tag.containsKey('active') && 
+              tag['active'] == true && 
+              tag.containsKey('id') && 
+              tag.containsKey('name')) {
+              
+            final tagId = tag['id'].toString();
+            final tagName = tag['name'].toString();
+            
+            // Lưu tên tag để hiển thị
+            tagNameMap[tagId] = tagName;
+            
+            // Thêm sản phẩm vào danh sách tương ứng với tag
+            if (!productsByTag.containsKey(tagId)) {
+              productsByTag[tagId] = [];
+            }
+            productsByTag[tagId]!.add(product);
+          }
+        }
+      }
     }
     
-    // Dự phòng: Nếu không có sản phẩm nào có tag "Bán chạy", sắp xếp theo soldCount
-    if (bestSellerProducts.isEmpty) {
-      bestSellerProducts.addAll(
-        products.where((p) => p.soldCount > 150).toList()
-          ..sort((a, b) => b.soldCount.compareTo(a.soldCount))
-      );
+    // 2. Hiển thị lên giao diện
+    return RefreshIndicator(
+      onRefresh: _loadData,
+      child: ListView(
+        children: [
+          // Promotional Banner
+          _buildPromotionalBanner(),
+          
+          // Hiển thị các section dựa trên tags - ưu tiên các tag đặc biệt trước
+          // Ưu tiên hiển thị "Sản phẩm khuyến mãi" nếu có
+          ..._buildSpecialTagSection(productsByTag, tagNameMap, promotionalTagName, 'SẢN PHẨM KHUYẾN MÃI'),
+          
+          // Ưu tiên hiển thị "Sản phẩm bán chạy" nếu có
+          ..._buildSpecialTagSection(productsByTag, tagNameMap, bestSellerTagName, 'SẢN PHẨM BÁN CHẠY'),
+          
+          // Ưu tiên hiển thị "Sản phẩm mới" nếu có
+          ..._buildSpecialTagSection(productsByTag, tagNameMap, newTagName, 'SẢN PHẨM MỚI'),
+          
+          // Hiển thị các tag khác nếu có
+          for (var entry in productsByTag.entries) 
+            if (!_isSpecialTag(tagNameMap[entry.key] ?? '', [promotionalTagName, bestSellerTagName, newTagName]))
+              ...[
+                _buildSectionTitle((tagNameMap[entry.key] ?? 'SẢN PHẨM').toUpperCase()),
+                entry.value.isEmpty 
+                    ? _buildEmptySection() 
+                    : _buildHorizontalProductList(entry.value.take(10).toList()),
+              ],
+          
+          // Nhóm sản phẩm theo loại sản phẩm
+          ..._buildProductTypesSections(products, productTypes),
+          
+          const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+  
+  // Phương thức để kiểm tra xem một tag có phải là tag đặc biệt không
+  bool _isSpecialTag(String tagName, List<String> specialTags) {
+    return specialTags.contains(tagName);
+  }
+  
+  // Phương thức để xây dựng section cho một tag đặc biệt
+  List<Widget> _buildSpecialTagSection(
+    Map<String, List<ProductModel>> productsByTag, 
+    Map<String, String> tagNameMap, 
+    String targetTagName,
+    String sectionTitle
+  ) {
+    // Tìm tagId có tên trùng với targetTagName và có active=true
+    List<String> targetTagIds = [];
+    
+    // Duyệt tất cả các tag ID được ánh xạ tới tên tag
+    for (var entry in tagNameMap.entries) {
+      if (entry.value == targetTagName) {
+        targetTagIds.add(entry.key);
+      }
     }
     
-    // Dự phòng: Nếu không có sản phẩm nào có tag "Mới", sắp xếp theo createdAt
-    if (latestProducts.isEmpty) {
-      latestProducts.addAll(
-        List.of(products)..sort((a, b) {
-          final aCreatedAt = a.createdAt ?? 0;
-          final bCreatedAt = b.createdAt ?? 0;
-          return bCreatedAt.compareTo(aCreatedAt);
-        })
-      );
+    // Kiểm tra xem có tag nào thỏa mãn không
+    List<ProductModel> tagProducts = [];
+    
+    // Gộp tất cả sản phẩm từ tất cả các tagId tương ứng với targetTagName
+    for (var tagId in targetTagIds) {
+      if (productsByTag.containsKey(tagId) && productsByTag[tagId]!.isNotEmpty) {
+        tagProducts.addAll(productsByTag[tagId]!);
+      }
     }
     
-    // Giới hạn số lượng sản phẩm trong mỗi danh mục
-    final limitedPromotionalProducts = promotionalProducts.take(10).toList();
-    final limitedBestSellerProducts = bestSellerProducts.take(10).toList();
-    final limitedLatestProducts = latestProducts.take(10).toList();
-
-    // Debug: In thông tin về productTypes để kiểm tra cấu trúc
-    developer.log("ProductTypes: ${productTypes.length}");
-    for (var i = 0; i < productTypes.length; i++) {
-      developer.log("ProductType $i: ${productTypes[i]}");
+    // Lọc trùng lặp
+    tagProducts = _removeDuplicateProducts(tagProducts);
+    
+    // Nếu có sản phẩm, trả về section
+    if (tagProducts.isNotEmpty) {
+      return [
+        _buildSectionTitle(sectionTitle),
+        _buildHorizontalProductList(tagProducts.take(10).toList()),
+      ];
     }
     
-    // Nhóm sản phẩm theo loại sản phẩm (product types)
+    // Không có sản phẩm thì trả về list rỗng
+    return [];
+  }
+  
+  // Phương thức để loại bỏ các sản phẩm trùng lặp
+  List<ProductModel> _removeDuplicateProducts(List<ProductModel> products) {
+    final Map<String, ProductModel> uniqueProducts = {};
+    
+    for (var product in products) {
+      uniqueProducts[product.id] = product;
+    }
+    
+    return uniqueProducts.values.toList();
+  }
+  
+  // Phương thức để xây dựng các section theo loại sản phẩm
+  List<Widget> _buildProductTypesSections(List<ProductModel> products, List<dynamic> productTypes) {
+    // Nhóm sản phẩm theo loại sản phẩm
     final Map<String, Map<String, dynamic>> productsByType = {};
     
-    // Đầu tiên, nhóm sản phẩm theo productType.id và lưu luôn thông tin tên
+    // Nhóm sản phẩm theo productType.id
     for (var product in products) {
       if (product.productType.isNotEmpty) {
-        // Lấy thông tin productType từ sản phẩm
         final productType = product.productType;
         String? typeId;
         String typeName = "SẢN PHẨM KHÁC";
         
-        // Xử lý an toàn khi lấy ID của loại sản phẩm
         try {
           if (productType.containsKey('id') && productType['id'] != null) {
             typeId = productType['id'].toString();
@@ -208,17 +279,14 @@ class _HomeScreenState extends State<HomeScreen> {
           developer.log("Lỗi khi lấy ID của loại sản phẩm: $e");
         }
         
-        // Xử lý an toàn khi lấy tên loại sản phẩm
         try {
           if (productType.containsKey('name') && productType['name'] != null) {
             typeName = productType['name'].toString();
-            developer.log("Tên loại sản phẩm: $typeName");
           }
         } catch (e) {
           developer.log("Lỗi khi lấy tên loại sản phẩm: $e");
         }
         
-        // Chỉ xử lý nếu có ID hợp lệ
         if (typeId != null && typeId.isNotEmpty) {
           if (!productsByType.containsKey(typeId)) {
             productsByType[typeId] = {
@@ -227,79 +295,24 @@ class _HomeScreenState extends State<HomeScreen> {
             };
           }
           
-          // Thêm sản phẩm vào danh sách tương ứng với typeId
           (productsByType[typeId]!['products'] as List<ProductModel>).add(product);
         }
       }
     }
     
-    // Debug thông tin loại sản phẩm đã nhóm
-    developer.log("Grouped product types: ${productsByType.length}");
+    // Giới hạn số lượng sản phẩm trong mỗi loại và xây dựng các widget
+    List<Widget> typeWidgets = [];
     for (var entry in productsByType.entries) {
-      developer.log("Type ID: ${entry.key}, Name: ${entry.value['name']}, Products: ${(entry.value['products'] as List).length}");
-    }
-    
-    // Giới hạn số lượng sản phẩm trong mỗi loại còn 10
-    final limitedProductsByType = <String, Map<String, dynamic>>{};
-    for (var entry in productsByType.entries) {
-      final typeId = entry.key;
       final typeName = entry.value['name'] as String;
       final typeProducts = entry.value['products'] as List<ProductModel>;
       
-      limitedProductsByType[typeId] = {
-        'name': typeName,
-        'products': typeProducts.take(10).toList()
-      };
+      if (typeProducts.isNotEmpty) {
+        typeWidgets.add(_buildSectionTitle(typeName.toUpperCase()));
+        typeWidgets.add(_buildHorizontalProductList(typeProducts.take(10).toList()));
+      }
     }
-
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView(
-        children: [
-          // Promotional Banner
-          _buildPromotionalBanner(),
-          
-          // Promotional Products Section
-          _buildSectionTitle('SẢN PHẨM KHUYẾN MÃI'),
-          limitedPromotionalProducts.isEmpty 
-              ? _buildEmptySection() 
-              : _buildHorizontalProductList(limitedPromotionalProducts),
-          
-          // Best Seller Products Section
-          _buildSectionTitle('SẢN PHẨM BÁN CHẠY'),
-          limitedBestSellerProducts.isEmpty 
-              ? _buildEmptySection() 
-              : _buildHorizontalProductList(limitedBestSellerProducts),
-          
-          // New Products Section
-          _buildSectionTitle('SẢN PHẨM MỚI'),
-          limitedLatestProducts.isEmpty 
-              ? _buildEmptySection() 
-              : _buildHorizontalProductList(limitedLatestProducts),
-          
-          // Hiển thị sản phẩm theo từng loại
-          ...limitedProductsByType.entries.map((entry) {
-            final typeName = entry.value['name'] as String;
-            final typeProducts = entry.value['products'] as List<ProductModel>;
-            
-            // In ra tên loại sản phẩm để debug
-            developer.log("Displaying product type: $typeName with ${typeProducts.length} products");
-            
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionTitle(typeName.toUpperCase()),
-                typeProducts.isEmpty
-                    ? _buildEmptySection()
-                    : _buildHorizontalProductList(typeProducts),
-              ],
-            );
-          }).toList(),
-          
-          const SizedBox(height: 30),
-        ],
-      ),
-    );
+    
+    return typeWidgets;
   }
 
   Widget _buildEmptySection() {
@@ -399,24 +412,26 @@ class _HomeScreenState extends State<HomeScreen> {
     double itemWidth;
 
     if (screenWidth < 600) { // Mobile
-      itemWidth = (screenWidth / 2.8).clamp(180.0, 200.0);
+      itemWidth = (screenWidth / 2.2).clamp(150.0, 210.0); // Slightly wider items on mobile
     } else if (screenWidth < 960) { // Tablet Portrait
-      itemWidth = (screenWidth / 2.8).clamp(180.0, 200.0);
+      itemWidth = (screenWidth / 3.2).clamp(160.0, 210.0);
     } else { // Tablet Landscape / Desktop-like
-      itemWidth = (screenWidth / 2.8).clamp(180.0, 200.0);
+      itemWidth = (screenWidth / 4.5).clamp(170.0, 220.0);
     }
 
-    const double originalItemWidth = 160.0; // Reference for scaling
-    const double originalListHeight = 200.0;
+    // Estimate height based on itemWidth and a common aspect ratio for cards (e.g., width/height ~ 0.6 - 0.7 for portrait cards)
+    // Height should be roughly itemWidth / 0.6 or itemWidth / 0.7. Let's use a factor.
+    // Typical card might be around 160w x 250-280h.
+    // If itemWidth is 180, height might be around 180 / (2/3) = 270, or 180 / 0.6 = 300
+    double estimatedItemHeight = itemWidth / 0.75; // Adjusted for potential tags
+    // if (estimatedItemHeight < 280) estimatedItemHeight = 280; // Min height
+    // if (estimatedItemHeight > 340) estimatedItemHeight = 340; // Max height
+
     const double originalImageHeight = 120.0;
-
-    double scaleFactor = itemWidth / originalItemWidth;
-
-    double responsiveListHeight = (originalListHeight * scaleFactor).clamp(200.0, 320.0);
-    double responsiveImageHeight = (originalImageHeight * scaleFactor).clamp(110.0, 180.0);
+    double responsiveImageHeight = (originalImageHeight * (itemWidth / 160.0)).clamp(100.0, 160.0); // Adjusted clamp
 
     return SizedBox(
-      height: responsiveListHeight,
+      height: estimatedItemHeight, // Use estimated height
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -430,8 +445,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductItem(ProductModel product, double itemWidth, double imageHeight) {
-    // Calculate the actual price after discount
     final actualPrice = product.price * (1 - (product.discountPercent / 100));
+    
+    final List<Map<String, dynamic>> activeTags = [];
+    if (product.tags.isNotEmpty) {
+      for (var tag in product.tags) {
+        if (tag is Map<String, dynamic> && 
+            tag.containsKey('active') && 
+            tag['active'] == true &&
+            tag.containsKey('name') &&
+            tag.containsKey('id')) {
+          activeTags.add(Map<String, dynamic>.from(tag));
+        }
+      }
+    }
     
     return GestureDetector(
       onTap: () {
@@ -455,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product Image with Discount Badge (không hiển thị tag badge)
+            // Product Image with Discount Badge
             Stack(
               children: [
                 ClipRRect(
@@ -477,11 +504,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
-                // Chỉ hiển thị discount badge
                 if (product.discountPercent > 0)
                   Positioned(
                     top: 8,
-                    right: 8,
+                    left: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
@@ -501,9 +527,41 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             
+            // Tags Section
+            if (activeTags.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0, right: 8.0, top: 6.0, bottom: 2.0),
+                child: Wrap(
+                  spacing: 4.0,
+                  runSpacing: 4.0,
+                  children: activeTags.map((tag) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: _getTagColor(tag['color']),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        tag['name'],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+            ),
+            
             // Product Info
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              padding: EdgeInsets.only(
+                left: 8.0, 
+                right: 8.0, 
+                bottom: 8.0, 
+                top: activeTags.isEmpty ? 4.0 : 2.0
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -546,8 +604,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.shopping_cart, size: 12, color: Colors.grey),
+                      const Icon(Icons.star, size: 12, color: Colors.amber),
                       const SizedBox(width: 2),
+                      Text(
+                        product.averageRating == null 
+                            ? 'N/A' 
+                            : product.averageRating! > 0 ? product.averageRating!.toStringAsFixed(1) : '0.0',
+                        style: const TextStyle(
+                          fontSize: 11,
+                        ),
+                      ),
+                      const Spacer(),
                       Text(
                         'Đã bán ${product.soldCount}',
                         style: TextStyle(
@@ -572,5 +639,44 @@ class _HomeScreenState extends State<HomeScreen> {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]},'
     );
+  }
+
+  // Hàm để chuyển đổi màu từ string sang Color
+  Color _getTagColor(String? colorString) {
+    if (colorString == null || colorString.isEmpty) {
+      return Colors.blue; // Màu mặc định
+    }
+    
+    // Xử lý chuỗi màu hex
+    if (colorString.startsWith('#')) {
+      try {
+        String hexColor = colorString.replaceAll('#', '');
+        if (hexColor.length == 6) {
+          hexColor = 'FF$hexColor';
+        }
+        return Color(int.parse(hexColor, radix: 16));
+      } catch (e) {
+        return Colors.blue; // Trả về màu mặc định nếu xử lý thất bại
+      }
+    }
+    
+    // Xử lý tên màu
+    switch (colorString.toLowerCase()) {
+      case 'red': return Colors.red;
+      case 'blue': return Colors.blue;
+      case 'green': return Colors.green;
+      case 'orange': return Colors.orange;
+      case 'purple': return Colors.purple;
+      case 'yellow': return Colors.yellow;
+      case 'pink': return Colors.pink;
+      case 'teal': return Colors.teal;
+      case 'cyan': return Colors.cyan;
+      case 'amber': return Colors.amber;
+      case 'indigo': return Colors.indigo;
+      case 'brown': return Colors.brown;
+      case 'grey': return Colors.grey;
+      case 'black': return Colors.black;
+      default: return Colors.blue;
+    }
   }
 } 

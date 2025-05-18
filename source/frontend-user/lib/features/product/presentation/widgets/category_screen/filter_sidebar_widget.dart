@@ -6,27 +6,33 @@ import 'package:intl/intl.dart';
 class FilterSidebarWidget extends StatelessWidget {
   final Set<String> selectedProductTypes;
   final Set<String> selectedBrands;
+  final Set<String> selectedTags;
   final RangeValues priceRange;
   final double minPrice;
   final double maxPrice;
   final ValueChanged<RangeValues> onPriceRangeChanged;
   final Function(String, bool) onProductTypeChanged;
   final Function(String, bool) onBrandChanged;
+  final Function(String, bool)? onTagChanged;
   final Function() onResetFilters;
   final List<dynamic> brands;
+  final List<dynamic> tags;
 
   const FilterSidebarWidget({
     super.key,
     required this.selectedProductTypes,
     required this.selectedBrands,
+    this.selectedTags = const {},
     required this.priceRange,
     required this.minPrice,
     required this.maxPrice,
     required this.onPriceRangeChanged,
     required this.onProductTypeChanged,
     required this.onBrandChanged,
+    this.onTagChanged,
     required this.onResetFilters,
     required this.brands,
+    this.tags = const [],
   });
 
   @override
@@ -107,6 +113,28 @@ class FilterSidebarWidget extends StatelessWidget {
               onChanged: (selected) => onBrandChanged(brandId, selected ?? false),
             );
           }).toList(),
+          
+          // Tags - thêm mới
+          if (tags.isNotEmpty && onTagChanged != null) ...[
+            const SizedBox(height: 24),
+            const Text(
+              'Thẻ',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ...tags.map((tag) {
+              final tagId = tag['id']?.toString() ?? '';
+              final isSelected = selectedTags.contains(tagId);
+              return CheckboxListTile(
+                title: Text(tag['name']?.toString() ?? 'Unknown'),
+                value: isSelected,
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                onChanged: (selected) => onTagChanged!(tagId, selected ?? false),
+              );
+            }).toList(),
+          ],
           
           const SizedBox(height: 24),
           

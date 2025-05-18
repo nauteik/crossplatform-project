@@ -5,7 +5,7 @@ import 'chat_support_screen.dart';
 import 'ai_chat_screen.dart';
 
 class SupportOptionsScreen extends StatelessWidget {
-  const SupportOptionsScreen({Key? key}) : super(key: key);
+  const SupportOptionsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

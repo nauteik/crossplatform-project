@@ -22,8 +22,9 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   final Set<String> _selectedProductTypes = {};
-  RangeValues _priceRange = const RangeValues(0, 100000000);
   final Set<String> _selectedBrands = {};
+  final Set<String> _selectedTags = {};
+  RangeValues _priceRange = const RangeValues(0, 100000000);
   String _sortBy = 'relevance';
   final double _minPrice = 0;
   final double _maxPrice = 100000000;
@@ -134,6 +135,26 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
         _selectedBrands.contains(product.brand['id'])).toList();
     }
     
+    // Lọc theo tag - chỉ lấy các sản phẩm có tag được chọn và tag đó phải có active=true
+    if (_selectedTags.isNotEmpty) {
+      filteredProducts = filteredProducts.where((product) {
+        if (product.tags == null || product.tags.isEmpty) {
+          return false;
+        }
+        
+        // Kiểm tra xem sản phẩm có chứa ít nhất một tag đã chọn và tag đó phải có active=true
+        return product.tags.any((tag) {
+          if (tag is Map<String, dynamic> && 
+              tag.containsKey('id') && 
+              tag.containsKey('active') && 
+              tag['active'] == true) {
+            return _selectedTags.contains(tag['id'].toString());
+          }
+          return false;
+        });
+      }).toList();
+    }
+    
     // Tìm kiếm theo từ khóa
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase().trim();
@@ -162,6 +183,34 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
       case 'name_desc':
         filteredProducts.sort((a, b) => b.name.compareTo(a.name));
         break;
+      case 'rating_desc':
+        filteredProducts.sort((a, b) {
+          final aRating = a.averageRating ?? 0.0;
+          final bRating = b.averageRating ?? 0.0;
+          return bRating.compareTo(aRating);
+        });
+        break;
+      case 'rating_asc':
+        filteredProducts.sort((a, b) {
+          final aRating = a.averageRating ?? 0.0;
+          final bRating = b.averageRating ?? 0.0;
+          return aRating.compareTo(bRating);
+        });
+        break;
+      case 'created_desc':
+        filteredProducts.sort((a, b) {
+          final aCreated = a.createdAt ?? 0;
+          final bCreated = b.createdAt ?? 0;
+          return bCreated.compareTo(aCreated);
+        });
+        break;
+      case 'created_asc':
+        filteredProducts.sort((a, b) {
+          final aCreated = a.createdAt ?? 0;
+          final bCreated = b.createdAt ?? 0;
+          return aCreated.compareTo(bCreated);
+        });
+        break;
       case 'relevance':
       default:
         // Giữ nguyên thứ tự
@@ -170,8 +219,6 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     
     // Cập nhật danh sách sản phẩm đã lọc
     productProvider.setFilteredProducts(filteredProducts);
-    
-    
   }
 
   void _onSearchChanged() {
@@ -503,10 +550,12 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                         child: FilterSidebarWidget(
                           selectedProductTypes: _selectedProductTypes,
                           selectedBrands: _selectedBrands,
+                          selectedTags: _selectedTags,
                           priceRange: _priceRange,
                           minPrice: _minPrice,
                           maxPrice: _maxPrice,
                           brands: _getBrands(productProvider.products),
+                          tags: _getTagsFromProducts(productProvider.products),
                           onPriceRangeChanged: (values) {
                             setState(() {
                               _priceRange = values;
@@ -538,10 +587,23 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                             }
                             _applyFilters();
                           },
+                          onTagChanged: (tagId, selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedTags.add(tagId);
+                              });
+                            } else {
+                              setState(() {
+                                _selectedTags.remove(tagId);
+                              });
+                            }
+                            _applyFilters();
+                          },
                           onResetFilters: () {
                             setState(() {
                               _selectedProductTypes.clear();
                               _selectedBrands.clear();
+                              _selectedTags.clear();
                               _priceRange = RangeValues(_minPrice, _maxPrice);
                             });
                             _applyFilters();
@@ -554,6 +616,12 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                           if (!_showProductTypeGrid) 
                             DesktopFilterBarWidget(
                               sortBy: _sortBy,
+                              productCount: productProvider.getFilteredProducts().length,
+                              onBackToCategories: _showProductTypeGrid ? null : () {
+                                setState(() {
+                                  _showProductTypeGrid = true;
+                                });
+                              },
                               onChangeSortBy: (String? newValue) {
                                 if (newValue != null) {
                                   setState(() {
@@ -651,9 +719,9 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     if (crossAxisCount <= 2) {
       childAspectRatio = 0.65; // Cho phép nhiều không gian hơn khi hiển thị 2 cột
     } else if (crossAxisCount == 3) {
-      childAspectRatio = 0.68; // Cho trường hợp 3 cột
-    } else {
-      childAspectRatio = 0.7; // Giữ nguyên tỷ lệ cho 4+ cột
+      childAspectRatio = 0.65; // Cho trường hợp 3 cột
+    } else { // For 4+ columns (Desktop)
+      childAspectRatio = 0.61; // GIẢM: Tăng chiều cao cho card trên desktop
     }
     
     Widget buildGridContent() {
@@ -679,6 +747,8 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                   soldCount: product.soldCount ?? 0,
                   discountPercent: product.discountPercent?.toDouble() ?? 0,
                   primaryImageUrl: product.primaryImageUrl ?? '',
+                  rating: product.averageRating,
+                  tags: product.tags,
                 );
               },
             ),
@@ -722,6 +792,9 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     // Sử dụng FutureBuilder để đảm bảo brands được tải trước khi hiển thị dialog
     Future<List<dynamic>> brandsFuture = _ensureBrandsLoaded(context);
     
+    // Lấy tất cả tag từ các sản phẩm
+    List<Map<String, dynamic>> tagsList = _getTagsFromProducts(productProvider.products);
+    
     final isDesktop = MediaQuery.of(context).size.width >= 1200;
     final isTablet = MediaQuery.of(context).size.width >= 600 && MediaQuery.of(context).size.width < 1200;
     
@@ -756,9 +829,10 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                       ],
                     ),
                     content: SizedBox(
-                      width: isDesktop ? 800 : 500,
-                      height: isDesktop ? 600 : 500,
-                      child: Row(
+                      width: isDesktop ? 800 : (isTablet ? 500 : double.infinity),
+                      height: isDesktop ? 600 : (isTablet ? 500 : double.infinity),
+                      child: isDesktop 
+                        ? Row( // Desktop: Two columns
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
@@ -767,106 +841,38 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Loại sản phẩm',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: typeProvider.productTypes.map((type) {
-                                      final isSelected = _selectedProductTypes.contains(type.id);
-                                      return FilterChip(
-                                        label: Text(type.name),
-                                        selected: isSelected,
-                                        onSelected: (selected) {
-                                          setState(() {
-                                            if (selected) {
-                                              _selectedProductTypes.add(type.id);
-                                            } else {
-                                              _selectedProductTypes.remove(type.id);
-                                            }
-                                          });
-                                        },
-                                      );
-                                    }).toList(),
-                                  ),
-                                  
-                                  const SizedBox(height: 24),
-                                  
-                                  const Text(
-                                    'Khoảng giá',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  RangeSlider(
-                                    values: _priceRange,
-                                    min: _minPrice,
-                                    max: _maxPrice,
-                                    divisions: 20,
-                                    labels: RangeLabels(
-                                      currencyFormatter.format(_priceRange.start),
-                                      currencyFormatter.format(_priceRange.end),
-                                    ),
-                                    onChanged: (RangeValues values) {
-                                      setState(() {
-                                        _priceRange = values;
-                                      });
-                                    },
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(currencyFormatter.format(_priceRange.start)),
-                                      Text(currencyFormatter.format(_priceRange.end)),
+                                      _buildProductTypeFilters(typeProvider, setState),
+                                      _buildPriceRangeFilter(currencyFormatter, setState),
+                                      _buildTagsFilter(tagsList, setState),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
-                          
-                          if (isDesktop) const VerticalDivider(),
-                          
-                          if (isDesktop)
+                              const VerticalDivider(),
                             Expanded(
                               child: SingleChildScrollView(
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      'Thương hiệu',
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: brands.map((brand) {
-                                        final brandId = brand['id']?.toString() ?? '';
-                                        final isSelected = _selectedBrands.contains(brandId);
-                                        return FilterChip(
-                                          label: Text(brand['name']?.toString() ?? 'Unknown'),
-                                          selected: isSelected,
-                                          onSelected: (selected) {
-                                            setState(() {
-                                              if (selected) {
-                                                _selectedBrands.add(brandId);
-                                              } else {
-                                                _selectedBrands.remove(brandId);
-                                              }
-                                            });
-                                          },
-                                        );
-                                      }).toList(),
-                                    ),
+                                      _buildBrandFilters(brands, setState),
                                   ],
                                 ),
                               ),
                             ),
-                        ],
+                            ],
+                          )
+                        : SingleChildScrollView( // Tablet: Single column for all filters
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildProductTypeFilters(typeProvider, setState),
+                                _buildPriceRangeFilter(currencyFormatter, setState),
+                                _buildBrandFilters(brands, setState), // Brands added here for tablet
+                                _buildTagsFilter(tagsList, setState), // Tags after brands for tablet
+                              ],
+                            ),
                       ),
                     ),
                     actions: [
@@ -875,6 +881,7 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                           setState(() {
                             _selectedProductTypes.clear();
                             _selectedBrands.clear();
+                            _selectedTags.clear(); // Xóa các tags đã chọn
                             _priceRange = RangeValues(_minPrice, _maxPrice);
                           });
                         },
@@ -896,6 +903,7 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
         },
       );
     } else {
+      // Mobile screen
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -1027,6 +1035,39 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                                   }).toList(),
                                 ),
                               ],
+                              
+                              // Thêm phần lọc theo tags cho cả màn hình nhỏ
+                              if (tagsList.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'Tags',
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: tagsList.map((tag) {
+                                    final tagId = tag['id']?.toString() ?? '';
+                                    final tagName = tag['name']?.toString() ?? 'Unknown';
+                                    final isSelected = _selectedTags.contains(tagId);
+                                    
+                                    return FilterChip(
+                                      label: Text(tagName),
+                                      selected: isSelected,
+                                      onSelected: (selected) {
+                                        setState(() {
+                                          if (selected) {
+                                            _selectedTags.add(tagId);
+                                          } else {
+                                            _selectedTags.remove(tagId);
+                                          }
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -1040,6 +1081,7 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
                                   setState(() {
                                     _selectedProductTypes.clear();
                                     _selectedBrands.clear();
+                                    _selectedTags.clear(); // Xóa các tags đã chọn
                                     _priceRange = RangeValues(_minPrice, _maxPrice);
                                   });
                                 },
@@ -1068,6 +1110,179 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
         },
       );
     }
+  }
+  
+  // Hàm để lấy tất cả tags từ các sản phẩm
+  List<Map<String, dynamic>> _getTagsFromProducts(List<dynamic> products) {
+    final Set<String> tagIds = {};
+    final List<Map<String, dynamic>> uniqueTags = [];
+    
+    for (var product in products) {
+      if (product.tags != null && product.tags.isNotEmpty) {
+        for (var tag in product.tags) {
+          if (tag is Map<String, dynamic> && 
+              tag.containsKey('id') && 
+              tag.containsKey('name') && 
+              tag.containsKey('active') && 
+              tag['active'] == true) {
+            final tagId = tag['id'].toString();
+            if (!tagIds.contains(tagId)) {
+              tagIds.add(tagId);
+              uniqueTags.add(Map<String, dynamic>.from(tag));
+            }
+          }
+        }
+      }
+    }
+    
+    return uniqueTags;
+  }
+  
+  // Phương thức xây dựng bộ lọc loại sản phẩm
+  Widget _buildProductTypeFilters(ProductTypeProvider typeProvider, StateSetter setState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Loại sản phẩm',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: typeProvider.productTypes.map((type) {
+            final isSelected = _selectedProductTypes.contains(type.id);
+            return FilterChip(
+              label: Text(type.name),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedProductTypes.add(type.id);
+                  } else {
+                    _selectedProductTypes.remove(type.id);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  // Phương thức xây dựng bộ lọc khoảng giá
+  Widget _buildPriceRangeFilter(NumberFormat currencyFormatter, StateSetter setState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Khoảng giá',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        RangeSlider(
+          values: _priceRange,
+          min: _minPrice,
+          max: _maxPrice,
+          divisions: 20,
+          labels: RangeLabels(
+            currencyFormatter.format(_priceRange.start),
+            currencyFormatter.format(_priceRange.end),
+          ),
+          onChanged: (RangeValues values) {
+            setState(() {
+              _priceRange = values;
+            });
+          },
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(currencyFormatter.format(_priceRange.start)),
+            Text(currencyFormatter.format(_priceRange.end)),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  // Phương thức xây dựng bộ lọc tags
+  Widget _buildTagsFilter(List<Map<String, dynamic>> tagsList, StateSetter setState) {
+    if (tagsList.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Tags',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: tagsList.map((tag) {
+            final tagId = tag['id']?.toString() ?? '';
+            final tagName = tag['name']?.toString() ?? 'Unknown';
+            final isSelected = _selectedTags.contains(tagId);
+            return FilterChip(
+              label: Text(tagName),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedTags.add(tagId);
+                  } else {
+                    _selectedTags.remove(tagId);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  // Phương thức xây dựng bộ lọc thương hiệu
+  Widget _buildBrandFilters(List<dynamic> brands, StateSetter setState) {
+    if (brands.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Thương hiệu',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: brands.map((brand) {
+            final brandId = brand['id']?.toString() ?? '';
+            final isSelected = _selectedBrands.contains(brandId);
+            return FilterChip(
+              label: Text(brand['name']?.toString() ?? 'Unknown'),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedBrands.add(brandId);
+                  } else {
+                    _selectedBrands.remove(brandId);
+                  }
+                });
+              },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+      ],
+    );
   }
   
   void _showSortDialog(BuildContext context) {
@@ -1234,6 +1449,46 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
       RadioListTile<String>(
         title: const Text('Tên Z-A'),
         value: 'name_desc',
+        groupValue: _sortBy,
+        onChanged: (value) {
+          setState(() {
+            _sortBy = value!;
+          });
+        },
+      ),
+      RadioListTile<String>(
+        title: const Text('Đánh giá cao nhất'),
+        value: 'rating_desc',
+        groupValue: _sortBy,
+        onChanged: (value) {
+          setState(() {
+            _sortBy = value!;
+          });
+        },
+      ),
+      RadioListTile<String>(
+        title: const Text('Đánh giá thấp nhất'),
+        value: 'rating_asc',
+        groupValue: _sortBy,
+        onChanged: (value) {
+          setState(() {
+            _sortBy = value!;
+          });
+        },
+      ),
+      RadioListTile<String>(
+        title: const Text('Mới nhất'),
+        value: 'created_desc',
+        groupValue: _sortBy,
+        onChanged: (value) {
+          setState(() {
+            _sortBy = value!;
+          });
+        },
+      ),
+      RadioListTile<String>(
+        title: const Text('Cũ nhất'),
+        value: 'created_asc',
         groupValue: _sortBy,
         onChanged: (value) {
           setState(() {

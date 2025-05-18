@@ -13,6 +13,7 @@ class ProductModel {
   final Map<String, dynamic>? specifications; 
   final int? createdAt; 
   final List<dynamic> tags; 
+  final double? averageRating;
 
   ProductModel({
     required this.id,
@@ -29,6 +30,7 @@ class ProductModel {
     this.specifications, 
     this.createdAt, 
     this.tags = const [], 
+    this.averageRating,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -80,6 +82,12 @@ class ProductModel {
       }
     }
 
+    // Xử lý averageRating
+    double? averageRating;
+    if (json['averageRating'] != null) {
+      averageRating = double.tryParse(json['averageRating'].toString());
+    }
+
     return ProductModel(
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
@@ -105,6 +113,7 @@ class ProductModel {
           ? int.tryParse(json['createdAt'].toString()) ?? DateTime.now().millisecondsSinceEpoch 
           : DateTime.now().millisecondsSinceEpoch,
       tags: tagsList,
+      averageRating: averageRating,
     );
   }
 
@@ -124,6 +133,7 @@ class ProductModel {
       'specifications': specifications,
       'createdAt': createdAt,
       'tags': tags,
+      'averageRating': averageRating,
     };
   }
 }
