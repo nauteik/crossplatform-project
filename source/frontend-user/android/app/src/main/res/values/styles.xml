@@ -15,4 +15,7 @@
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+    <string name="app_name">ecommerce-project</string>
+    <!-- Thêm Client ID từ Google Console -->
+    <string name="server_client_id">72454882219-qtni2uep2vt51uojo496r0v79790f6i8.apps.googleusercontent.com</string>
 </resources>

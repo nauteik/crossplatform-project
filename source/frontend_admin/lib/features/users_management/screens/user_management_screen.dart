@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend_admin/features/users_management/screens/user_details_dialog.dart';
 import 'package:frontend_admin/features/users_management/screens/user_form_screen.dart';
 import 'package:frontend_admin/models/user_model.dart';
 import 'package:frontend_admin/providers/user_provider.dart';
 import 'package:provider/provider.dart';
-
-enum UserStatus { initial, loading, loaded, error }
 
 class UsersManagementScreen extends StatefulWidget {
   const UsersManagementScreen({super.key});
@@ -15,38 +14,129 @@ class UsersManagementScreen extends StatefulWidget {
 
 class _UsersManagementScreenState extends State<UsersManagementScreen> {
   final TextEditingController _searchController = TextEditingController();
-  // Placeholder for search state - actual search logic needs provider support
-  bool _isSearching = false; 
   late Future<void> _fetchUsersFuture;
 
   @override
   void initState() {
     super.initState();
+    // Bắt đầu fetch dữ liệu khi màn hình khởi tạo
     _fetchUsersFuture = _fetchUsers();
+
+    // Thêm listener cho search controller để lọc khi text thay đổi
+    _searchController.addListener(_onSearchChanged);
   }
 
   Future<void> _fetchUsers() async {
-    await Provider.of<UserManagementProvider>(context, listen: false).fetchUsers();
+    await Provider.of<UserManagementProvider>(
+      context,
+      listen: false,
+    ).fetchUsers();
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  void _searchUsers() {
-    final query = _searchController.text.trim();
-    if (query.isNotEmpty) {
-       print('Searching for: $query');
-    } else {
-      _clearSearch();
-    }
+  // Phương thức được gọi khi text trong search bar thay đổi
+  void _onSearchChanged() {
+    setState(() {});
   }
 
+  // Phương thức xử lý tìm kiếm (có thể bỏ qua nếu dùng listener)
+  void _searchUsers() {
+    setState(() {});
+  }
+
+  // Phương thức xóa tìm kiếm và hiển thị lại toàn bộ danh sách
   void _clearSearch() {
     _searchController.clear();
-    Provider.of<UserManagementProvider>(context, listen: false).fetchUsers();
+  }
+
+  // Phương thức hiển thị dialog chi tiết người dùng
+  void _showUserDetailsDialog(User user) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return UserDetailsDialog(user: user);
+      },
+    );
+  }
+
+  // Phương thức hiển thị dialog xác nhận xóa
+  void _showDeleteConfirmation(BuildContext context, User user) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Xác nhận xóa'),
+          content: Text(
+            'Bạn có chắc chắn muốn xóa người dùng ${user.name} (${user.email})?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Đóng dialog
+              },
+              child: const Text('Hủy'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Đóng dialog
+
+                final userProvider = Provider.of<UserManagementProvider>(
+                  context,
+                  listen: false,
+                );
+                final success = await userProvider.deleteUser(user.id);
+
+                // Hiển thị phản hồi (SnackBar)
+                if (success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Xóa người dùng thành công'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Lỗi: ${userProvider.errorMessage ?? 'Không thể xóa người dùng'}',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text('Xóa', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Hàm lọc danh sách người dùng dựa trên query (trong widget)
+  List<User> _filterUsers(List<User> users, String query) {
+    if (query.isEmpty) {
+      return users;
+    }
+
+    final lowerCaseQuery = query.toLowerCase().trim();
+
+    return users.where((user) {
+      final nameMatch = user.name.toLowerCase().contains(lowerCaseQuery);
+      final usernameMatch =
+          user.username?.toLowerCase().contains(lowerCaseQuery) ?? false;
+      final phoneMatch =
+          user.phone?.toLowerCase().contains(lowerCaseQuery) ?? false;
+      final emailMatch = user.email.toLowerCase().contains(lowerCaseQuery);
+
+      return nameMatch || usernameMatch || phoneMatch || emailMatch;
+    }).toList();
   }
 
   @override
@@ -58,18 +148,22 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                  builder: (context) => const UserFormScreen(),
-                ),
-              ).then((success) {
-                // Nếu trả về true (thêm thành công), fetch lại data
-                if (success == true) {
-                  setState(() {
-                    _fetchUsersFuture = _fetchUsers();
+              // Điều hướng đến màn hình thêm người dùng
+              Navigator.of(context)
+                  .push<bool>(
+                    // Push với kết quả trả về bool
+                    MaterialPageRoute(
+                      builder: (context) => const UserFormScreen(),
+                    ),
+                  )
+                  .then((success) {
+                    if (success == true) {
+                      setState(() {
+                        _fetchUsersFuture = _fetchUsers();
+                        _searchController.clear();
+                      });
+                    }
                   });
-                }
-              });
             },
             tooltip: 'Thêm người dùng mới',
           ),
@@ -77,20 +171,25 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
+          // Khi refresh, fetch lại dữ liệu và xóa search bar
           setState(() {
             _fetchUsersFuture = _fetchUsers();
+            _searchController.clear(); // Xóa search bar khi refresh
           });
         },
+        // FutureBuilder chờ fetch ban đầu hoàn thành
         child: FutureBuilder(
           future: _fetchUsersFuture,
           builder: (context, snapshot) {
+            // Xử lý trạng thái loading/error ban đầu từ _fetchUsersFuture
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
-            
+
+            // Sau khi fetch ban đầu xong, phần còn lại được quản lý bởi Consumer
             return Column(
               children: [
-                // Search bar (Placeholder functionality)
+                // Search bar
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -99,32 +198,93 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
-                            hintText: 'Tìm kiếm người dùng...',
+                            hintText: 'Tìm kiếm theo tên, username, SĐT...',
                             prefixIcon: const Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: _clearSearch,
-                                  )
-                                : null,
+                            suffixIcon:
+                                _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clearSearch,
+                                    )
+                                    : null,
                           ),
-                          onSubmitted: (_) => _searchUsers(),
+                          // Listener _onSearchChanged đã trigger lọc khi gõ
+                          // onSubmitted: (_) => _searchUsers(), // Có thể bỏ qua nếu dùng listener
                         ),
                       ),
                       const SizedBox(width: 10),
+                      // Nút "Tìm kiếm" (có thể bỏ qua nếu dùng listener)
                       ElevatedButton(
-                        onPressed: _searchUsers, // Calls placeholder search function
+                        onPressed: _searchUsers,
                         child: const Text('Tìm kiếm'),
                       ),
                     ],
                   ),
                 ),
-                // User list
+                // Danh sách người dùng được quản lý bởi Consumer
                 Expanded(
-                  child: _buildBody(),
+                  // Consumer lắng nghe UserManagementProvider
+                  child: Consumer<UserManagementProvider>(
+                    builder: (context, userProvider, child) {
+                      // Xử lý trạng thái loading và error từ provider
+                      if (userProvider.isLoading) {
+                        // Provider đang loading
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (userProvider.errorMessage != null) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Lỗi: ${userProvider.errorMessage}',
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Xóa search bar và thử fetch lại
+                                  _searchController.clear();
+                                  userProvider.fetchUsers();
+                                },
+                                child: const Text('Thử lại'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // Lấy danh sách người dùng gốc từ provider
+                      final allUsers = userProvider.users;
+                      // Lọc danh sách dựa trên text hiện tại trong search bar
+                      final displayedUsers = _filterUsers(
+                        allUsers,
+                        _searchController.text,
+                      );
+
+                      // Hiển thị thông báo nếu danh sách rỗng (toàn bộ hoặc sau khi lọc)
+                      if (displayedUsers.isEmpty) {
+                        final isSearchActive =
+                            _searchController.text.isNotEmpty;
+                        return Center(
+                          child: Text(
+                            isSearchActive
+                                ? 'Không tìm thấy người dùng nào trùng khớp.'
+                                : 'Không có người dùng nào.',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        );
+                      } else {
+                        // Hiển thị danh sách người dùng đã lọc bằng ListView
+                        return _buildUsersList(displayedUsers);
+                      }
+                    },
+                  ),
                 ),
               ],
             );
@@ -134,186 +294,181 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     );
   }
 
-  Widget _buildBody() {
-    return Consumer<UserManagementProvider>(
-      builder: (context, userProvider, child) {
-        // Map provider state to a simple enum for clarity if needed
-        // Or just use provider.isLoading and provider.errorMessage directly
-        // final status = userProvider.isLoading ? UserStatus.loading : 
-        //               userProvider.errorMessage != null ? UserStatus.error :
-        //               userProvider.users.isNotEmpty ? UserStatus.loaded : UserStatus.initial;
-
-        if (userProvider.isLoading || _isSearching) { // Check both provider loading and local searching state
-          return const Center(child: CircularProgressIndicator());
-        } else if (userProvider.errorMessage != null) {
-          return Center(
+  // Xây dựng ListView item với layout 3 phần mới
+  Widget _buildUsersList(List<User> users) {
+    return ListView.builder(
+      itemCount: users.length,
+      itemBuilder: (context, index) {
+        final user = users[index];
+        return Card(
+          // Sử dụng Card cho mỗi item
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+          elevation: 2.0,
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Lỗi: ${userProvider.errorMessage}', style: const TextStyle(color: Colors.red)),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    userProvider.fetchUsers(); // Retry fetching users
-                  },
-                  child: const Text('Thử lại'),
-                )
-              ],
-            ),
-          );
-        } else if (userProvider.users.isNotEmpty) {
-          final users = userProvider.users;
-          return _buildUsersTable(users);
-        } else { // userProvider.users is empty and no error/loading
-           return const Center(
-              child: Text('Không có người dùng nào'),
-            );
-        }
-
-        // Fallback, though covered by above conditions
-        // return const Center(child: Text('Vui lòng tải dữ liệu người dùng'));
-      },
-    );
-  }
-
-  Widget _buildUsersTable(List<User> users) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: const [
-            DataColumn(label: Text('ID')),
-            DataColumn(label: Text('Avatar')),
-            DataColumn(label: Text('Email')),
-            DataColumn(label: Text('Tên')),
-            DataColumn(label: Text('Username')),
-            DataColumn(label: Text('SĐT')),
-            DataColumn(label: Text('Địa chỉ')),
-            DataColumn(label: Text('Giới tính')),
-            DataColumn(label: Text('Ngày sinh')),
-            DataColumn(label: Text('Rank')),
-            DataColumn(label: Text('Total Spend')),
-            DataColumn(label: Text('Vai trò')),
-            DataColumn(label: Text('Thao tác')),
-          ],
-          rows: users.map((user) {
-            return DataRow(
-              cells: [
-                DataCell(Text(user.id.length > 8 
-                    ? '${user.id.substring(0, 8)}...' 
-                    : user.id)),
-                 DataCell(
-                  // Use Image.network if ImageHelper is available for users, else use Icon
-                  user.avatar != null && user.avatar!.isNotEmpty
-                      ? Image.network(
-                          // Assume a function like ImageHelper.getUserAvatar exists
-                           // Or use a direct URL if possible/safe
-                           user.avatar!, // Using the direct URL from the model
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            // Placeholder if image fails or is null/empty
-                            return const Icon(Icons.account_circle, size: 40);
-                          },
-                        )
-                      : const Icon(Icons.account_circle, size: 40), // Placeholder icon
-                ),
-                DataCell(Text(user.email)),
-                DataCell(Text(user.name)),
-                DataCell(Text(user.username ?? 'N/A')), // Handle nullable username
-                DataCell(Text(user.phone ?? 'N/A')), // Handle nullable phone
-                DataCell(Text(user.address ?? 'N/A')), // Handle nullable address
-                DataCell(Text(user.gender ?? 'N/A')), // Handle nullable gender
-                DataCell(Text(user.birthdayString)), // Use the getter from User model
-                DataCell(Text(user.rank ?? 'N/A')), // Handle nullable rank
-                DataCell(Text('${user.totalSpend ?? 0}')), // Handle nullable totalSpend
-                DataCell(Text(user.roleString)), // Use the getter from User model
-                DataCell(
-                  Row(
-                    mainAxisSize: MainAxisSize.min, // Use minimum space
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                           // Navigate to UserFormScreen for editing
-                           Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => UserFormScreen(
-                                user: user,
-                                isEditing: true,
-                              ),
-                            ),
-                          ).then((_) {
-                            // Refresh user list when returning from edit screen
-                            Provider.of<UserManagementProvider>(context, listen: false).fetchUsers();
-                          });
-                        },
-                        tooltip: 'Sửa',
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          _showDeleteConfirmation(context, user); // Show delete confirmation dialog
-                        },
-                        tooltip: 'Xóa',
-                      ),
-                    ],
+                // Hàng trên cùng: Tên người dùng
+                Text(
+                  user.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Divider(height: 16, thickness: 1), // Đường phân cách
+                // Hàng giữa: Avatar và các thông tin chi tiết còn lại
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Avatar
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: Colors.grey[300],
+                      // Sử dụng NetworkImage chỉ nếu URL avatar hợp lệ và không phải "Chưa cập nhật"
+                      backgroundImage:
+                          user.avatar != null &&
+                                  user.avatar!.isNotEmpty &&
+                                  user.avatar!.toLowerCase() != 'chưa cập nhật'
+                              ? NetworkImage(user.avatar!)
+                              : null,
+                      // Hiển thị icon placeholder nếu không có avatar hợp lệ
+                      child:
+                          (user.avatar == null ||
+                                  user.avatar!.isEmpty ||
+                                  user.avatar!.toLowerCase() == 'chưa cập nhật')
+                              ? Icon(
+                                Icons.account_circle,
+                                size: 28,
+                                color: Colors.grey[700],
+                              )
+                              : null,
+                    ),
+                    const SizedBox(width: 16),
+
+                    // Các thông tin chi tiết khác (ID, Username, Email, SĐT, Vai trò)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ID: ${user.id.length > 8 ? '${user.id.substring(0, 8)}...' : user.id}', // Rút gọn ID
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black54,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Username: ${user.username ?? 'N/A'}', // Username có thể null
+                            style: const TextStyle(fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Email: ${user.email}',
+                            style: const TextStyle(fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          // Hiển thị SĐT
+                          Text(
+                            'SĐT: ${user.phone ?? 'N/A'}', // SĐT có thể null hoặc "Chưa cập nhật" (đã xử lý trong model)
+                            style: const TextStyle(fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(
+                            height: 8,
+                          ), // Khoảng cách trước Vai trò
+                          // Hiển thị Vai trò
+                          Text(
+                            'Vai trò: ${user.roleString}', // Sử dụng getter roleString
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // Bỏ hiển thị Rank và Total Spend ở đây
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 16, thickness: 1), // Đường phân cách
+                // Hàng cuối cùng: Các nút chức năng
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end, // Căn cuối
+                  children: [
+                    // Nút Xem Chi tiết
+                    TextButton.icon(
+                      onPressed: () => _showUserDetailsDialog(user),
+                      icon: const Icon(Icons.info_outline, size: 20),
+                      label: const Text('Chi tiết'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Nút Sửa
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.of(context)
+                            .push(
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => UserFormScreen(
+                                      user: user,
+                                      isEditing: true,
+                                    ),
+                              ),
+                            )
+                            .then((_) {
+                              Provider.of<UserManagementProvider>(
+                                context,
+                                listen: false,
+                              ).fetchUsers(); // Refetch toàn bộ
+                            });
+                      },
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      label: const Text('Sửa'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Nút Xóa
+                    TextButton.icon(
+                      onPressed: () {
+                        _showDeleteConfirmation(context, user);
+                      },
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 20,
+                        color: Colors.red,
+                      ),
+                      label: const Text(
+                        'Xóa',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, User user) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Xác nhận xóa'),
-          content: Text('Bạn có chắc chắn muốn xóa người dùng ${user.name} (${user.email})?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-              },
-              child: const Text('Hủy'),
             ),
-            TextButton(
-              onPressed: () async {
-                Navigator.of(context).pop(); // Close dialog
-                
-                // Use the provider to delete the user
-                final userProvider = Provider.of<UserManagementProvider>(context, listen: false);
-                final success = await userProvider.deleteUser(user.id);
-                
-                // Show feedback (SnackBar) based on deletion result
-                if (success && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Xóa người dùng thành công'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                   // The provider's deleteUser already removes the user from the list and calls notifyListeners,
-                   // so the UI should automatically update. No need to explicitly call fetchUsers unless needed for specific scenarios.
-                } else if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Lỗi: ${userProvider.errorMessage ?? 'Không thể xóa người dùng'}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-            ),
-          ],
+          ),
         );
       },
     );

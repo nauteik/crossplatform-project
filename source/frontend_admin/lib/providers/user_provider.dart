@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_admin/models/user_model.dart';
-import 'package:frontend_admin/repository/user_repository.dart';
+import 'package:frontend_admin/repository/user_repository.dart'; 
 
 class UserManagementProvider extends ChangeNotifier {
   final UserManagementRepository _repository;
@@ -18,20 +18,24 @@ class UserManagementProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> fetchUsers() async {
-    _setLoading(true);
-    _setErrorMessage(null);
+    if (_isLoading != true) { _isLoading = true; notifyListeners(); }
 
     final response = await _repository.fetchUsers();
 
     if (response.isSuccess) {
       _users = response.data ?? [];
-      _setErrorMessage(null);
+       if (_errorMessage != null) { _errorMessage = null; }
     } else {
       _users = [];
-      _setErrorMessage(response.message);
+      if (response.message != null && response.message!.isNotEmpty) {
+         _setErrorMessage(response.message);
+      } else {
+         _setErrorMessage('Lỗi không xác định khi lấy dữ liệu người dùng.');
+      }
     }
 
-    _setLoading(false);
+    // Chỉ cập nhật trạng thái loading và notify nếu nó thay đổi
+    if (_isLoading != false) { _isLoading = false; notifyListeners(); }
   }
 
   // Thêm người dùng mới
@@ -41,16 +45,14 @@ class UserManagementProvider extends ChangeNotifier {
 
     final response = await _repository.addUser(userData);
 
-    if (response.isSuccess && response.data != null) {
+    if (response.isSuccess) {
       _setErrorMessage(null);
-      _setLoading(false);
       await Future.delayed(const Duration(milliseconds: 500));
       await fetchUsers();
-      return true;
+      return true; 
     } else {
       _setErrorMessage(response.message.isNotEmpty ? response.message : 'Thêm người dùng thất bại.');
       _setLoading(false);
-      notifyListeners();
       return false;
     }
   }
@@ -62,19 +64,24 @@ class UserManagementProvider extends ChangeNotifier {
 
     final response = await _repository.updateUser(userId, userData);
 
-    if (response.isSuccess && response.data != null) {
-      int index = _users.indexWhere((user) => user.id == userId);
-      if (index != -1) {
-        _users[index] = response.data!;
+    if (response.isSuccess) {
+      if (response.data != null) {
+        int index = _users.indexWhere((user) => user.id == userId);
+        if (index != -1) {
+          _users[index] = response.data!;
+           _setErrorMessage(null);
+           _setLoading(false);
+           return true;
+        }
       }
-      _setErrorMessage(null);
-      _setLoading(false);
-      notifyListeners();
-      await Future.delayed(const Duration(milliseconds: 500));
-      await fetchUsers();
-      return true;
+       _setErrorMessage(null);
+       _setLoading(false);
+       await Future.delayed(const Duration(milliseconds: 500));
+       await fetchUsers();
+       return true;
     } else {
-      notifyListeners();
+      _setErrorMessage(response.message.isNotEmpty ? response.message : 'Cập nhật người dùng thất bại.');
+      _setLoading(false);
       return false;
     }
   }
@@ -90,29 +97,25 @@ class UserManagementProvider extends ChangeNotifier {
       _users.removeWhere((user) => user.id == userId);
       _setErrorMessage(null);
       _setLoading(false);
-      notifyListeners();
-      await Future.delayed(const Duration(milliseconds: 500));
-      await fetchUsers();
+      // await Future.delayed(const Duration(milliseconds: 500));
+      // await fetchUsers();
       return true;
     } else {
       _setErrorMessage(response.message.isNotEmpty ? response.message : 'Xóa người dùng thất bại.');
       _setLoading(false);
-      notifyListeners();
       return false;
     }
   }
 
-  // Helper methods
+  // Helper methods 
   void _setLoading(bool value) {
-    _isLoading = value;
-    if (_isLoading != value) {
+     if (_isLoading != value) {
        _isLoading = value;
        notifyListeners();
-    }
+     }
   }
 
   void _setErrorMessage(String? message) {
-    _errorMessage = message;
      if (_errorMessage != message) {
         _errorMessage = message;
         notifyListeners();

@@ -1,6 +1,8 @@
 package com.example.ecommerceproject.controller;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import com.example.ecommerceproject.model.ChangePasswordRequest;
 import com.example.ecommerceproject.exception.ApiStatus;
@@ -11,10 +13,21 @@ import com.example.ecommerceproject.security.JwtUtil;
 import com.example.ecommerceproject.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import jakarta.annotation.PostConstruct;
 
 
 @RestController
@@ -33,6 +46,19 @@ public class UserController {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    // Đường dẫn đến thư mục lưu trữ ảnh đại diện
+    private final Path avatarUploadDir = Paths.get("uploads/avatars");
+    
+    // Khởi tạo thư mục lưu trữ nếu chưa tồn tại
+    @PostConstruct
+    public void init() {
+        try {
+            Files.createDirectories(avatarUploadDir);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not initialize avatar upload directory", e);
+        }
+    }
 
     @PostMapping("/add")
     public User addUser(@RequestBody User user) {
@@ -361,6 +387,165 @@ public class UserController {
                         "Failed to change password: " + e.getMessage(),
                         null
                     ));
+        }
+    }
+    
+    /**
+     * Tải lên ảnh đại diện cho người dùng
+     * @param userId ID của người dùng
+     * @param avatar File ảnh đại diện
+     * @param request HttpServletRequest để xác thực người dùng từ token JWT
+     * @return ResponseEntity với ApiResponse chứa thông tin người dùng đã cập nhật
+     */
+    @PostMapping("/upload-avatar/{userId}")
+    public ResponseEntity<ApiResponse<?>> uploadAvatar(
+            @PathVariable String userId,
+            @RequestParam("avatar") MultipartFile avatar,
+            HttpServletRequest request) {
+        try {
+            // Xác thực người dùng từ token JWT
+            String authHeader = request.getHeader("Authorization");
+            
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(
+                            401,
+                            "Authorization token is required",
+                            null
+                        ));
+            }
+            
+            String token = authHeader.substring(7);
+            String username = jwtUtil.extractUsername(token);
+            
+            // Kiểm tra người dùng hiện tại
+            User currentUser = userService.getUserByUsername(username);
+            
+            // Chỉ admin (role = 1) hoặc chính người dùng đó mới có thể thay đổi ảnh đại diện
+            if (currentUser.getRole() != 1 && !currentUser.getId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse<>(
+                            403,
+                            "You don't have permission to change this user's avatar",
+                            null
+                        ));
+            }
+            
+            // Lấy thông tin người dùng cần cập nhật
+            User user = userService.getUserById(userId);
+            
+            // Kiểm tra file upload
+            if (avatar.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(
+                            ApiStatus.BAD_REQUEST.getCode(),
+                            "Please select a file to upload",
+                            null
+                        ));
+            }
+            
+            // Kiểm tra định dạng file - Mở rộng danh sách MIME types chấp nhận được
+            String contentType = avatar.getContentType();
+            System.out.println("Received file with content type: " + contentType);
+            
+            // Danh sách MIME types được chấp nhận
+            List<String> allowedTypes = Arrays.asList(
+                "image/jpeg", "image/jpg", "image/png", "image/gif",
+                "image/webp", "image/bmp", "image/x-ms-bmp", 
+                "application/octet-stream" // Cho các trường hợp không xác định được type
+            );
+            
+            if (contentType == null || !allowedTypes.contains(contentType.toLowerCase())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse<>(
+                            ApiStatus.BAD_REQUEST.getCode(),
+                            "Unsupported image format. Supported formats are JPEG, PNG, GIF, BMP and WebP.",
+                            null
+                        ));
+            }
+            
+            // Xử lý file upload
+            // Tạo tên file ngẫu nhiên để tránh trùng lặp
+            String originalFilename = avatar.getOriginalFilename();
+            String fileExtension = originalFilename != null ? 
+                originalFilename.substring(originalFilename.lastIndexOf(".")) : ".jpg";
+            String newFilename = UUID.randomUUID().toString() + fileExtension;
+            
+            // Lưu file vào thư mục uploads
+            Path targetLocation = avatarUploadDir.resolve(newFilename);
+            Files.copy(avatar.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            
+            // Cập nhật đường dẫn ảnh đại diện trong DB
+            // Tạo URL trả về cho client
+            String fileUrl = request.getScheme() + "://" + request.getServerName() + ":" + 
+                            request.getServerPort() + "/api/user/avatars/" + newFilename;
+            
+            // Lưu URL vào DB
+            user.setAvatar(fileUrl);
+            User updatedUser = userRepo.save(user);
+            
+            // Không trả về mật khẩu đã mã hóa
+            updatedUser.setPassword(null);
+            
+            return ResponseEntity.ok(new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                "Avatar uploaded successfully",
+                updatedUser
+            ));
+            
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("User not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse<>(
+                            ApiStatus.NOT_FOUND.getCode(),
+                            e.getMessage(),
+                            null
+                        ));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new ApiResponse<>(
+                            ApiStatus.SERVER_ERROR.getCode(),
+                            "Avatar upload failed: " + e.getMessage(),
+                            null
+                        ));
+            }
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse<>(
+                        ApiStatus.SERVER_ERROR.getCode(),
+                        "Failed to upload avatar: " + e.getMessage(),
+                        null
+                    ));
+        }
+    }
+    
+    /**
+     * Lấy ảnh đại diện từ server
+     * @param filename Tên file ảnh đại diện
+     * @return ResponseEntity với Resource chứa file ảnh
+     */
+    @GetMapping("/avatars/{filename:.+}")
+    public ResponseEntity<Resource> getAvatar(@PathVariable String filename) {
+        try {
+            Path filePath = avatarUploadDir.resolve(filename).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            
+            if (resource.exists()) {
+                // Xác định kiểu MIME của file
+                String contentType = Files.probeContentType(filePath);
+                
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+                
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

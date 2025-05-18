@@ -15,9 +15,7 @@ class OverviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tổng quan'),
-      ),
+      appBar: AppBar(title: const Text('Tổng quan')),
       body: Consumer<OverviewProvider>(
         builder: (context, provider, child) {
           // Kiểm tra trạng thái loading dựa trên provider.isLoading
@@ -52,8 +50,8 @@ class OverviewScreen extends StatelessWidget {
             // Kiểm tra xem có bất kỳ dữ liệu biểu đồ nào được load không trong DTO
             bool hasChartData =
                 (data.timeSeriesRevenueProfitData?.isNotEmpty ?? false) ||
-                    (data.timeSeriesQuantityData?.isNotEmpty ?? false) ||
-                    (data.categorySalesRatio?.isNotEmpty ?? false);
+                (data.timeSeriesQuantityData?.isNotEmpty ?? false) ||
+                (data.categorySalesRatio?.isNotEmpty ?? false);
 
             // Hiển thị dashboard
             return SingleChildScrollView(
@@ -63,48 +61,84 @@ class OverviewScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // --- Top Row: Key Metrics Grid ---
-
                   Text(
                     'Daily Metrics', // Thêm tiêu đề cho phần metrics
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 10),
                   GridView.count(
-                    crossAxisCount: 4,
+                    crossAxisCount:
+                        MediaQuery.of(context).size.width < 1050
+                            ? 2
+                            : MediaQuery.of(context).size.width < 1300
+                            ? 3
+                            : 4,
                     crossAxisSpacing: 16.0,
                     mainAxisSpacing: 16.0,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     childAspectRatio: 2.0, // Tỷ lệ khung hình cho ô metric
                     children: [
-                      _buildMetricCard(context, 'Total Users',
-                          data.totalUsers.toString(), Icons.people),
-                      _buildMetricCard(context, 'Total Orders',
-                          data.totalOrders.toString(), Icons.shopping_cart),
-                      _buildMetricCard(context, 'Total Product Types',
-                          data.totalProductTypes.toString(), Icons.category),
-                      _buildMetricCard(context, 'Total Products',
-                          data.totalProducts.toString(), Icons.inventory),
-                      _buildMetricCard(context, 'New Users',
-                          data.newUsers.toString(), FontAwesomeIcons.userPlus),
-                      _buildMetricCard(context, 'New Orders',
-                          data.newOrders.toString(), FontAwesomeIcons.cartPlus),
-                      _buildMetricCard(context, 'Total Revenue',
-                          _formatCurrency(data.totalRevenue), FontAwesomeIcons.moneyBill),
-                      _buildMetricCard(context, 'Total Profit',
-                          _formatCurrency(data.totalProfit), FontAwesomeIcons.moneyBillTrendUp),
+                      _buildMetricCard(
+                        context,
+                        'Total Users',
+                        data.totalUsers.toString(),
+                        Icons.people,
+                      ),
+                      _buildMetricCard(
+                        context,
+                        'Total Orders',
+                        data.totalOrders.toString(),
+                        Icons.shopping_cart,
+                      ),
+                      _buildMetricCard(
+                        context,
+                        'Total Product Types',
+                        data.totalProductTypes.toString(),
+                        Icons.category,
+                      ),
+                      _buildMetricCard(
+                        context,
+                        'Total Products',
+                        data.totalProducts.toString(),
+                        Icons.inventory,
+                      ),
+                      _buildMetricCard(
+                        context,
+                        'New Users',
+                        data.newUsers.toString(),
+                        FontAwesomeIcons.userPlus,
+                      ),
+                      _buildMetricCard(
+                        context,
+                        'New Orders',
+                        data.newOrders.toString(),
+                        FontAwesomeIcons.cartPlus,
+                      ),
+                      _buildMetricCard(
+                        context,
+                        'Total Revenue',
+                        _formatCurrency(data.totalRevenue),
+                        FontAwesomeIcons.moneyBill,
+                      ),
+                      _buildMetricCard(
+                        context,
+                        'Total Profit',
+                        _formatCurrency(data.totalProfit),
+                        FontAwesomeIcons.moneyBillTrendUp,
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 30), // Khoảng cách sau metrics
-
-                  // Hiển thị thông báo "No Chart Data" nếu không có dữ liệu biểu đồ sau khi load
+                  const SizedBox(height: 30),
                   if (!hasChartData &&
                       !provider.isLoading &&
                       provider.errorMessage == null) ...[
                     const SizedBox(height: 30), // Khoảng cách trước thông báo
                     const Center(
-                        child: Text(
-                            'No chart data available for the selected period.')),
+                      child: Text(
+                        'No chart data available for the selected period.',
+                      ),
+                    ),
                   ],
 
                   // --- Lower Section: Charts ---
@@ -114,14 +148,12 @@ class OverviewScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Remove Filter Selection UI
-                  // Charts Grid
                   GridView(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount:
+                          MediaQuery.of(context).size.width < 1300 ? 1 : 2,
                       childAspectRatio: 1.3,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
@@ -133,8 +165,11 @@ class OverviewScreen extends StatelessWidget {
                         _buildChartCard(
                           context,
                           'Revenue and Profit',
-                          LineChart(_buildLineChartData(
-                              data.timeSeriesRevenueProfitData!)),
+                          LineChart(
+                            _buildLineChartData(
+                              data.timeSeriesRevenueProfitData!,
+                            ),
+                          ),
                           height: 300,
                         ),
 
@@ -144,8 +179,12 @@ class OverviewScreen extends StatelessWidget {
                         _buildChartCard(
                           context,
                           'Products Sold',
-                          BarChart(_buildBarChartData(
-                              context, data.timeSeriesQuantityData!)),
+                          BarChart(
+                            _buildBarChartData(
+                              context,
+                              data.timeSeriesQuantityData!,
+                            ),
+                          ),
                           height: 300,
                         ),
 
@@ -156,7 +195,8 @@ class OverviewScreen extends StatelessWidget {
                           context,
                           'Sales Ratio',
                           PieChart(
-                              _buildPieChartData(data.categorySalesRatio!)),
+                            _buildPieChartData(data.categorySalesRatio!),
+                          ),
                           height: 300,
                         ),
                     ],
@@ -172,7 +212,11 @@ class OverviewScreen extends StatelessWidget {
 
   // Helper method to build a metric card (giữ nguyên như file bạn gửi)
   Widget _buildMetricCard(
-      BuildContext context, String title, String value, IconData icon) {
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+  ) {
     return Card(
       elevation: 4.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
@@ -182,10 +226,11 @@ class OverviewScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon,
-                size: 30,
-                color:
-                    Theme.of(context).primaryColor), // Kích thước icon nhỏ hơn
+            Icon(
+              icon,
+              size: 30,
+              color: Theme.of(context).primaryColor,
+            ), // Kích thước icon nhỏ hơn
             const SizedBox(height: 8),
             Text(
               title,
@@ -196,9 +241,9 @@ class OverviewScreen extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20, // Kích thước font nhỏ hơn
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 20, // Kích thước font nhỏ hơn
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -209,8 +254,12 @@ class OverviewScreen extends StatelessWidget {
   }
 
   // Helper method to build a card container for charts (giữ nguyên như file bạn gửi)
-  Widget _buildChartCard(BuildContext context, String title, Widget chartWidget,
-      {double height = 250}) {
+  Widget _buildChartCard(
+    BuildContext context,
+    String title,
+    Widget chartWidget, {
+    double height = 250,
+  }) {
     return Card(
       elevation: 4.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
@@ -219,10 +268,7 @@ class OverviewScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
             Container(
               height: height, // Sử dụng chiều cao được truyền vào
@@ -236,16 +282,20 @@ class OverviewScreen extends StatelessWidget {
 
   // Helper method to format currency (assuming VND)
   String _formatCurrency(int amount) {
-    final formatter =
-        NumberFormat.currency(locale: 'vi_VN', symbol: '₫', decimalDigits: 0);
+    final formatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
     return formatter.format(amount);
   }
 
   // --- Helper Methods Vẽ Biểu đồ (Cập nhật để nhận List<TimeBasedChartData>) ---
 
   LineChartData _buildLineChartData(List<TimeBasedChartData> data) {
-    data.sort((a, b) =>
-        a.timePeriod.compareTo(b.timePeriod)); // Sắp xếp theo timePeriod
+    data.sort(
+      (a, b) => a.timePeriod.compareTo(b.timePeriod),
+    ); // Sắp xếp theo timePeriod
 
     List<FlSpot> revenueSpots = [];
     List<FlSpot> profitSpots = [];
@@ -274,8 +324,9 @@ class OverviewScreen extends StatelessWidget {
           final parts = data[i].timePeriod.split('-');
           final year = int.parse(parts[0]);
           final month = int.parse(parts[1]);
-          label = DateFormat('MM/yyyy')
-              .format(DateTime(year, month)); // Ví dụ 10/2023
+          label = DateFormat(
+            'MM/yyyy',
+          ).format(DateTime(year, month)); // Ví dụ 10/2023
         } else if (data[i].timePeriod.length == 4) {
           // Dữ liệu theo năm (YYYY)
           label = data[i].timePeriod; // Giữ nguyên năm
@@ -304,16 +355,10 @@ class OverviewScreen extends StatelessWidget {
         horizontalInterval: maxY > 0 ? maxY / 5 : 1.0,
         verticalInterval: 1.0,
         getDrawingHorizontalLine: (value) {
-          return const FlLine(
-            color: Color(0xffe7e7e7),
-            strokeWidth: 1,
-          );
+          return const FlLine(color: Color(0xffe7e7e7), strokeWidth: 1);
         },
         getDrawingVerticalLine: (value) {
-          return const FlLine(
-            color: Color(0xffe7e7e7),
-            strokeWidth: 1,
-          );
+          return const FlLine(color: Color(0xffe7e7e7), strokeWidth: 1);
         },
       ),
       titlesData: FlTitlesData(
@@ -333,8 +378,10 @@ class OverviewScreen extends StatelessWidget {
                   meta: meta,
                   space: 8.0,
                   angle: rotate ? -45 : 0,
-                  child:
-                      Text(labels[index], style: const TextStyle(fontSize: 10)),
+                  child: Text(
+                    labels[index],
+                    style: const TextStyle(fontSize: 10),
+                  ),
                 );
               }
               return SideTitleWidget(meta: meta, child: Container());
@@ -396,7 +443,9 @@ class OverviewScreen extends StatelessWidget {
   }
 
   BarChartData _buildBarChartData(
-      BuildContext context, List<TimeBasedChartData> data) {
+    BuildContext context,
+    List<TimeBasedChartData> data,
+  ) {
     data.sort((a, b) => a.timePeriod.compareTo(b.timePeriod));
 
     List<BarChartGroupData> barGroups = [];
@@ -472,8 +521,10 @@ class OverviewScreen extends StatelessWidget {
                   meta: meta,
                   space: 4.0,
                   angle: rotate ? -45 : 0,
-                  child:
-                      Text(labels[index], style: const TextStyle(fontSize: 10)),
+                  child: Text(
+                    labels[index],
+                    style: const TextStyle(fontSize: 10),
+                  ),
                 );
               }
               return SideTitleWidget(meta: meta, child: Container());
@@ -489,8 +540,10 @@ class OverviewScreen extends StatelessWidget {
               return SideTitleWidget(
                 meta: meta,
                 space: 4.0,
-                child: Text(value.toInt().toString(),
-                    style: const TextStyle(fontSize: 10)),
+                child: Text(
+                  value.toInt().toString(),
+                  style: const TextStyle(fontSize: 10),
+                ),
               );
             },
             reservedSize: 28,
@@ -504,10 +557,11 @@ class OverviewScreen extends StatelessWidget {
     List<PieChartSectionData> sections = [];
     double totalSold = 0;
     if (data.isNotEmpty) {
-      totalSold = data
-          .map((item) => item.totalQuantitySold)
-          .reduce((a, b) => a + b)
-          .toDouble();
+      totalSold =
+          data
+              .map((item) => item.totalQuantitySold)
+              .reduce((a, b) => a + b)
+              .toDouble();
     }
 
     List<Color> colors = [
@@ -569,10 +623,7 @@ class OverviewScreen extends StatelessWidget {
       ),
       child: Text(
         display,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-        ),
+        style: const TextStyle(color: Colors.white, fontSize: 10),
       ),
     );
   }

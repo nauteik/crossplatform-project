@@ -17,18 +17,20 @@ class ReviewModel {
     required this.createdAt,
   });
 
+  // Sửa phương thức fromJson để xử lý media
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
-    List<MediaModel> mediaList = [];
-    if (json['media'] != null && json['media'] is List) {
-      mediaList = List.from(json['media'])
-          .map((mediaJson) => MediaModel.fromJson(mediaJson))
-          .toList();
+    final List<MediaModel> mediaList = [];
+
+    if (json['media'] != null) {
+      for (var item in json['media']) {
+        mediaList.add(MediaModel.fromJson(item));
+      }
     }
 
     return ReviewModel(
       id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
       productId: json['productId'] ?? '',
+      userId: json['userId'] ?? '',
       rating: json['rating'] ?? 0,
       comment: json['comment'] ?? '',
       media: mediaList,

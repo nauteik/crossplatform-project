@@ -489,6 +489,7 @@ public class DataLoader implements CommandLineRunner {
         admin.setAvatar("Chưa cập nhật");
         admin.setPhone("Chưa cập nhật");
         admin.setGender("Chưa cập nhật");
+        admin.setRank("Thành viên đồng");
         admin.setLoyaltyPoints(0);
         admin = userRepository.save(admin);
 
@@ -502,6 +503,7 @@ public class DataLoader implements CommandLineRunner {
         user.setAvatar("Chưa cập nhật");
         user.setPhone("Chưa cập nhật");
         user.setGender("Chưa cập nhật");
+        user.setRank("Thành viên đồng");
         user.setLoyaltyPoints(0);
         user = userRepository.save(user);
 

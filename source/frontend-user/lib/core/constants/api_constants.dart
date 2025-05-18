@@ -3,12 +3,17 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiConstants {
   // Base URLs for different environments
-  
+
   //Real Android url
   static const String localEmulatorUrl = 'http://10.0.2.2:8080';
-  // static const String localEmulatorUrl = 'http://192.168.1.3:8080';
+
+  // Thay đổi IP này thành IP của máy tính bạn vừa xác định ở bước 1
+  static const String localDeviceUrl =
+      'http://192.168.1.4:8080'; // Thay IP thực tế tại đây
+
   static const String localUrl = 'http://localhost:8080';
-  static const String fallbackUrl = 'http://10.0.2.2:8080'; // Fallback URL nếu không kết nối được
+  static const String fallbackUrl =
+      'http://10.0.2.2:8080'; // Fallback URL nếu không kết nối được
 
   // Chọn base URL phù hợp theo môi trường
   static String get baseApiUrl {
@@ -34,7 +39,8 @@ class ApiConstants {
 
   // Thêm getter cho WebSocket URL
   static String get websocketUrl {
-    String httpBase = baseApiUrl; // Lấy base URL HTTP (ví dụ: http://localhost:8080)
+    String httpBase =
+        baseApiUrl; // Lấy base URL HTTP (ví dụ: http://localhost:8080)
     // Chuyển đổi http:// thành ws:// hoặc https:// thành wss://
     if (httpBase.startsWith('https')) {
       return httpBase.replaceFirst('https', 'wss') + '/ws';
