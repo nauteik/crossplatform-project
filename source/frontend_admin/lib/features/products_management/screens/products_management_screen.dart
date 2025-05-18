@@ -42,11 +42,24 @@ class _ProductsManagementScreenState extends State<ProductsManagementScreen> wit
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_handleTabSelection);
     
-    // Gọi API để lấy danh sách sản phẩm khi màn hình được khởi tạo
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<ProductProvider>(context, listen: false);
-      provider.setSorting(ProductSortField.createdAt, SortDirection.desc); // Sắp xếp mặc định theo thời gian tạo
-      provider.fetchProducts();
+    // Gọi API để lấy danh sách sản phẩm, brands và product types khi màn hình được khởi tạo
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final productProvider = Provider.of<ProductProvider>(context, listen: false);
+      final brandProvider = Provider.of<BrandProvider>(context, listen: false);
+      final typeProvider = Provider.of<ProductTypeProvider>(context, listen: false);
+      final tagProvider = Provider.of<TagProvider>(context, listen: false);
+      
+      productProvider.setSorting(ProductSortField.createdAt, SortDirection.desc); // Sắp xếp mặc định theo thời gian tạo
+      
+      // Tải dữ liệu từ tất cả các providers để đảm bảo bộ lọc hiển thị đầy đủ
+      await Future.wait([
+        brandProvider.fetchBrands(),
+        typeProvider.fetchProductTypes(),
+        tagProvider.fetchTags(),
+      ]);
+      
+      // Tải sản phẩm sau khi các bộ lọc đã sẵn sàng
+      await productProvider.fetchProducts();
     });
     
     // Thêm listener cho thanh tìm kiếm

@@ -90,14 +90,11 @@ class ProductSpecifications extends StatelessWidget {
         continue;
       }
       
-      // Format the key for display (replace underscores with spaces and capitalize)
-      String formattedKey = key.replaceAll('_', ' ');
-      formattedKey = formattedKey.split(' ').map((word) => 
-        word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : ''
-      ).join(' ');
+      // Use key as is, since they are already in Vietnamese
+      String displayKey = key;
       
       // Add the spec item
-      specWidgets.add(_buildSpecItem(formattedKey, specs[key].toString()));
+      specWidgets.add(_buildSpecItem(displayKey, specs[key].toString()));
     }
     
     return specWidgets;
@@ -111,8 +108,8 @@ class ProductSpecifications extends StatelessWidget {
     
     // Try to identify socket type
     String socketType = '';
-    if (product.specifications != null && product.specifications!['socket'] != null) {
-      socketType = product.specifications!['socket'].toString();
+    if (product.specifications != null && product.specifications!['Socket'] != null) {
+      socketType = product.specifications!['Socket'].toString();
     } else {
       if (description.contains('lga1700')) socketType = 'LGA1700';
       else if (description.contains('lga1200')) socketType = 'LGA1200';
@@ -122,8 +119,8 @@ class ProductSpecifications extends StatelessWidget {
     
     // Try to identify cores/threads
     if (!(product.specifications != null && 
-         (product.specifications!.containsKey('cores') || 
-          product.specifications!.containsKey('threads')))) {
+         (product.specifications!.containsKey('Số nhân') || 
+          product.specifications!.containsKey('Số luồng')))) {
       final coreRegex = RegExp(r'(\d+)\s*cores?', caseSensitive: false);
       final threadRegex = RegExp(r'(\d+)\s*threads?', caseSensitive: false);
       
@@ -133,20 +130,20 @@ class ProductSpecifications extends StatelessWidget {
       if (coreMatch != null) {
         final cores = coreMatch.group(1) ?? '';
         if (cores.isNotEmpty) {
-          cpuInfo.add(_buildSpecItem('Cores', cores));
+          cpuInfo.add(_buildSpecItem('Số nhân', cores));
         }
       }
       
       if (threadMatch != null) {
         final threads = threadMatch.group(1) ?? '';
         if (threads.isNotEmpty) {
-          cpuInfo.add(_buildSpecItem('Threads', threads));
+          cpuInfo.add(_buildSpecItem('Số luồng', threads));
         }
       }
     }
     
     // Add socket type if not already in specs and not empty
-    if (!(product.specifications != null && product.specifications!.containsKey('socket')) && 
+    if (!(product.specifications != null && product.specifications!.containsKey('Socket')) && 
         socketType.isNotEmpty) {
       cpuInfo.add(_buildSpecItem('Socket', socketType));
     }
@@ -162,8 +159,8 @@ class ProductSpecifications extends StatelessWidget {
     
     // Try to identify socket type
     String socketType = '';
-    if (product.specifications != null && product.specifications!['socket'] != null) {
-      socketType = product.specifications!['socket'].toString();
+    if (product.specifications != null && product.specifications!['Socket'] != null) {
+      socketType = product.specifications!['Socket'].toString();
     } else {
       if (description.contains('lga1700')) socketType = 'LGA1700';
       else if (description.contains('lga1200')) socketType = 'LGA1200';
@@ -173,8 +170,8 @@ class ProductSpecifications extends StatelessWidget {
     
     // Try to identify chipset
     String chipset = '';
-    if (product.specifications != null && product.specifications!['chipset'] != null) {
-      chipset = product.specifications!['chipset'].toString();
+    if (product.specifications != null && product.specifications!['Chipset'] != null) {
+      chipset = product.specifications!['Chipset'].toString();
     } else {
       if (description.contains('z690')) chipset = 'Z690';
       else if (description.contains('b660')) chipset = 'B660';
@@ -184,8 +181,8 @@ class ProductSpecifications extends StatelessWidget {
     
     // Try to identify form factor
     String formFactor = '';
-    if (product.specifications != null && product.specifications!['form_factor'] != null) {
-      formFactor = product.specifications!['form_factor'].toString();
+    if (product.specifications != null && product.specifications!['Form factor'] != null) {
+      formFactor = product.specifications!['Form factor'].toString();
     } else {
       if (description.contains('atx') && !description.contains('micro') && !description.contains('mini')) {
         formFactor = 'ATX';
@@ -197,21 +194,21 @@ class ProductSpecifications extends StatelessWidget {
     }
     
     // Add socket type if not already in specs and not empty
-    if (!(product.specifications != null && product.specifications!.containsKey('socket')) && 
+    if (!(product.specifications != null && product.specifications!.containsKey('Socket')) && 
         socketType.isNotEmpty) {
       moboInfo.add(_buildSpecItem('Socket', socketType));
     }
     
     // Add chipset if not already in specs and not empty
-    if (!(product.specifications != null && product.specifications!.containsKey('chipset')) &&
+    if (!(product.specifications != null && product.specifications!.containsKey('Chipset')) &&
         chipset.isNotEmpty) {
       moboInfo.add(_buildSpecItem('Chipset', chipset));
     }
     
     // Add form factor if not already in specs and not empty
-    if (!(product.specifications != null && product.specifications!.containsKey('form_factor')) &&
+    if (!(product.specifications != null && product.specifications!.containsKey('Form factor')) &&
         formFactor.isNotEmpty) {
-      moboInfo.add(_buildSpecItem('Form Factor', formFactor));
+      moboInfo.add(_buildSpecItem('Form factor', formFactor));
     }
     
     return moboInfo;
@@ -226,8 +223,8 @@ class ProductSpecifications extends StatelessWidget {
     
     // Try to identify RAM type
     String ramType = '';
-    if (product.specifications != null && product.specifications!['memory_type'] != null) {
-      ramType = product.specifications!['memory_type'].toString();
+    if (product.specifications != null && product.specifications!['Loại RAM'] != null) {
+      ramType = product.specifications!['Loại RAM'].toString();
     } else {
       if (description.contains('ddr5') || name.contains('ddr5')) ramType = 'DDR5';
       else if (description.contains('ddr4') || name.contains('ddr4')) ramType = 'DDR4';
@@ -236,8 +233,8 @@ class ProductSpecifications extends StatelessWidget {
     
     // Try to identify capacity
     String capacity = '';
-    if (product.specifications != null && product.specifications!['capacity'] != null) {
-      capacity = product.specifications!['capacity'].toString();
+    if (product.specifications != null && product.specifications!['Dung lượng'] != null) {
+      capacity = product.specifications!['Dung lượng'].toString();
     } else {
       final capacityRegex = RegExp(r'(\d+)(?:\s*gb|\s*tb)', caseSensitive: false);
       final capacityMatch = capacityRegex.firstMatch(name) ?? 
@@ -249,15 +246,15 @@ class ProductSpecifications extends StatelessWidget {
     }
     
     // Add memory type if not already in specs and not empty
-    if (!(product.specifications != null && product.specifications!.containsKey('memory_type')) &&
+    if (!(product.specifications != null && product.specifications!.containsKey('Loại RAM')) &&
         ramType.isNotEmpty) {
-      ramInfo.add(_buildSpecItem('Memory Type', ramType));
+      ramInfo.add(_buildSpecItem('Loại RAM', ramType));
     }
     
     // Add capacity if not already in specs and not empty
-    if (!(product.specifications != null && product.specifications!.containsKey('capacity')) &&
+    if (!(product.specifications != null && product.specifications!.containsKey('Dung lượng')) &&
         capacity.isNotEmpty) {
-      ramInfo.add(_buildSpecItem('Capacity', capacity));
+      ramInfo.add(_buildSpecItem('Dung lượng', capacity));
     }
     
     return ramInfo;

@@ -3,6 +3,7 @@ package com.example.ecommerceproject.repository;
 import com.example.ecommerceproject.model.Brand;
 import com.example.ecommerceproject.model.Product;
 import com.example.ecommerceproject.model.ProductType;
+import com.example.ecommerceproject.model.Tag;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,4 +16,5 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     List<Product> findByNameContainingIgnoreCase(String name);
     List<Product> findByBrandAndProductType(Brand brand, ProductType productType);
     List<Product> findByProductType_Name(String productTypeName);
+    List<Product> findByTagsContaining(Tag tag);
 }

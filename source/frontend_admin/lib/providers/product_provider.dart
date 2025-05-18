@@ -67,9 +67,9 @@ class ProductProvider with ChangeNotifier {
         
         // Lưu thông tin phân trang
         if (response.meta != null) {
-          _totalPages = response.meta!['totalPages'] ?? 0;
-          _totalItems = response.meta!['totalItems'] ?? 0;
-          _currentPage = response.meta!['currentPage'] ?? 0;
+          _totalPages = _getIntValue(response.meta!['totalPages'], 0);
+          _totalItems = _getIntValue(response.meta!['totalItems'], 0);
+          _currentPage = _getIntValue(response.meta!['currentPage'], 0);
         }
         
         // Sắp xếp sản phẩm nếu cần
@@ -131,9 +131,9 @@ class ProductProvider with ChangeNotifier {
         
         // Lưu thông tin phân trang
         if (response.meta != null) {
-          _totalPages = response.meta!['totalPages'] ?? 0;
-          _totalItems = response.meta!['totalItems'] ?? 0;
-          _currentPage = response.meta!['currentPage'] ?? 0;
+          _totalPages = _getIntValue(response.meta!['totalPages'], 0);
+          _totalItems = _getIntValue(response.meta!['totalItems'], 0);
+          _currentPage = _getIntValue(response.meta!['currentPage'], 0);
         }
         
         // Sắp xếp sản phẩm nếu cần
@@ -172,9 +172,9 @@ class ProductProvider with ChangeNotifier {
         
         // Lưu thông tin phân trang
         if (response.meta != null) {
-          _totalPages = response.meta!['totalPages'] ?? 0;
-          _totalItems = response.meta!['totalItems'] ?? 0;
-          _currentPage = response.meta!['currentPage'] ?? 0;
+          _totalPages = _getIntValue(response.meta!['totalPages'], 0);
+          _totalItems = _getIntValue(response.meta!['totalItems'], 0);
+          _currentPage = _getIntValue(response.meta!['currentPage'], 0);
         }
         
         // Sắp xếp sản phẩm nếu cần
@@ -254,9 +254,9 @@ class ProductProvider with ChangeNotifier {
         
         // Lưu thông tin phân trang
         if (response.meta != null) {
-          _totalPages = response.meta!['totalPages'] ?? 0;
-          _totalItems = response.meta!['totalItems'] ?? 0;
-          _currentPage = response.meta!['currentPage'] ?? 0;
+          _totalPages = _getIntValue(response.meta!['totalPages'], 0);
+          _totalItems = _getIntValue(response.meta!['totalItems'], 0);
+          _currentPage = _getIntValue(response.meta!['currentPage'], 0);
         }
         
         // Sắp xếp sản phẩm nếu cần
@@ -271,6 +271,15 @@ class ProductProvider with ChangeNotifier {
     }
     
     notifyListeners();
+  }
+  
+  // Helper để xử lý an toàn kiểu dữ liệu từ API
+  int _getIntValue(dynamic value, int defaultValue) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    if (value is double) return value.toInt();
+    return defaultValue;
   }
   
   // Đặt thông tin sắp xếp

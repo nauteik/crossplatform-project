@@ -299,13 +299,6 @@ class SupportOptionsScreen extends StatelessWidget {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
-              child: const Text('Đăng nhập'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushNamed(context, '/login');
-              },
-            ),
           ],
         );
       },

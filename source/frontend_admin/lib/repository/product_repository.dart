@@ -22,19 +22,40 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final Map<String, dynamic> pageData = responseData['data'];
-        final List<dynamic> productsJson = pageData['products'];
-        final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
+        // Xử lý nhiều kiểu phản hồi có thể có
+        final data = responseData['data'];
+        List<Product> products = [];
+        Map<String, dynamic> meta = {
+          'currentPage': page,
+          'totalItems': 0,
+          'totalPages': 1,
+        };
+        
+        if (data is Map<String, dynamic> && data.containsKey('products')) {
+          // Trường hợp data là Map và có trường products
+          final productsJson = data['products'];
+          if (productsJson is List) {
+            products = productsJson.map((json) => Product.fromJson(json)).toList();
+          }
+          // Lưu thông tin phân trang nếu có
+          if (data.containsKey('currentPage')) meta['currentPage'] = data['currentPage'];
+          if (data.containsKey('totalItems')) meta['totalItems'] = data['totalItems'];
+          if (data.containsKey('totalPages')) meta['totalPages'] = data['totalPages'];
+        } else if (data is List) {
+          // Trường hợp data trực tiếp là List các sản phẩm
+          products = data.map((json) => Product.fromJson(json)).toList();
+          meta = {
+            'currentPage': page,
+            'totalItems': products.length,
+            'totalPages': 1,
+          };
+        }
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
-          meta: {
-            'currentPage': pageData['currentPage'],
-            'totalItems': pageData['totalItems'],
-            'totalPages': pageData['totalPages'],
-          },
+          meta: meta,
         );
       } else {
         return ApiResponse<List<Product>>(
@@ -101,19 +122,40 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final Map<String, dynamic> pageData = responseData['data'];
-        final List<dynamic> productsJson = pageData['products'];
-        final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
+        // Xử lý nhiều kiểu phản hồi có thể có
+        final data = responseData['data'];
+        List<Product> products = [];
+        Map<String, dynamic> meta = {
+          'currentPage': page,
+          'totalItems': 0,
+          'totalPages': 1,
+        };
+        
+        if (data is Map<String, dynamic> && data.containsKey('products')) {
+          // Trường hợp data là Map và có trường products
+          final productsJson = data['products'];
+          if (productsJson is List) {
+            products = productsJson.map((json) => Product.fromJson(json)).toList();
+          }
+          // Lưu thông tin phân trang nếu có
+          if (data.containsKey('currentPage')) meta['currentPage'] = data['currentPage'];
+          if (data.containsKey('totalItems')) meta['totalItems'] = data['totalItems'];
+          if (data.containsKey('totalPages')) meta['totalPages'] = data['totalPages'];
+        } else if (data is List) {
+          // Trường hợp data trực tiếp là List các sản phẩm
+          products = data.map((json) => Product.fromJson(json)).toList();
+          meta = {
+            'currentPage': page,
+            'totalItems': products.length,
+            'totalPages': 1,
+          };
+        }
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
-          meta: {
-            'currentPage': pageData['currentPage'],
-            'totalItems': pageData['totalItems'],
-            'totalPages': pageData['totalPages'],
-          },
+          meta: meta,
         );
       } else {
         return ApiResponse<List<Product>>(
@@ -144,19 +186,40 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final Map<String, dynamic> pageData = responseData['data'];
-        final List<dynamic> productsJson = pageData['products'];
-        final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
+        // Xử lý nhiều kiểu phản hồi có thể có
+        final data = responseData['data'];
+        List<Product> products = [];
+        Map<String, dynamic> meta = {
+          'currentPage': page,
+          'totalItems': 0,
+          'totalPages': 1,
+        };
+        
+        if (data is Map<String, dynamic> && data.containsKey('products')) {
+          // Trường hợp data là Map và có trường products
+          final productsJson = data['products'];
+          if (productsJson is List) {
+            products = productsJson.map((json) => Product.fromJson(json)).toList();
+          }
+          // Lưu thông tin phân trang nếu có
+          if (data.containsKey('currentPage')) meta['currentPage'] = data['currentPage'];
+          if (data.containsKey('totalItems')) meta['totalItems'] = data['totalItems'];
+          if (data.containsKey('totalPages')) meta['totalPages'] = data['totalPages'];
+        } else if (data is List) {
+          // Trường hợp data trực tiếp là List các sản phẩm
+          products = data.map((json) => Product.fromJson(json)).toList();
+          meta = {
+            'currentPage': page,
+            'totalItems': products.length,
+            'totalPages': 1,
+          };
+        }
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
-          meta: {
-            'currentPage': pageData['currentPage'],
-            'totalItems': pageData['totalItems'],
-            'totalPages': pageData['totalPages'],
-          },
+          meta: meta,
         );
       } else {
         return ApiResponse<List<Product>>(
@@ -187,19 +250,40 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final Map<String, dynamic> pageData = responseData['data'];
-        final List<dynamic> productsJson = pageData['products'];
-        final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
+        // Xử lý nhiều kiểu phản hồi có thể có
+        final data = responseData['data'];
+        List<Product> products = [];
+        Map<String, dynamic> meta = {
+          'currentPage': page,
+          'totalItems': 0,
+          'totalPages': 1,
+        };
+        
+        if (data is Map<String, dynamic> && data.containsKey('products')) {
+          // Trường hợp data là Map và có trường products
+          final productsJson = data['products'];
+          if (productsJson is List) {
+            products = productsJson.map((json) => Product.fromJson(json)).toList();
+          }
+          // Lưu thông tin phân trang nếu có
+          if (data.containsKey('currentPage')) meta['currentPage'] = data['currentPage'];
+          if (data.containsKey('totalItems')) meta['totalItems'] = data['totalItems'];
+          if (data.containsKey('totalPages')) meta['totalPages'] = data['totalPages'];
+        } else if (data is List) {
+          // Trường hợp data trực tiếp là List các sản phẩm
+          products = data.map((json) => Product.fromJson(json)).toList();
+          meta = {
+            'currentPage': page,
+            'totalItems': products.length,
+            'totalPages': 1,
+          };
+        }
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
-          meta: {
-            'currentPage': pageData['currentPage'],
-            'totalItems': pageData['totalItems'],
-            'totalPages': pageData['totalPages'],
-          },
+          meta: meta,
         );
       } else {
         return ApiResponse<List<Product>>(
@@ -230,19 +314,40 @@ class ProductRepository {
       final Map<String, dynamic> responseData = json.decode(response.body);
 
       if (response.statusCode == 200 && responseData['status'] == 200) {
-        final Map<String, dynamic> pageData = responseData['data'];
-        final List<dynamic> productsJson = pageData['products'];
-        final List<Product> products = productsJson.map((json) => Product.fromJson(json)).toList();
+        // Xử lý nhiều kiểu phản hồi có thể có
+        final data = responseData['data'];
+        List<Product> products = [];
+        Map<String, dynamic> meta = {
+          'currentPage': page,
+          'totalItems': 0,
+          'totalPages': 1,
+        };
+        
+        if (data is Map<String, dynamic> && data.containsKey('products')) {
+          // Trường hợp data là Map và có trường products
+          final productsJson = data['products'];
+          if (productsJson is List) {
+            products = productsJson.map((json) => Product.fromJson(json)).toList();
+          }
+          // Lưu thông tin phân trang nếu có
+          if (data.containsKey('currentPage')) meta['currentPage'] = data['currentPage'];
+          if (data.containsKey('totalItems')) meta['totalItems'] = data['totalItems'];
+          if (data.containsKey('totalPages')) meta['totalPages'] = data['totalPages'];
+        } else if (data is List) {
+          // Trường hợp data trực tiếp là List các sản phẩm
+          products = data.map((json) => Product.fromJson(json)).toList();
+          meta = {
+            'currentPage': page,
+            'totalItems': products.length,
+            'totalPages': 1,
+          };
+        }
         
         return ApiResponse<List<Product>>(
           status: responseData['status'],
           message: responseData['message'],
           data: products,
-          meta: {
-            'currentPage': pageData['currentPage'],
-            'totalItems': pageData['totalItems'],
-            'totalPages': pageData['totalPages'],
-          },
+          meta: meta,
         );
       } else {
         return ApiResponse<List<Product>>(

@@ -252,6 +252,21 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         final priceText = _priceController.text.replaceAll('.', '').replaceAll(',', '').trim();
         final price = double.tryParse(priceText) ?? 0;
         
+        // Kiểm tra và giới hạn discount không vượt quá 50%
+        final double discount = double.tryParse(_discountController.text) ?? 0;
+        if (discount > 50) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Giảm giá không thể vượt quá 50%'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+        
         // Tạo đối tượng Product
         final product = Product(
           id: widget.isEditing && widget.product != null ? widget.product!.id : '',
@@ -268,7 +283,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
           soldCount: widget.isEditing && widget.product != null
               ? widget.product!.soldCount
               : 0,
-          discountPercent: double.tryParse(_discountController.text) ?? 0,
+          discountPercent: discount,
           brand: {
             'id': selectedBrand.id,
             'name': selectedBrand.name,
@@ -510,6 +525,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Giảm giá (%)',
                         border: OutlineInputBorder(),
+                        helperText: 'Giảm giá tối đa 50%',
                       ),
                       validator: (value) {
                         if (value != null && value.isNotEmpty) {
@@ -517,8 +533,11 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                           if (discount == null) {
                             return 'Giá trị không hợp lệ';
                           }
-                          if (discount < 0 || discount > 100) {
-                            return 'Giảm giá phải từ 0-100%';
+                          if (discount < 0) {
+                            return 'Giảm giá không thể âm';
+                          }
+                          if (discount > 50) {
+                            return 'Giảm giá tối đa 50%';
                           }
                         }
                         return null;

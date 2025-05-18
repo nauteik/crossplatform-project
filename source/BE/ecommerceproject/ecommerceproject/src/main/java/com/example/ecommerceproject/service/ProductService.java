@@ -77,6 +77,14 @@ public class ProductService {
         return List.of();
     }
 
+    public List<Product> getProductsByTag(String tagId) {
+        Optional<Tag> tag = tagRepository.findById(tagId);
+        if (tag.isPresent()) {
+            return productRepository.findByTagsContaining(tag.get());
+        }
+        return List.of();
+    }
+
     public List<Product> searchProducts(String query) {
         return productRepository.findByNameContainingIgnoreCase(query);
     }

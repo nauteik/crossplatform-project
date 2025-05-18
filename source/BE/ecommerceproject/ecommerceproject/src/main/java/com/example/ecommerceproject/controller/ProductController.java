@@ -116,6 +116,17 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/by-tag/{tagId}")
+    public ResponseEntity<ApiResponse<List<Product>>> getProductsByTag(@PathVariable String tagId) {
+        List<Product> products = productService.getProductsByTag(tagId);
+        ApiResponse<List<Product>> response = new ApiResponse<>(
+                ApiStatus.SUCCESS.getCode(),
+                ApiStatus.SUCCESS.getMessage(),
+                products
+        );
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<Product>> createProduct(@RequestBody Product product) {
         Product createdProduct = productService.createProduct(product);

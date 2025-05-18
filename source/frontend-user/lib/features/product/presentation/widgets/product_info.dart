@@ -29,8 +29,10 @@ class ProductInfo extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Discount and Brand
-        Row(
+        // Discount, Brand and Tags
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
             if (product.discountPercent > 0)
               Container(
@@ -51,7 +53,6 @@ class ProductInfo extends StatelessWidget {
                   ),
                 ),
               ),
-            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 8,
@@ -69,6 +70,41 @@ class ProductInfo extends StatelessWidget {
                 ),
               ),
             ),
+            
+            // Tags
+            ...product.tags.map<Widget>((tag) {
+              // Đảm bảo tag là Map để truy cập các thuộc tính
+              final Map<String, dynamic> tagMap = tag is Map ? Map<String, dynamic>.from(tag) : {};
+              final String tagName = tagMap['name'] ?? '';
+              final String tagColor = tagMap['color'] ?? '#FF0000';
+              
+              // Chuyển đổi màu từ chuỗi hex sang Color
+              Color color;
+              try {
+                color = Color(int.parse(tagColor.replaceAll('#', '0xFF')));
+              } catch (e) {
+                color = Colors.blue; // Màu mặc định nếu không thể parse
+              }
+              
+              if (tagName.isEmpty) return const SizedBox.shrink();
+              
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: color.withOpacity(0.5), width: 1),
+                ),
+                child: Text(
+                  tagName,
+                  style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                  ),
+                ),
+              );
+            }).toList(),
           ],
         ),
         
