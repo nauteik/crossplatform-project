@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
     double itemWidth;
 
     if (screenWidth < 600) { // Mobile
-      itemWidth = (screenWidth / 2.2).clamp(150.0, 210.0); // Slightly wider items on mobile
+      itemWidth = (screenWidth / 2).clamp(150.0, 210.0); // Slightly wider items on mobile
     } else if (screenWidth < 960) { // Tablet Portrait
       itemWidth = (screenWidth / 3.2).clamp(160.0, 210.0);
     } else { // Tablet Landscape / Desktop-like

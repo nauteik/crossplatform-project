@@ -737,7 +737,7 @@ class _ProductCategoryScreenState extends State<ProductCategoryScreen> {
     // Điều chỉnh childAspectRatio dựa trên số cột
     double childAspectRatio;
     if (crossAxisCount <= 2) {
-      childAspectRatio = 0.65; // Cho phép nhiều không gian hơn khi hiển thị 2 cột
+      childAspectRatio = 0.63; // Cho phép nhiều không gian hơn khi hiển thị 2 cột
     } else if (crossAxisCount == 3) {
       childAspectRatio = 0.65; // Cho trường hợp 3 cột
     } else { // For 4+ columns (Desktop)
