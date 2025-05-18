@@ -3,6 +3,7 @@ import 'package:frontend_admin/models/coupon_model.dart';
 import 'package:frontend_admin/providers/coupon_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 
 class CouponsManagementScreen extends StatefulWidget {
   const CouponsManagementScreen({super.key});
@@ -21,7 +22,6 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
   @override
   void initState() {
     super.initState();
-    // Load coupons when the widget is built and after the first frame is rendered
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<CouponProvider>(context, listen: false).loadCoupons();
     });
@@ -52,10 +52,24 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
                   TextField(
                     controller: _codeController,
                     decoration: const InputDecoration(
-                        labelText: 'Mã giảm giá (5 ký tự chữ/số)',
-                        counterText: ''),
+                      labelText: 'Mã giảm giá (5 ký tự chữ/số)',
+                      counterText: '',
+                      errorMaxLines: 2,
+                    ),
                     maxLength: 5,
                     textCapitalization: TextCapitalization.characters,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                      LengthLimitingTextInputFormatter(5),
+                    ],
+                    onChanged: (value) {
+                      if (value != value.toUpperCase()) {
+                        _codeController.text = value.toUpperCase();
+                        _codeController.selection = TextSelection.fromPosition(
+                          TextPosition(offset: _codeController.text.length),
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<double>(
@@ -82,8 +96,11 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
                     controller: _maxUsesController,
                     decoration: const InputDecoration(
                         labelText:
-                            'Số lượt dùng tối đa (1-10)'), // Label based on requirements
+                            'Số lượt dùng tối đa'),
                     keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
                   ),
                 ],
               ),
@@ -116,11 +133,11 @@ class _CouponsManagementScreenState extends State<CouponsManagementScreen> {
                               int.tryParse(_maxUsesController.text.trim());
                           final double value = _selectedDiscountValue;
 
-                          if (maxUses == null) {
+                          if (maxUses == null || maxUses <= 0) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text(
-                                      'Số lượt dùng tối đa không hợp lệ.')),
+                                      'Số lượt dùng tối đa phải là số nguyên dương.')),
                             );
                             return;
                           }

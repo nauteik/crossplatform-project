@@ -58,7 +58,7 @@ class AdminSidebar extends StatelessWidget {
                 leading: const Icon(FontAwesomeIcons.rightFromBracket,
                     color: Colors.white),
                 title: extended 
-                    ? const Text('Log out', style: TextStyle(color: Colors.white))
+                    ? const Text('Đăng xuất', style: TextStyle(color: Colors.white))
                     : null,
                 onTap: () async {
                   await authProvider.logout();
@@ -72,12 +72,12 @@ class AdminSidebar extends StatelessWidget {
         );
       },
       items: const [
-        SidebarXItem(icon: FontAwesomeIcons.house, label: 'Overview'),
-        SidebarXItem(icon: FontAwesomeIcons.chartSimple, label: 'Statistics'),
-        SidebarXItem(icon: FontAwesomeIcons.warehouse, label: 'Products Management'),
-        SidebarXItem(icon: FontAwesomeIcons.users, label: 'Users Management'),
-        SidebarXItem(icon: FontAwesomeIcons.truckRampBox, label: 'Orders Management'),
-        SidebarXItem(icon: FontAwesomeIcons.tag, label: 'Coupon Management'),
+        SidebarXItem(icon: FontAwesomeIcons.house, label: 'Tổng quan'),
+        SidebarXItem(icon: FontAwesomeIcons.chartSimple, label: 'Thống kê'),
+        SidebarXItem(icon: FontAwesomeIcons.warehouse, label: 'Quản lý sản phẩm'),
+        SidebarXItem(icon: FontAwesomeIcons.users, label: 'Quản lý người dùng'),
+        SidebarXItem(icon: FontAwesomeIcons.truckRampBox, label: 'Quản lý đơn hàng'),
+        SidebarXItem(icon: FontAwesomeIcons.tag, label: 'Quản lý khuyến mãi'),
         SidebarXItem(icon: FontAwesomeIcons.headset, label: 'Hỗ trợ khách hàng'),
       ],
     );

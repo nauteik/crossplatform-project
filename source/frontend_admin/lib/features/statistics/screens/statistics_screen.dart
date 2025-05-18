@@ -16,6 +16,8 @@ class StatisticsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Thống kê'),
+        backgroundColor: Colors.indigo.shade800,
+        foregroundColor: Colors.white,
       ),
       body: Consumer<StatisticsProvider>(
         builder: (context, provider, child) {
@@ -51,8 +53,8 @@ class StatisticsScreen extends StatelessWidget {
             // Kiểm tra xem có bất kỳ dữ liệu biểu đồ nào được load không trong DTO
             bool hasChartData =
                 (data.timeSeriesRevenueProfitData?.isNotEmpty ?? false) ||
-                    (data.timeSeriesQuantityData?.isNotEmpty ?? false) ||
-                    (data.categorySalesRatio?.isNotEmpty ?? false);
+                (data.timeSeriesQuantityData?.isNotEmpty ?? false) ||
+                (data.categorySalesRatio?.isNotEmpty ?? false);
 
             // Hiển thị dashboard
             return SingleChildScrollView(
@@ -67,13 +69,17 @@ class StatisticsScreen extends StatelessWidget {
                       provider.errorMessage == null) ...[
                     const SizedBox(height: 30), // Khoảng cách trước thông báo
                     const Center(
-                        child: Text(
-                            'No chart data available for the selected period.')),
+                      child: Text(
+                        'No chart data available for the selected period.',
+                      ),
+                    ),
                   ],
 
                   Text(
-                    'Sales Analytics',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    'Biểu đồ phân tích doanh số',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.indigo.shade800,
+                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -87,8 +93,9 @@ class StatisticsScreen extends StatelessWidget {
                     _buildChartCard(
                       context,
                       _getSalesChartTitle(provider),
-                      LineChart(_buildLineChartData(
-                          data.timeSeriesRevenueProfitData!)),
+                      LineChart(
+                        _buildLineChartData(data.timeSeriesRevenueProfitData!),
+                      ),
                       height: 300,
                     ),
 
@@ -98,8 +105,12 @@ class StatisticsScreen extends StatelessWidget {
                     _buildChartCard(
                       context,
                       _getTotalSalesChartTitle(provider),
-                      BarChart(_buildBarChartData(
-                          context, data.timeSeriesQuantityData!)),
+                      BarChart(
+                        _buildBarChartData(
+                          context,
+                          data.timeSeriesQuantityData!,
+                        ),
+                      ),
                       height: 300,
                     ),
 
@@ -122,8 +133,12 @@ class StatisticsScreen extends StatelessWidget {
   }
 
   // Helper method to build a card container for charts (giữ nguyên như file bạn gửi)
-  Widget _buildChartCard(BuildContext context, String title, Widget chartWidget,
-      {double height = 250}) {
+  Widget _buildChartCard(
+    BuildContext context,
+    String title,
+    Widget chartWidget, {
+    double height = 250,
+  }) {
     return Card(
       elevation: 4.0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
@@ -132,10 +147,7 @@ class StatisticsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
             Container(
               height: height, // Sử dụng chiều cao được truyền vào
@@ -149,7 +161,9 @@ class StatisticsScreen extends StatelessWidget {
 
   // --- Helper Methods cho UI Chọn Bộ Lọc (Thêm vào) ---
   Widget _buildFilterSelectionUI(
-      BuildContext context, StatisticsProvider provider) {
+    BuildContext context,
+    StatisticsProvider provider,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -157,18 +171,21 @@ class StatisticsScreen extends StatelessWidget {
           flex: 2,
           child: DropdownButtonFormField<ChartFilterType>(
             decoration: const InputDecoration(
-              labelText: 'Filter By',
+              labelText: 'Lọc theo',
               border: OutlineInputBorder(),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 15,
+              ),
             ),
             value: provider.currentFilterType,
-            items: ChartFilterType.values.map((type) {
-              return DropdownMenuItem(
-                value: type,
-                child: Text(_filterTypeToString(type)),
-              );
-            }).toList(),
+            items:
+                ChartFilterType.values.map((type) {
+                  return DropdownMenuItem(
+                    value: type,
+                    child: Text(_filterTypeToString(type)),
+                  );
+                }).toList(),
             onChanged: (newValue) {
               if (newValue != null) {
                 provider.setFilter(filterType: newValue);
@@ -177,23 +194,22 @@ class StatisticsScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        Expanded(
-          flex: 3,
-          child: _buildFilterValueInput(context, provider),
-        ),
+        Expanded(flex: 3, child: _buildFilterValueInput(context, provider)),
       ],
     );
   }
 
   // Helper hiển thị UI nhập giá trị lọc tùy theo loại
   Widget _buildFilterValueInput(
-      BuildContext context, StatisticsProvider provider) {
+    BuildContext context,
+    StatisticsProvider provider,
+  ) {
     switch (provider.currentFilterType) {
       case ChartFilterType.weekly:
         return Container(
           alignment: Alignment.centerLeft,
           height: 56,
-          child: const Text('Last 7 Days', style: TextStyle(fontSize: 16)),
+          child: const Text('7 ngày qua', style: TextStyle(fontSize: 16)),
         );
       case ChartFilterType.dateRange:
         return Row(
@@ -203,15 +219,17 @@ class StatisticsScreen extends StatelessWidget {
                 onTap: () => _selectDate(context, provider, isStartDate: true),
                 child: InputDecorator(
                   decoration: const InputDecoration(
-                    labelText: 'Start Date',
+                    labelText: 'Ngày bắt đầu',
                     border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 15,
+                    ),
                   ),
                   child: Text(
                     provider.startDate == null
-                        ? 'Select Date'
-                        : DateFormat('yyyy-MM-dd').format(provider.startDate!),
+                        ? 'Chọn ngày'
+                        : DateFormat('dd/MM/yyyy').format(provider.startDate!),
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
@@ -223,15 +241,17 @@ class StatisticsScreen extends StatelessWidget {
                 onTap: () => _selectDate(context, provider, isStartDate: false),
                 child: InputDecorator(
                   decoration: const InputDecoration(
-                    labelText: 'End Date',
+                    labelText: 'Ngày kết thúc',
                     border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 15,
+                    ),
                   ),
                   child: Text(
                     provider.endDate == null
-                        ? 'Select Date'
-                        : DateFormat('yyyy-MM-dd').format(provider.endDate!),
+                        ? 'Chọn ngày'
+                        : DateFormat('dd/MM/yyyy').format(provider.endDate!),
                     style: const TextStyle(fontSize: 16),
                   ),
                 ),
@@ -246,19 +266,23 @@ class StatisticsScreen extends StatelessWidget {
             Expanded(
               child: DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                  labelText: 'Month',
+                  labelText: 'Tháng',
                   border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 15,
+                  ),
                 ),
                 value: provider.selectedMonth ?? now.month,
-                items: List.generate(12, (index) => index + 1).map((month) {
-                  return DropdownMenuItem(
-                    value: month,
-                    child: Text(
-                        DateFormat('MMMM').format(DateTime(now.year, month))),
-                  );
-                }).toList(),
+                items:
+                    List.generate(12, (index) => index + 1).map((month) {
+                      return DropdownMenuItem(
+                        value: month,
+                        child: Text(
+                          DateFormat('MMMM').format(DateTime(now.year, month)),
+                        ),
+                      );
+                    }).toList(),
                 onChanged: (newValue) {
                   if (newValue != null) {
                     provider.setFilter(
@@ -274,19 +298,21 @@ class StatisticsScreen extends StatelessWidget {
             Expanded(
               child: DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                  labelText: 'Year',
+                  labelText: 'Năm',
                   border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 15,
+                  ),
                 ),
                 value: provider.selectedYear ?? now.year,
                 items:
                     List.generate(10, (index) => now.year - index).map((year) {
-                  return DropdownMenuItem(
-                    value: year,
-                    child: Text(year.toString()),
-                  );
-                }).toList(),
+                      return DropdownMenuItem(
+                        value: year,
+                        child: Text(year.toString()),
+                      );
+                    }).toList(),
                 onChanged: (newValue) {
                   if (newValue != null) {
                     provider.setFilter(
@@ -307,18 +333,21 @@ class StatisticsScreen extends StatelessWidget {
             Expanded(
               child: DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                  labelText: 'Quarter',
+                  labelText: 'Quý',
                   border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 15,
+                  ),
                 ),
                 value: provider.selectedQuarter ?? ((now.month - 1) ~/ 3) + 1,
-                items: List.generate(4, (index) => index + 1).map((quarter) {
-                  return DropdownMenuItem(
-                    value: quarter,
-                    child: Text('Q$quarter'),
-                  );
-                }).toList(),
+                items:
+                    List.generate(4, (index) => index + 1).map((quarter) {
+                      return DropdownMenuItem(
+                        value: quarter,
+                        child: Text('Q$quarter'),
+                      );
+                    }).toList(),
                 onChanged: (newValue) {
                   if (newValue != null) {
                     provider.setFilter(
@@ -334,19 +363,21 @@ class StatisticsScreen extends StatelessWidget {
             Expanded(
               child: DropdownButtonFormField<int>(
                 decoration: const InputDecoration(
-                  labelText: 'Year',
+                  labelText: 'Năm',
                   border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 15,
+                  ),
                 ),
                 value: provider.selectedYear ?? now.year,
                 items:
                     List.generate(10, (index) => now.year - index).map((year) {
-                  return DropdownMenuItem(
-                    value: year,
-                    child: Text(year.toString()),
-                  );
-                }).toList(),
+                      return DropdownMenuItem(
+                        value: year,
+                        child: Text(year.toString()),
+                      );
+                    }).toList(),
                 onChanged: (newValue) {
                   if (newValue != null) {
                     provider.setFilter(
@@ -364,21 +395,24 @@ class StatisticsScreen extends StatelessWidget {
         final now = DateTime.now();
         return DropdownButtonFormField<int>(
           decoration: const InputDecoration(
-            labelText: 'Year',
+            labelText: 'Năm',
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 15),
           ),
           value: provider.selectedYear ?? now.year,
-          items: List.generate(10, (index) => now.year - index).map((year) {
-            return DropdownMenuItem(
-              value: year,
-              child: Text(year.toString()),
-            );
-          }).toList(),
+          items:
+              List.generate(10, (index) => now.year - index).map((year) {
+                return DropdownMenuItem(
+                  value: year,
+                  child: Text(year.toString()),
+                );
+              }).toList(),
           onChanged: (newValue) {
             if (newValue != null) {
               provider.setFilter(
-                  filterType: ChartFilterType.yearly, selectedYear: newValue);
+                filterType: ChartFilterType.yearly,
+                selectedYear: newValue,
+              );
             }
           },
         );
@@ -386,13 +420,17 @@ class StatisticsScreen extends StatelessWidget {
   }
 
   // Helper hiển thị Date Picker
-  Future<void> _selectDate(BuildContext context, StatisticsProvider provider,
-      {required bool isStartDate}) async {
+  Future<void> _selectDate(
+    BuildContext context,
+    StatisticsProvider provider, {
+    required bool isStartDate,
+  }) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isStartDate
-          ? (provider.startDate ?? DateTime.now())
-          : (provider.endDate ?? DateTime.now()),
+      initialDate:
+          isStartDate
+              ? (provider.startDate ?? DateTime.now())
+              : (provider.endDate ?? DateTime.now()),
       firstDate: DateTime(2000),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
@@ -411,15 +449,15 @@ class StatisticsScreen extends StatelessWidget {
   String _filterTypeToString(ChartFilterType type) {
     switch (type) {
       case ChartFilterType.weekly:
-        return 'Weekly';
+        return 'Theo tuần';
       case ChartFilterType.dateRange:
-        return 'Date Range';
+        return 'Khoảng thời gian';
       case ChartFilterType.monthly:
-        return 'Monthly';
+        return 'Theo tháng';
       case ChartFilterType.yearly:
-        return 'Yearly';
+        return 'Theo năm';
       case ChartFilterType.quarterly:
-        return 'Quarterly';
+        return 'Theo quý';
     }
   }
 
@@ -428,35 +466,36 @@ class StatisticsScreen extends StatelessWidget {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Revenue and Profit ($start to $end)';
+          final start = DateFormat('dd/MM/yyyy').format(provider.startDate!);
+          final end = DateFormat('dd/MM/yyyy').format(provider.endDate!);
+          return 'Doanh thu và Lợi nhuận ($start đến $end)';
         } else if (provider.startDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          return 'Revenue and Profit (Since $start)';
+          final start = DateFormat('dd/MM/yyyy').format(provider.startDate!);
+          return 'Doanh thu và Lợi nhuận (Từ $start)';
         } else if (provider.endDate != null) {
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Revenue and Profit (Until $end)';
+          final end = DateFormat('dd/MM/yyyy').format(provider.endDate!);
+          return 'Doanh thu và Lợi nhuận (Đến $end)';
         }
-        return 'Revenue and Profit (Select Date Range)';
+        return 'Doanh thu và Lợi nhuận (Theo khoảng thời gian)';
       case ChartFilterType.monthly:
         if (provider.selectedMonth != null && provider.selectedYear != null) {
-          final monthName = DateFormat('MMMM').format(
-              DateTime(provider.selectedYear!, provider.selectedMonth!));
-          return 'Revenue and Profit in $monthName ${provider.selectedYear}';
+          final monthName = DateFormat(
+            'MMMM',
+          ).format(DateTime(provider.selectedYear!, provider.selectedMonth!));
+          return 'Doanh thu và Lợi nhuận trong $monthName ${provider.selectedYear}';
         } else if (provider.selectedYear != null) {
-          return 'Revenue and Profit in ${provider.selectedYear}';
+          return 'Doanh thu và Lợi nhuận trong ${provider.selectedYear}';
         }
-        return 'Revenue and Profit (Select Month/Year)';
+        return 'Doanh thu và Lợi nhuận (Theo tháng/năm)';
       case ChartFilterType.yearly:
         if (provider.selectedYear != null) {
-          return 'Revenue and Profit in ${provider.selectedYear}';
+          return 'Doanh thu và Lợi nhuận trong ${provider.selectedYear}';
         }
-        return 'Revenue and Profit (Select Year)';
+        return 'Doanh thu và Lợi nhuận (Theo năm)';
       case ChartFilterType.quarterly:
-        return 'Revenue and Profit (Quarterly)';
+        return 'Doanh thu và Lợi nhuận (Theo quý)';
       case ChartFilterType.weekly:
-        return 'Revenue and Profit (Last 7 Days)';
+        return 'Doanh thu và Lợi nhuận (7 ngày qua)';
     }
   }
 
@@ -465,35 +504,36 @@ class StatisticsScreen extends StatelessWidget {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Products Sold ($start to $end)';
+          final start = DateFormat('dd/MM/yyyy').format(provider.startDate!);
+          final end = DateFormat('dd/MM/yyyy').format(provider.endDate!);
+          return 'Số lượng sản phẩm bán ra ($start đến $end)';
         } else if (provider.startDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          return 'Products Sold (Since $start)';
+          final start = DateFormat('dd/MM/yyyy').format(provider.startDate!);
+          return 'Số lượng sản phẩm bán ra (Từ $start)';
         } else if (provider.endDate != null) {
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Products Sold (Until $end)';
+          final end = DateFormat('dd/MM/yyyy').format(provider.endDate!);
+          return 'Số lượng sản phẩm bán ra (Đến $end)';
         }
-        return 'Products Sold (Select Date Range)';
+        return 'Số lượng sản phẩm bán ra (Theo khoảng thời gian)';
       case ChartFilterType.monthly:
         if (provider.selectedMonth != null && provider.selectedYear != null) {
-          final monthName = DateFormat('MMMM').format(
-              DateTime(provider.selectedYear!, provider.selectedMonth!));
-          return 'Products Sold in $monthName ${provider.selectedYear}';
+          final monthName = DateFormat(
+            'MMMM',
+          ).format(DateTime(provider.selectedYear!, provider.selectedMonth!));
+          return 'Số lượng sản phẩm bán ra trong $monthName ${provider.selectedYear}';
         } else if (provider.selectedYear != null) {
-          return 'Products Sold in ${provider.selectedYear}';
+          return 'Số lượng sản phẩm bán ra trong ${provider.selectedYear}';
         }
-        return 'Products Sold (Select Month/Year)';
+        return 'Số lượng sản phẩm bán ra (Theo tháng/năm)';
       case ChartFilterType.yearly:
         if (provider.selectedYear != null) {
-          return 'Products Sold in ${provider.selectedYear}';
+          return 'Số lượng sản phẩm bán ra trong ${provider.selectedYear}';
         }
-        return 'Products Sold in ${provider.selectedYear}';
+        return 'Số lượng sản phẩm bán ra trong ${DateTime.now().year}';
       case ChartFilterType.quarterly:
-        return 'Products Sold (Quarterly)';
+        return 'Số lượng sản phẩm bán ra (Theo quý)';
       case ChartFilterType.weekly:
-        return 'Products Sold (Last 7 Days)';
+        return 'Số lượng sản phẩm bán ra (7 ngày qua)';
     }
   }
 
@@ -502,43 +542,45 @@ class StatisticsScreen extends StatelessWidget {
     switch (provider.currentFilterType) {
       case ChartFilterType.dateRange:
         if (provider.startDate != null && provider.endDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Sales Ratio ($start to $end)';
+          final start = DateFormat('dd/MM/yyyy').format(provider.startDate!);
+          final end = DateFormat('dd/MM/yyyy').format(provider.endDate!);
+          return 'Tỉ lệ sản phẩm bán ra theo danh mục ($start đến $end)';
         } else if (provider.startDate != null) {
-          final start = DateFormat('yyyy-MM-dd').format(provider.startDate!);
-          return 'Sales Ratio (Since $start)';
+          final start = DateFormat('dd/MM/yyyy').format(provider.startDate!);
+          return 'Tỉ lệ sản phẩm bán ra theo danh mục (Từ $start)';
         } else if (provider.endDate != null) {
-          final end = DateFormat('yyyy-MM-dd').format(provider.endDate!);
-          return 'Sales Ratio (Until $end)';
+          final end = DateFormat('dd/MM/yyyy').format(provider.endDate!);
+          return 'Tỉ lệ sản phẩm bán ra theo danh mục (Đến $end)';
         }
-        return 'Sales Ratio (Select Date Range)';
+        return 'Tỉ lệ sản phẩm bán ra theo danh mục (Theo khoảng thời gian)';
       case ChartFilterType.monthly:
         if (provider.selectedMonth != null && provider.selectedYear != null) {
-          final monthName = DateFormat('MMMM').format(
-              DateTime(provider.selectedYear!, provider.selectedMonth!));
-          return 'Sales Ratio in $monthName ${provider.selectedYear}';
+          final monthName = DateFormat(
+            'MMMM',
+          ).format(DateTime(provider.selectedYear!, provider.selectedMonth!));
+          return 'Tỉ lệ sản phẩm bán ra theo danh mục trong $monthName ${provider.selectedYear}';
         } else if (provider.selectedYear != null) {
-          return 'Sales Ratio in ${provider.selectedYear}';
+          return 'Tỉ lệ sản phẩm bán ra theo danh mục trong ${provider.selectedYear}';
         }
-        return 'Sales Ratio (Select Month/Year)';
+        return 'Tỉ lệ sản phẩm bán ra theo danh mục (Theo tháng/năm)';
       case ChartFilterType.yearly:
         if (provider.selectedYear != null) {
-          return 'Sales Ratio in ${provider.selectedYear}';
+          return 'Tỉ lệ sản phẩm bán ra theo danh mục trong ${provider.selectedYear}';
         }
-        return 'Sales Ratio (Select Year)';
+        return 'Tỉ lệ sản phẩm bán ra theo danh mục (Theo năm)';
       case ChartFilterType.quarterly:
-        return 'Sales Ratio (Quarterly)';
+        return 'Tỉ lệ sản phẩm bán ra theo danh mục (Theo quý)';
       case ChartFilterType.weekly:
-        return 'Sales Ratio (Last 7 Days)';
+        return 'Tỉ lệ sản phẩm bán ra theo danh mục (7 ngày qua)';
     }
   }
 
   // --- Helper Methods Vẽ Biểu đồ (Cập nhật để nhận List<TimeBasedChartData>) ---
 
   LineChartData _buildLineChartData(List<TimeBasedChartData> data) {
-    data.sort((a, b) =>
-        a.timePeriod.compareTo(b.timePeriod)); // Sắp xếp theo timePeriod
+    data.sort(
+      (a, b) => a.timePeriod.compareTo(b.timePeriod),
+    ); // Sắp xếp theo timePeriod
 
     List<FlSpot> revenueSpots = [];
     List<FlSpot> profitSpots = [];
@@ -554,24 +596,18 @@ class StatisticsScreen extends StatelessWidget {
       }
 
       // Tạo nhãn từ timePeriod. Logic định dạng có thể phức tạp hơn tùy vào format của timePeriod
-      String label =
-          data[i].timePeriod; // Ví dụ: "2023-10-26", "2023-10", "2023"
-      // Cố gắng định dạng lại nhãn cho đẹp hơn tùy vào độ dài của list data hoặc format
+      String label = data[i].timePeriod;
       try {
         if (data.length <= 7 && data[i].timePeriod.length >= 8) {
-          // Dữ liệu hàng ngày (ví dụ weekly hoặc dateRange ngắn)
           final date = DateTime.parse(data[i].timePeriod);
-          label = DateFormat('dd/MM').format(date); // Ví dụ 26/10
+          label = DateFormat('dd/MM').format(date);
         } else if (data[i].timePeriod.length == 7) {
-          // Dữ liệu theo tháng (YYYY-MM)
           final parts = data[i].timePeriod.split('-');
           final year = int.parse(parts[0]);
           final month = int.parse(parts[1]);
-          label = DateFormat('MM/yyyy')
-              .format(DateTime(year, month)); // Ví dụ 10/2023
+          label = DateFormat('MM/yyyy').format(DateTime(year, month));
         } else if (data[i].timePeriod.length == 4) {
-          // Dữ liệu theo năm (YYYY)
-          label = data[i].timePeriod; // Giữ nguyên năm
+          label = data[i].timePeriod;
         }
       } catch (e) {
         // ignore formatting error, use original label
@@ -597,16 +633,10 @@ class StatisticsScreen extends StatelessWidget {
         horizontalInterval: maxY > 0 ? maxY / 5 : 1.0,
         verticalInterval: 1.0,
         getDrawingHorizontalLine: (value) {
-          return const FlLine(
-            color: Color(0xffe7e7e7),
-            strokeWidth: 1,
-          );
+          return const FlLine(color: Color(0xffe7e7e7), strokeWidth: 1);
         },
         getDrawingVerticalLine: (value) {
-          return const FlLine(
-            color: Color(0xffe7e7e7),
-            strokeWidth: 1,
-          );
+          return const FlLine(color: Color(0xffe7e7e7), strokeWidth: 1);
         },
       ),
       titlesData: FlTitlesData(
@@ -626,8 +656,10 @@ class StatisticsScreen extends StatelessWidget {
                   meta: meta,
                   space: 8.0,
                   angle: rotate ? -45 : 0,
-                  child:
-                      Text(labels[index], style: const TextStyle(fontSize: 10)),
+                  child: Text(
+                    labels[index],
+                    style: const TextStyle(fontSize: 10),
+                  ),
                 );
               }
               return SideTitleWidget(meta: meta, child: Container());
@@ -685,11 +717,45 @@ class StatisticsScreen extends StatelessWidget {
           belowBarData: BarAreaData(show: false),
         ),
       ],
+      lineTouchData: LineTouchData(
+        touchTooltipData: LineTouchTooltipData(
+          tooltipPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
+          tooltipMargin: 8,
+          getTooltipItems: (touchedSpots) {
+            return touchedSpots.map((LineBarSpot touchedSpot) {
+              final isRevenue = touchedSpot.barIndex == 0;
+              return LineTooltipItem(
+                _formatCurrency(touchedSpot.y),
+                TextStyle(
+                  color: isRevenue ? Colors.blue : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+                children: [
+                  TextSpan(
+                    text: '\n${isRevenue ? 'Doanh thu' : 'Lợi nhuận'}',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontWeight: FontWeight.normal,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              );
+            }).toList();
+          },
+        ),
+        handleBuiltInTouches: true,
+      ),
     );
   }
 
   BarChartData _buildBarChartData(
-      BuildContext context, List<TimeBasedChartData> data) {
+    BuildContext context,
+    List<TimeBasedChartData> data,
+  ) {
     data.sort((a, b) => a.timePeriod.compareTo(b.timePeriod));
 
     List<BarChartGroupData> barGroups = [];
@@ -716,9 +782,14 @@ class StatisticsScreen extends StatelessWidget {
             barRods: [
               BarChartRodData(
                 toY: item.quantitySold!.toDouble(),
-                color: Theme.of(context).primaryColor,
+                color: Colors.indigo.shade400,
                 width: 16,
                 borderRadius: BorderRadius.circular(4),
+                backDrawRodData: BackgroundBarChartRodData(
+                  show: true,
+                  toY: maxY,
+                  color: Colors.indigo.withOpacity(0.05),
+                ),
               ),
             ],
           ),
@@ -765,8 +836,10 @@ class StatisticsScreen extends StatelessWidget {
                   meta: meta,
                   space: 4.0,
                   angle: rotate ? -45 : 0,
-                  child:
-                      Text(labels[index], style: const TextStyle(fontSize: 10)),
+                  child: Text(
+                    labels[index],
+                    style: const TextStyle(fontSize: 10),
+                  ),
                 );
               }
               return SideTitleWidget(meta: meta, child: Container());
@@ -782,12 +855,29 @@ class StatisticsScreen extends StatelessWidget {
               return SideTitleWidget(
                 meta: meta,
                 space: 4.0,
-                child: Text(value.toInt().toString(),
-                    style: const TextStyle(fontSize: 10)),
+                child: Text(
+                  value.toInt().toString(),
+                  style: const TextStyle(fontSize: 10),
+                ),
               );
             },
             reservedSize: 28,
           ),
+        ),
+      ),
+      barTouchData: BarTouchData(
+        touchTooltipData: BarTouchTooltipData(
+          tooltipPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
+          tooltipMargin: 8,
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            return BarTooltipItem(
+              '${rod.toY.toInt()} sản phẩm',
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            );
+          },
         ),
       ),
     );
@@ -797,10 +887,11 @@ class StatisticsScreen extends StatelessWidget {
     List<PieChartSectionData> sections = [];
     double totalSold = 0;
     if (data.isNotEmpty) {
-      totalSold = data
-          .map((item) => item.totalQuantitySold)
-          .reduce((a, b) => a + b)
-          .toDouble();
+      totalSold =
+          data
+              .map((item) => item.totalQuantitySold)
+              .reduce((a, b) => a + b)
+              .toDouble();
     }
 
     List<Color> colors = [
@@ -862,11 +953,18 @@ class StatisticsScreen extends StatelessWidget {
       ),
       child: Text(
         display,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 10,
-        ),
+        style: const TextStyle(color: Colors.white, fontSize: 10),
       ),
     );
+  }
+
+  // Thêm hàm _formatCurrency
+  String _formatCurrency(double amount) {
+    final formatter = NumberFormat.currency(
+      locale: 'vi_VN',
+      symbol: '₫',
+      decimalDigits: 0,
+    );
+    return formatter.format(amount);
   }
 }

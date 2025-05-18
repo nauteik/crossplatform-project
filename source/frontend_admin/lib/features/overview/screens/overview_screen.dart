@@ -15,7 +15,11 @@ class OverviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tổng quan')),
+      appBar: AppBar(
+        title: const Text('Tổng quan'),
+        backgroundColor: Colors.indigo.shade800,
+        foregroundColor: Colors.white,
+      ),
       body: Consumer<OverviewProvider>(
         builder: (context, provider, child) {
           // Kiểm tra trạng thái loading dựa trên provider.isLoading
@@ -62,7 +66,7 @@ class OverviewScreen extends StatelessWidget {
                 children: [
                   // --- Top Row: Key Metrics Grid ---
                   Text(
-                    'Daily Metrics', // Thêm tiêu đề cho phần metrics
+                    'Số liệu tổng quan',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 10),
@@ -81,49 +85,49 @@ class OverviewScreen extends StatelessWidget {
                     children: [
                       _buildMetricCard(
                         context,
-                        'Total Users',
+                        'Tổng số người dùng',
                         data.totalUsers.toString(),
                         Icons.people,
                       ),
                       _buildMetricCard(
                         context,
-                        'Total Orders',
+                        'Tổng số đơn hàng',
                         data.totalOrders.toString(),
                         Icons.shopping_cart,
                       ),
                       _buildMetricCard(
                         context,
-                        'Total Product Types',
+                        'Tổng số danh mục sản phẩm',
                         data.totalProductTypes.toString(),
                         Icons.category,
                       ),
                       _buildMetricCard(
                         context,
-                        'Total Products',
+                        'Tổng số sản phẩm',
                         data.totalProducts.toString(),
                         Icons.inventory,
                       ),
                       _buildMetricCard(
                         context,
-                        'New Users',
+                        'Số người dùng mới',
                         data.newUsers.toString(),
                         FontAwesomeIcons.userPlus,
                       ),
                       _buildMetricCard(
                         context,
-                        'New Orders',
+                        'Số đơn hàng mới',
                         data.newOrders.toString(),
                         FontAwesomeIcons.cartPlus,
                       ),
                       _buildMetricCard(
                         context,
-                        'Total Revenue',
+                        'Tổng doanh thu',
                         _formatCurrency(data.totalRevenue),
                         FontAwesomeIcons.moneyBill,
                       ),
                       _buildMetricCard(
                         context,
-                        'Total Profit',
+                        'Tổng lợi nhuận',
                         _formatCurrency(data.totalProfit),
                         FontAwesomeIcons.moneyBillTrendUp,
                       ),
@@ -136,14 +140,14 @@ class OverviewScreen extends StatelessWidget {
                     const SizedBox(height: 30), // Khoảng cách trước thông báo
                     const Center(
                       child: Text(
-                        'No chart data available for the selected period.',
+                        'Không có dữ liệu biểu đồ nào có sẵn cho khoảng thời gian đã chọn.',
                       ),
                     ),
                   ],
 
                   // --- Lower Section: Charts ---
                   Text(
-                    'Sales Analytics (Last 7 Days)',
+                    'Phân tích doanh số (7 ngày qua)',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: 16),
@@ -164,7 +168,7 @@ class OverviewScreen extends StatelessWidget {
                           data.timeSeriesRevenueProfitData!.isNotEmpty)
                         _buildChartCard(
                           context,
-                          'Revenue and Profit',
+                          'Doanh thu và Lợi nhuận',
                           LineChart(
                             _buildLineChartData(
                               data.timeSeriesRevenueProfitData!,
@@ -178,7 +182,7 @@ class OverviewScreen extends StatelessWidget {
                           data.timeSeriesQuantityData!.isNotEmpty)
                         _buildChartCard(
                           context,
-                          'Products Sold',
+                          'Số lượng sản phẩm bán ra',
                           BarChart(
                             _buildBarChartData(
                               context,
@@ -193,7 +197,7 @@ class OverviewScreen extends StatelessWidget {
                           data.categorySalesRatio!.isNotEmpty)
                         _buildChartCard(
                           context,
-                          'Sales Ratio',
+                          'Tỉ lệ sản phẩm bán ra theo danh mục',
                           PieChart(
                             _buildPieChartData(data.categorySalesRatio!),
                           ),
@@ -229,8 +233,8 @@ class OverviewScreen extends StatelessWidget {
             Icon(
               icon,
               size: 30,
-              color: Theme.of(context).primaryColor,
-            ), // Kích thước icon nhỏ hơn
+              color: Colors.indigo,
+            ),
             const SizedBox(height: 8),
             Text(
               title,
@@ -271,8 +275,8 @@ class OverviewScreen extends StatelessWidget {
             Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
             Container(
-              height: height, // Sử dụng chiều cao được truyền vào
-              child: chartWidget, // Widget biểu đồ
+              height: height,
+              child: chartWidget,
             ),
           ],
         ),
@@ -281,7 +285,7 @@ class OverviewScreen extends StatelessWidget {
   }
 
   // Helper method to format currency (assuming VND)
-  String _formatCurrency(int amount) {
+  String _formatCurrency(double amount) {
     final formatter = NumberFormat.currency(
       locale: 'vi_VN',
       symbol: '₫',
@@ -439,6 +443,37 @@ class OverviewScreen extends StatelessWidget {
           belowBarData: BarAreaData(show: false),
         ),
       ],
+      lineTouchData: LineTouchData(
+        touchTooltipData: LineTouchTooltipData(
+          tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          tooltipMargin: 8,
+          getTooltipItems: (touchedSpots) {
+            return touchedSpots.map((LineBarSpot touchedSpot) {
+              final value = touchedSpot.y.toDouble();
+              final isRevenue = touchedSpot.barIndex == 0;
+              
+              return LineTooltipItem(
+                _formatCurrency(value),
+                TextStyle(
+                  color: isRevenue ? Colors.blue : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+                children: [
+                  TextSpan(
+                    text: '\n${isRevenue ? 'Doanh thu' : 'Lợi nhuận'}',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontWeight: FontWeight.normal,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              );
+            }).toList();
+          },
+        ),
+        handleBuiltInTouches: true,
+      ),
     );
   }
 
@@ -472,9 +507,14 @@ class OverviewScreen extends StatelessWidget {
             barRods: [
               BarChartRodData(
                 toY: item.quantitySold!.toDouble(),
-                color: Theme.of(context).primaryColor,
+                color: Colors.indigo.shade400,
                 width: 16,
                 borderRadius: BorderRadius.circular(4),
+                backDrawRodData: BackgroundBarChartRodData(
+                  show: true,
+                  toY: maxY,
+                  color: Colors.indigo.withOpacity(0.05),
+                ),
               ),
             ],
           ),
@@ -505,6 +545,21 @@ class OverviewScreen extends StatelessWidget {
       borderData: FlBorderData(show: false),
       gridData: FlGridData(show: false),
       maxY: maxY,
+      barTouchData: BarTouchData(
+        touchTooltipData: BarTouchTooltipData(
+          tooltipPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          tooltipMargin: 8,
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            return BarTooltipItem(
+              rod.toY.toInt().toString(),
+              const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            );
+          },
+        ),
+      ),
       titlesData: FlTitlesData(
         show: true,
         rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
